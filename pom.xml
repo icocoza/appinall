@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>com.ccz.appinall</groupId>
+	<artifactId>appinall</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<packaging>jar</packaging>
+
+	<name>appinall</name>
+	<description>app-in-all services parent</description>
+
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>1.5.9.RELEASE</version>
+		<relativePath/> <!-- lookup parent from repository -->
+	</parent>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+		<java.version>1.8</java.version>
+		<thymeleaf.version>3.0.9.RELEASE</thymeleaf.version>
+        <thymeleaf-extras-java8time.version>3.0.2.RELEASE</thymeleaf-extras-java8time.version>
+        <thymeleaf-layout-dialect.version>2.2.2</thymeleaf-layout-dialect.version>
+	</properties>
+
+	<dependencies>
+	<!-- https://mvnrepository.com/artifact/org.codehaus.groovy/groovy-all -->
+<dependency>
+    <groupId>org.codehaus.groovy</groupId>
+    <artifactId>groovy-all</artifactId>
+    <version>2.4.13</version>
+</dependency>
+	
+		<dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-devtools</artifactId>
+        </dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-jpa</artifactId>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-thymeleaf -->
+		<dependency>
+		    <groupId>org.springframework.boot</groupId>
+		    <artifactId>spring-boot-starter-thymeleaf</artifactId>
+		</dependency>
+		<dependency>
+	        <groupId>org.thymeleaf.extras</groupId>
+	        <artifactId>thymeleaf-extras-springsecurity4</artifactId>
+    		</dependency>	
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-redis</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-jdbc</artifactId>
+        </dependency>
+        <dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-config</artifactId>
+		</dependency>
+
+        <!-- query dsl -->
+        <dependency>
+            <groupId>com.querydsl</groupId>
+            <artifactId>querydsl-apt</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.querydsl</groupId>
+            <artifactId>querydsl-codegen</artifactId>
+            <version>${querydsl.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.querydsl</groupId>
+            <artifactId>querydsl-jpa</artifactId>
+        </dependency>
+        <dependency>
+			<groupId>org.hsqldb</groupId>
+			<artifactId>hsqldb</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        
+    		<dependency>
+		    <groupId>io.netty</groupId>
+		    <artifactId>netty-all</artifactId>
+		    <version>4.1.14.Final</version>
+        </dependency>
+        
+            <!-- https://mvnrepository.com/artifact/mysql/mysql-connector-java -->
+		<dependency>
+		    <groupId>mysql</groupId>
+		    <artifactId>mysql-connector-java</artifactId>
+		    <version>5.1.38</version>
+		</dependency>
+		
+		<!-- https://mvnrepository.com/artifact/org.apache.phoenix/phoenix -->
+		<dependency>
+		    <groupId>org.apache.phoenix</groupId>
+		    <artifactId>phoenix</artifactId>
+		    <version>4.11.0-HBase-1.3</version>
+		    <type>pom</type>
+		</dependency>
+			<!-- https://mvnrepository.com/artifact/org.apache.hbase/hbase-client -->
+		<dependency>
+		    <groupId>org.apache.hbase</groupId>
+		    <artifactId>hbase-client</artifactId>
+		    <version>1.2.3</version>
+		</dependency>
+		
+		<!-- https://mvnrepository.com/artifact/org.igniterealtime.smack/smack -->
+		<dependency>
+		    <groupId>org.igniterealtime.smack</groupId>
+		    <artifactId>smack</artifactId>
+		    <version>3.2.1</version>
+		</dependency>
+	
+		<!-- https://mvnrepository.com/artifact/org.chasen.mecab/mecab-java -->
+		<dependency>
+		    <groupId>org.chasen.mecab</groupId>
+		    <artifactId>mecab-java</artifactId>
+		    <version>0.993</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.elasticsearch/elasticsearch -->
+		<dependency>
+		    <groupId>org.elasticsearch</groupId>
+		    <artifactId>elasticsearch</artifactId>
+		    <version>5.6.1</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.elasticsearch.client/transport -->
+		<dependency>
+		    <groupId>org.elasticsearch.client</groupId>
+		    <artifactId>transport</artifactId>
+		    <version>5.6.1</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-java -->
+		<dependency>
+		    <groupId>org.seleniumhq.selenium</groupId>
+		    <artifactId>selenium-java</artifactId>
+		    <version>3.5.3</version>
+		</dependency>
+
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+		</plugins>
+	</build>
+
+
+</project>
