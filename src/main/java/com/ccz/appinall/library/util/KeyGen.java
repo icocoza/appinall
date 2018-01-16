@@ -7,11 +7,11 @@ import java.util.UUID;
 
 public class KeyGen {
 	static public String makeKey(String prefix) {	//ex, test:fbc671c6-1a7b-481d-8034-1d7ae3c733c8 (5+36= 41char)
-		return String.format("%s_%s", prefix, UUID.randomUUID().toString().replaceAll("-", ""));
+		return String.format("%s%s", prefix, UUID.randomUUID().toString().replaceAll("-", ""));
 	}
 
 	static public String makeKey(String prefix, String footer) {		//ex, test:d6340c15-43f4-4551-8cf6-08a15dc3eebd:20181214095732
-		return String.format("%s_%s_%s", prefix, UUID.randomUUID().toString().replaceAll("-", ""), footer);
+		return String.format("%s%s%s", prefix, UUID.randomUUID().toString().replaceAll("-", ""), footer);
 	}
 	
 	static public String makeKey(String prefix, int seq) {	//ex, test:2cee287e-ef2e-4692-b6ad-910b0ab73984:0009

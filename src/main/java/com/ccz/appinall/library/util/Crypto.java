@@ -34,7 +34,7 @@ public class Crypto {
 				 c.init(Cipher.ENCRYPT_MODE, secureKey, new IvParameterSpec(IV.getBytes()));
 				 
 				 byte[] encrypted = c.doFinal(str.getBytes("UTF-8"));
-				 String enStr = Base64.getEncoder().encodeToString(encrypted);
+				 String enStr = Base62.encode(encrypted);
 				 
 				 return enStr;
 			 }catch(Exception e) {
@@ -48,11 +48,12 @@ public class Crypto {
 		 }
 		 public String dec(String key, String str) {
 			 try{
+				  byte[] byteStr = Base62.decode(str);
+				 
 				  byte[] keyData = key.getBytes();
 				  SecretKey secureKey = new SecretKeySpec(keyData, "AES");
 				  Cipher c = Cipher.getInstance("AES/CBC/PKCS5Padding");
 				  c.init(Cipher.DECRYPT_MODE, secureKey, new IvParameterSpec(IV.getBytes()));				  
-				  byte[] byteStr = Base64.getDecoder().decode(str);				 
 				  byte[] deStr = c.doFinal(byteStr);
 				  return new String(deStr,"UTF-8");
 			 }catch(Exception e) {

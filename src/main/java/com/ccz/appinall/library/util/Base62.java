@@ -19,6 +19,10 @@ public class Base62 {
 		return Base64.decodeBase64(base64.getBytes());
 	}
 	
+	public static String decodeString(String base62) {
+		return new String(decode(base62));
+	}
+	
 	/**
 	 * Takes a base64 encoded string and eliminates the '+' and '/'.
 	 * Also eliminates any CRs.

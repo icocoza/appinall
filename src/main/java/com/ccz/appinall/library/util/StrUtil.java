@@ -10,7 +10,19 @@ import java.util.UUID;
 import org.apache.commons.codec.digest.DigestUtils;
 
 public class StrUtil {
-	static public boolean isAlpha(String name) {
+	private static final String EMAIL_PATTERN =
+			"^[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*@"
+			+ "[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$";
+	private static final String PHONE_PATTERN = "^\\(?(\\d{3})\\)?[- ]?(\\d{3})[- ]?(\\d{4})$";
+	static public boolean isEmail(String email) {
+	    return email.matches(EMAIL_PATTERN);
+	}
+
+	static public boolean isPhone(String phone) {
+	    return phone.matches(EMAIL_PATTERN);
+	}
+
+	static public boolean isAlphaNumeric(String name) {
 	    return name.matches("^[a-zA-Z0-9]+$");
 	}
 	
@@ -18,6 +30,13 @@ public class StrUtil {
 		return prefix + UUID.randomUUID().toString();
 	}
 	
+	static public String getSha1(String data) {
+		return DigestUtils.sha1Hex(data);
+	}
+	static public String getSha256(String data) {
+		return DigestUtils.sha256Hex(data);
+	}
+
 	static int appendix_count=0;
 	static public String getSha1Uuid(String prefix) {
 		return getSha1Uuid(prefix, String.format("%04d", ++appendix_count%10000));

@@ -14,9 +14,9 @@ public class DbConnection {
 		return connection;
 	}
 	
-	public Connection getConn(boolean bAuto) {
+	public Connection getConn(boolean autoCommit) {
 		try {
-			connection.setAutoCommit(bAuto);
+			connection.setAutoCommit(autoCommit);
 		} catch (SQLException e) {
 		}
 		return connection;

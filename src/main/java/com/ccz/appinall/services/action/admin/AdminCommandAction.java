@@ -117,6 +117,8 @@ public class AdminCommandAction extends CommonAction {
 	 */
 	private ResponseData<EAdminError> doRegister(ResponseData<EAdminError> res, AdminRegister rec) {
 		//[TODO] check email, password syntax
+		if(StrUtil.isEmail(rec.getEmail())==false)
+			return res.setError(EAdminError.invalid_email_format);
 		if(DbAppManager.getInst().getAdminUser(rec.getEmail())!=RecAdminUser.Empty)
 			return res.setError(EAdminError.already_exist_email);
 		if(rec.passwd.length()<8)
@@ -153,7 +155,7 @@ public class AdminCommandAction extends CommonAction {
 	private ResponseData<EAdminError> addApp(ResponseData<EAdminError> res, AddApp rec) {
 		if( DbAppManager.getInst().hasSCode(rec.scode) == true )
 			return res.setError(EAdminError.already_exist_scode);
-		if(StrUtil.isAlpha(rec.scode)==false)
+		if(StrUtil.isAlphaNumeric(rec.scode)==false)
 			return res.setError(EAdminError.scode_allowed_only_alphabet);
 		
 		String appid = KeyGen.makeKeyWithSeq("appid");

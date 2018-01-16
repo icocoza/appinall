@@ -42,14 +42,6 @@ public class ResponseData<T> {
 		return cmd;
 	}
 	
-//	public T getError() {
-//		return error;
-//	}
-	
-//	public String getParam() {
-//		return param;
-//	}
-	
 	public ResponseData<T> setError(T error) {
 		this.error = error;
 		return this;

@@ -64,25 +64,3 @@ public class RecBoardUser extends DbRecord {
 	}
 
 }
-
-/*implements Serializable{
-	private static final long serialVersionUID = -6570228089235049100L;
-
-	@EmbeddedId
-	PKBoardUser id;
-	
-	@Column(length = 32, nullable = false)
-	private String username;
-	
-	@CreationTimestamp
-    @Temporal(TemporalType.TIMESTAMP)
-	private Date visittime;
-	
-	public RecBoardUser()	{	}
-	
-	public RecBoardUser(String boardid, String userid, String username, String preference) {
-		id = new PKBoardUser(boardid, userid, preference);
-		this.username = username;
-	}
-}
-*/

@@ -1,5 +1,6 @@
 package com.ccz.appinall.library.dbhelper;
 
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
 
@@ -91,6 +92,36 @@ public class DbHelper {
         }finally {
         	if(conn != null)
         		DbConnMgr.getInst().freeConnection(poolName, conn);
+        }
+    }
+    
+    /*insert, update, delete only*/
+    static public boolean multiQuery(String poolName, String[] sqls)
+    {
+    		Connection conn = null;
+    		DbConnection dbConn = null;
+        try
+        {
+	        	boolean bok = false;
+	        	dbConn = DbConnMgr.getInst().getConnection(poolName);
+	        conn = dbConn.getConn(false);
+	        	for(String sql : sqls) {
+	        		Statement stmt = conn.createStatement();
+	        		bok = (stmt.executeUpdate(sql)>0 ? true : false);
+	        		stmt.close();
+	        		if(bok==false)
+	        			return false;
+	        	}
+	        	conn.commit();
+	        	return true;
+        }
+        catch (Exception e)
+        {
+	        	System.out.println(e.getMessage());
+            return false;
+        }finally {
+	        	if(conn != null)
+	        		DbConnMgr.getInst().freeConnection(poolName, dbConn);
         }
     }
 

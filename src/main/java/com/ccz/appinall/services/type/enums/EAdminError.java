@@ -4,6 +4,7 @@ public enum EAdminError {
 	ok,
 	
 	/*for the register*/
+	invalid_email_format,
 	already_exist_email,
 	short_password_length_than_8,
 	register_failed,

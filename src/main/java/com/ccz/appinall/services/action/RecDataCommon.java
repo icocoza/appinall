@@ -1,15 +1,42 @@
 package com.ccz.appinall.services.action;
 
+import com.ccz.appinall.library.util.Crypto;
+import com.ccz.appinall.library.util.AsciiSplitter.ASS;
+import com.fasterxml.jackson.databind.JsonNode;
+
+import lombok.Getter;
+
 public class RecDataCommon {
-	public String scode;
-	public String rcode;
-	public String cmd;
+	@Getter
+	private String scode, rcode, cmd;
 	
-	public RecDataCommon() {}
+	private String apptoken;
 	
-	public RecDataCommon(String scode, String rcode, String cmd) {
-		this.scode = scode;
-		this.rcode = rcode;
-		this.cmd = cmd;
+	@Getter
+	private String tokenAppId, tokenScode;//by appToken
+	
+	public RecDataCommon(JsonNode jnode) {
+		scode = jnode.get("scode").asText();
+		rcode = jnode.get("rcode").asText();
+		cmd   = jnode.get("cmd").asText();
+		
+		if(jnode.has("apptoken")) {
+			apptoken = jnode.get("apptoken").asText();
+			decodeToken();
+		}
 	}
+	
+	private void decodeToken() {
+		String dec = Crypto.AES256Cipher.getInst().dec(apptoken);
+		String[] chunk = dec.split(ASS.CHUNK);
+		tokenAppId = chunk[0];
+		tokenScode = chunk[1];
+	}
+	
+	public boolean isValidAppToken() {
+		if(tokenAppId==null || tokenAppId.length()<1 || tokenScode == null || tokenScode.length()<1)
+			return false;
+		return true;
+	}
+
 }

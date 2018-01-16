@@ -3,18 +3,14 @@ package com.ccz.appinall.services.entity.db;
 import com.ccz.appinall.library.dbhelper.DbReader;
 import com.ccz.appinall.library.dbhelper.DbRecord;
 
-//@Entity
-//@Data
-//@Table( name="user",
-//	indexes = {	@Index(name = "idx_user_devuuid",  columnList="devuuid", unique = false)})
 public class RecUser extends DbRecord {
 	static final String TBL_NAME = "user";
 	
 	public String userid;
-	public String devuuid;
 	public String username, usertype;
 	public String ostype, osversion, appversion;
-	public String email, inappcode; //optional
+	public String inappcode; //optional
+	public Boolean enabledtoken;
 	public long   jointime, leavetime, lasttime;
 
 	public RecUser(String poolName) {
@@ -23,9 +19,9 @@ public class RecUser extends DbRecord {
 	}
 
 	public boolean createTable() {
-		String sql = String.format("CREATE TABLE IF NOT EXISTS %s (userid VARCHAR(64) NOT NULL PRIMARY KEY, devuuid VARCHAR(128) NOT NULL, "
-				+ "username VARCHAR(64) NOT NULL, usertype VARCHAR(4) DEFAULT 'u', ostype VARCHAR(16), osversion VARCHAR(8), appversion VARCHAR(8), email VARCHAR(64), "
-				+ "inappcode VARCHAR(8), jointime LONG, leavetime LONG, lasttime LONG, INDEX (devuuid)) ", RecUser.TBL_NAME);
+		String sql = String.format("CREATE TABLE IF NOT EXISTS %s (userid VARCHAR(64) NOT NULL PRIMARY KEY, "
+				+ "username VARCHAR(64) NOT NULL, usertype VARCHAR(4) DEFAULT 'u', ostype VARCHAR(16), osversion VARCHAR(8), appversion VARCHAR(8), "
+				+ "inappcode VARCHAR(8), jointime LONG, leavetime LONG, lasttime LONG) ", RecUser.TBL_NAME);
 		
 		return super.createTable(sql);
 	}
@@ -34,13 +30,11 @@ public class RecUser extends DbRecord {
 	protected DbRecord doLoad(DbReader rd, DbRecord r) {
 		RecUser rec = (RecUser)r;
 		rec.userid = rd.getString("userid");
-		rec.devuuid = rd.getString("devuuid");
 		rec.username = rd.getString("username");
 		rec.usertype = rd.getString("usertype");
 		rec.ostype = rd.getString("ostype");
 		rec.osversion = rd.getString("osversion");
 		rec.appversion = rd.getString("appversion");
-		rec.email = rd.getString("email");
 		rec.inappcode = rd.getString("inappcode");
 		rec.jointime = rd.getLong("jointime");
 		rec.leavetime = rd.getLong("leavetime");
@@ -58,22 +52,20 @@ public class RecUser extends DbRecord {
 		return doLoad(rd, new RecUser(super.poolName));
 	}
 	
-	public DbRecord insert(String userid, String devuuid, String username, String usertype, String ostype, String osversion, String appversion, String email) {
-		this.userid = userid;
-		this.devuuid = devuuid;
-		this.username = username;
-		this.usertype = usertype;
-		this.ostype = ostype;
-		this.osversion = osversion;
-		this.appversion = appversion;
-		this.email = email;
-		this.jointime = System.currentTimeMillis();
-		String sql = String.format("INSERT INTO %s (userid, devuuid, username, usertype, ostype, osversion, appversion, email, jointime, leavetime, lasttime) "
-								 + "VALUES('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', %d, 0, 0)", RecUser.TBL_NAME,
-								 userid, devuuid, username, usertype, ostype, osversion, appversion, email, this.jointime);
-		return super.insert(sql) ? this : DbRecord.Empty;
+	public DbRecord insert(String userid, String username, String usertype, String ostype, String osversion, String appversion) {
+		return super.insert(qInsert(userid, username, usertype, ostype, osversion, appversion)) ? this : DbRecord.Empty;
 	}
-	
+
+	static public String qInsert(String userid, String username, String usertype, String ostype, String osversion, String appversion) {
+		return String.format("INSERT INTO %s (userid, username, usertype, ostype, osversion, appversion, jointime, leavetime, lasttime) "
+								 + "VALUES('%s', '%s', '%s', '%s', '%s', '%s', %d, 0, 0)", RecUser.TBL_NAME,
+								 userid, username, usertype, ostype, osversion, appversion, System.currentTimeMillis());
+	}
+
+	static public String qUpdateUser(String userid, String ostype, String osversion, String appversion) {
+		return String.format("UPDATE %s SET ostype='%s', osversion='%s', appversion='%s' WHERE userid='%s'", RecUser.TBL_NAME, ostype, osversion, appversion, userid);
+	}
+
 	public boolean delete(String userid) {
 		String sql = String.format("DELETE FROM %s WHERE userid='%s'", RecUser.TBL_NAME, userid);
 		return super.delete(sql);
@@ -84,12 +76,7 @@ public class RecUser extends DbRecord {
 		return (RecUser) super.getOne(sql);
 	}
 
-	public RecUser getUserByUuid(String devuuid) {
-		String sql = String.format("SELECT * FROM %s WHERE devuuid='%s'", RecUser.TBL_NAME, devuuid);
-		return (RecUser) super.getOne(sql);
-	}
-
-	public boolean updateAptCode(String userid, String inappcode) {
+	public boolean updateAppCode(String userid, String inappcode) {
 		String sql = String.format("UPDATE %s SET inappcode='%s' WHERE userid='%s'", RecUser.TBL_NAME, inappcode, userid);
 		return super.update(sql);
 	}
@@ -108,70 +95,9 @@ public class RecUser extends DbRecord {
 		String sql = String.format("UPDATE %s SET username='%s' WHERE userid='%s'", RecUser.TBL_NAME, username, userid);
 		return super.update(sql);
 	}
-
-	public boolean updateEmail(String userid, String email) {
-		String sql = String.format("UPDATE %s SET email='%s' WHERE userid='%s'", RecUser.TBL_NAME, email, userid);
-		return super.update(sql);
-	}
 	
 	public boolean isSameApt(String inappcode) {
 		return this.inappcode!=null && inappcode.equals(inappcode);
 	}
 	
 }
-/* {
-	@Id
-	@Column(length = 64, nullable = false)
-	public String userid;
-	
-	@Column(length = 128, nullable = false)
-	public String devuuid;
-	
-	@Column(length = 32, nullable = false)
-	public String username;
-	
-	@Column(length = 4, nullable = false)
-	@ColumnDefault("u")
-	public String usertype;
-	
-	@Column(length = 16)
-	public String ostype;
-	
-	@Column(length = 8)
-	public String osversion;
-	
-	@Column(length = 8)
-	public String appversion;
-	
-	@Column(length = 64)
-	public String email;
-	
-	@Column(length = 8)
-	public String inappcode; //optional
-	
-	@CreationTimestamp
-	@Temporal(TemporalType.TIMESTAMP)
-	public Date jointime;
-	
-	@UpdateTimestamp
-	@Temporal(TemporalType.TIMESTAMP)
-	public Date leavetime;
-	
-	@UpdateTimestamp
-	@Temporal(TemporalType.TIMESTAMP)
-	public Date lasttime;
-	
-	public RecUser() {	}
-	
-	public RecUser(String userid, String devuuid, String username, String usertype, String ostype, String osversion, String appversion, String email) {
-		this.userid = userid;
-		this.devuuid = devuuid;
-		this.username = username;
-		this.usertype = usertype;
-		this.ostype = ostype;
-		this.osversion = osversion;
-		this.appversion = appversion;
-		this.email = email;
-	}
-}
-*/

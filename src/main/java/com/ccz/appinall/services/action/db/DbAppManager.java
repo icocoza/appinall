@@ -12,6 +12,7 @@ import com.ccz.appinall.services.type.enums.EAdminAppStatus;
 import com.ccz.appinall.services.type.enums.EAdminStatus;
 import com.ccz.appinall.services.type.enums.EFriendStatus;
 import com.ccz.appinall.services.type.enums.EMessageType;
+import com.ccz.appinall.services.type.enums.EUserAuthType;
 import com.ccz.appinall.services.type.enums.EUserRole;
 import com.ccz.appinall.services.entity.db.RecFriend.RecFriendInfo;
 import com.ccz.appinall.services.entity.db.RecChannel.RecChLastMsg;
@@ -147,6 +148,7 @@ public class DbAppManager {
 			new RecMessage(scode).createTable();
 			new RecRead(scode).createTable();
 			new RecUser(scode).createTable();
+			new RecUserAuth(scode).createTable();
 			new RecVote(scode).createTable();
 			new RecVoteInfo(scode).createTable();
 			new RecVoteUser(scode).createTable();
@@ -176,17 +178,105 @@ public class DbAppManager {
 	 * @param email
 	 * @return true if success
 	 */
-	public RecUser addUser(String scode, String userid, String uuid, String username, String usertype, String ostype, String osversion, String appversion, String email) {
-		return (RecUser) new RecUser(scode).insert(userid, uuid, username, usertype, ostype, osversion, appversion, email);
+	public RecUser addUser(String scode, String userid, String username, String usertype, String ostype, String osversion, String appversion) {
+		return (RecUser) new RecUser(scode).insert(userid, username, usertype, ostype, osversion, appversion);
 	}
-	public RecUser getUserByUuid(String scode, String uuid) {
-		return new RecUser(scode).getUserByUuid(uuid);
+
+	public RecUser getUser(String scode, String userid) {
+		return (RecUser) new RecUser(scode).getUser(userid);
 	}
-	public boolean updateAptCode(String scode, String userid, String aptcode) {
-		return new RecUser(scode).updateAptCode(userid, aptcode);
+	
+	public boolean updateAppCode(String scode, String userid, String appcode) {
+		return new RecUser(scode).updateAppCode(userid, appcode);
 	}
 	public boolean updateLasttime(String scode, String userid) {
 		return new RecUser(scode).updateLastVisit(userid);
+	}
+	
+	//for user token
+	public RecUserToken getUserToken(String scode, String tokenid) {
+		return new RecUserToken(scode).getToken(tokenid);
+	}
+
+	public RecUserToken getUserToken(String scode, String userid, String tokenid) {
+		return new RecUserToken(scode).getToken(userid, tokenid);
+	}
+	
+	public boolean addUserToken(String scode, String userid, String uuid, String tokenid, String token) {
+		return new RecUserToken(scode).insertToken(userid, uuid, tokenid, token);
+	}
+	
+	public boolean delUserToken(String scode, String userid) {
+		return new RecUserToken(scode).delete(userid);
+	}
+	
+	public boolean enableToken(String scode, String userid, String tokenid, boolean enabled) {
+		return new RecUserToken(scode).enableToken(userid, tokenid, enabled);
+	}
+	
+	//for user authentication
+	public RecUserAuth insertUID(String scode, String userid, String uid, String pw) {
+		return (RecUserAuth) new RecUserAuth(scode).insertUID(userid, uid, pw);
+	}
+	
+	public RecUserAuth insertEmail(String scode, String userid, String email, String pw) {
+		return (RecUserAuth) new RecUserAuth(scode).insertEmail(userid, email);
+	}
+
+	public RecUserAuth insertPhoneNo(String scode, String userid, String phoneno, String pw) {
+		return (RecUserAuth) new RecUserAuth(scode).insertPhoneNo(userid, phoneno);
+	}
+	
+	public RecUserAuth getUserAuth(String scode, String userid) {
+		return new RecUserAuth(scode).getUser(userid);
+	}
+
+	public RecUserAuth getUserAuthByUid(String scode, String uid) {
+		return new RecUserAuth(scode).getUserByUid(uid);
+	}
+
+	public RecUserAuth getUserAuthByEmail(String scode, String email) {
+		return new RecUserAuth(scode).getUserByEmail(email);
+	}
+
+	public RecUserAuth getUserAuthByPhone(String scode, String phoneno) {
+		return new RecUserAuth(scode).getUserByPhone(phoneno);
+	}
+
+	public EUserAuthType findUserAuth(String scode, String uid, String email, String phoneno) {
+		return new RecUserAuth(scode).findUserAuth(uid, email, phoneno);
+	}
+	
+	public boolean findUid(String scode, String uid) {
+		return new RecUserAuth(scode).findUid(uid);
+	}
+	
+	public boolean findEmail(String scode, String email) {
+		return new RecUserAuth(scode).findEmail(email);
+	}
+	
+	public boolean findPhoneno(String scode, String phoneno) {
+		return new RecUserAuth(scode).findPhoneno(phoneno);
+	}
+	
+	public boolean updatePw(String scode, String uid, String pw) {
+		return new RecUserAuth(scode).updatePw(uid, pw);
+	}
+
+	public boolean updateEmailCode(String scode, String email, String pw) {
+		return new RecUserAuth(scode).updateEmailCode(email, pw);
+	}
+	
+	public boolean updateSMSCode(String scode, String phoneno, String emailcode) {
+		return new RecUserAuth(scode).updateSMSCode(phoneno, emailcode);
+	}
+
+	public boolean updateUserQuit(String scode, String userid) {
+		return new RecUserAuth(scode).updateUserQuit(userid);
+	}
+	
+	public boolean deleteUserId(String scode, String userid) {
+		return new RecUserAuth(scode).deleteUserId(userid);
 	}
 	
 	//for user epid for fcm push

@@ -32,10 +32,6 @@ public class AuthSession extends SessionItem<RecUser> {
 		return super.item.userid;
 	}
 	
-	public String getUuid() {
-		return super.item.devuuid;
-	}
-	
 	public String getUsername() {
 		return super.item.username;
 	}
