@@ -42,22 +42,27 @@ public class ResourceLoader {
 	}
 	
 	public String getAllText() throws IOException {
-		return getAllText(configInputStream);
+		return getAllText(configInputStream, "UTF-8");
 	}
 
 	public String getAllText(String filepath) throws IOException {
 		InputStream is = loadConfig(filepath);
-		return getAllText(is);
+		return getAllText(is, "UTF-8");
 	}
 	
-	private String getAllText(InputStream inputStream) throws IOException {
+	public String getAllText(String filepath, String encoding) throws IOException {
+		InputStream is = loadConfig(filepath);
+		return getAllText(is, encoding);
+	}
+	
+	private String getAllText(InputStream inputStream, String encoding) throws IOException {
 		ByteArrayOutputStream result = new ByteArrayOutputStream();
 		byte[] buffer = new byte[1024];
 		int length;
 		while ((length = inputStream.read(buffer)) != -1) {
 		    result.write(buffer, 0, length);
 		}
-		return result.toString("UTF-8");
+		return result.toString(encoding);
 	}
 	
 }

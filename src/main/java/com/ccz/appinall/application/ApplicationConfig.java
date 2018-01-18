@@ -61,7 +61,13 @@ public class ApplicationConfig {
     
     @Value("${keystore.password}")
     	private String keystorePassword;
-    
+
+    @Value("${mongodb.url}")
+	private String mongoDbUrl;
+
+    @Value("${mongodb.port}")
+	private int mongoDbPort;
+
     @Bean(name = "webSocketPort")
     public InetSocketAddress wsPort() {
         return new InetSocketAddress(websocketPort);
@@ -71,7 +77,8 @@ public class ApplicationConfig {
     public String getWebSocketPath() {
     		return websocketPath;
     }
-    
+
+
     @Bean
     JedisConnectionFactory jedisConnectionFactory() {
     		return new JedisConnectionFactory();

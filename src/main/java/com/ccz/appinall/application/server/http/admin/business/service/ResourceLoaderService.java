@@ -17,4 +17,14 @@ public class ResourceLoaderService {
 		}
 		return "";
 	}
+	
+	public String loadText(String filepath, String encoding) {
+		try {
+			return ResourceLoader.getInst().getAllText(filepath, encoding);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return "";
+	}
+
 }
