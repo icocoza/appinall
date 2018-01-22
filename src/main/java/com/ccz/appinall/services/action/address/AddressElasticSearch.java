@@ -41,7 +41,11 @@ public class AddressElasticSearch {
 	public void insertAddress(ElasticSourcePair pair) {
 		ElasticTransportMgr.getInst().insert(indexDb, typeTable, pair.id, pair.json).forcedRefresh();
 	}
-	
+
+	public void updateAddress(ElasticSourcePair pair) throws InterruptedException, ExecutionException {
+		ElasticTransportMgr.getInst().update(indexDb, typeTable, pair.id, pair.json).forcedRefresh();
+	}
+
 
 	public SearchResponse searchAddress(String index, String type, String word) throws InterruptedException, ExecutionException {
 		return ElasticTransportMgr.getInst().multiMatchSearch(index, type, word, "sido", "sigu", "rname", "buildname", "hjdongname", "delivery", "liname", "eub");

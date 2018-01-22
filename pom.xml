@@ -26,7 +26,14 @@
         <thymeleaf-extras-java8time.version>3.0.2.RELEASE</thymeleaf-extras-java8time.version>
         <thymeleaf-layout-dialect.version>2.2.2</thymeleaf-layout-dialect.version>
 	</properties>
-
+	<repositories>
+	  <repository>
+	    <id>geotoolkit</id>
+	    <name>Geotoolkit.org project</name>
+	    <url>http://maven.geotoolkit.org</url>
+	  </repository>
+	</repositories>
+	
 	<dependencies>
 		<!-- https://mvnrepository.com/artifact/org.codehaus.groovy/groovy-all -->
 		<dependency>
@@ -182,6 +189,13 @@
 		    <artifactId>log4j-core</artifactId>
 		    <version>2.9.1</version>
 		</dependency>
+		
+		<dependency>
+		    <groupId>org.opengis.wrapper</groupId>
+		    <artifactId>geoapi-proj4</artifactId>
+		    <version>4.0-M02</version>
+		</dependency>
+				
 	</dependencies>
 
 	<build>

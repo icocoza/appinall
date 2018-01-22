@@ -54,7 +54,8 @@ public class AddressMongoDb {
 				return;
 		
 		this.getCollection().createIndex(Indexes.compoundIndex(Indexes.text("zip"), Indexes.text("sido"), Indexes.text("sigu"), Indexes.text("eub")
-				, Indexes.text("rname"), Indexes.text("delivery"), Indexes.text("dongname"), Indexes.text("liname"), Indexes.text("hjdongname")), new IndexOptions().name("SearchIndex"));
+				, Indexes.text("rname"), Indexes.text("delivery"), Indexes.text("buildname"), Indexes.text("dongname"), Indexes.text("liname"), 
+				Indexes.text("hjdongname"), Indexes.text("buildno"), Indexes.text("buildsubno"), Indexes.text("jino"), Indexes.text("jisubno")) , new IndexOptions().name("SearchIndex"));
 	}
 	
 	private MongoCollection<Document> getCollection() {

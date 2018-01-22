@@ -126,12 +126,12 @@ public class ElasticTransportMgr {
 		return transportClient.prepareIndex(index, type, id).setSource(json, XContentType.JSON).get();
 	}
 	
-	public UpdateResponse update(Map<String, Object> json, String index, String type, String id) throws InterruptedException, ExecutionException {
-		UpdateRequest update = new UpdateRequest().index(index).type(type).id(id).doc(json);
+	public UpdateResponse update(String index, String type, String id, String json) throws InterruptedException, ExecutionException {
+		UpdateRequest update = new UpdateRequest().index(index).type(type).id(id).doc(json, XContentType.JSON);
 		return transportClient.update(update).get();
 	}
 	
-	public UpdateResponse upsert(Map<String, Object> old, Map<String, Object> newone, String index, String type, String id) throws InterruptedException, ExecutionException {
+	public UpdateResponse upsert(String index, String type, String id, Map<String, Object> old, Map<String, Object> newone) throws InterruptedException, ExecutionException {
 		IndexRequest indexRequest = new IndexRequest(index, type, id).source(newone);
 		UpdateRequest update = new UpdateRequest().index(index).type(type).id(id).doc(old).upsert(indexRequest);
 		return transportClient.update(update).get();
@@ -151,6 +151,10 @@ public class ElasticTransportMgr {
 	public SearchResponse multiMatchSearch(String index, String type, String word, String... fieldNames) throws InterruptedException, ExecutionException {
 		MultiMatchQueryBuilder builder = QueryBuilders.multiMatchQuery(word, fieldNames).type(MatchQuery.Type.PHRASE_PREFIX);
 		return transportClient.prepareSearch(index).setTypes(type).setQuery(builder).execute().get();
+	}
+	
+	public SearchRequestBuilder getAll(String index, String type) {
+		return transportClient.prepareSearch(index).setTypes(type).setQuery(QueryBuilders.matchAllQuery());
 	}
 
 }
