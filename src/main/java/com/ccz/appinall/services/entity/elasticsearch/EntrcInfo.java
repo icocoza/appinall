@@ -13,7 +13,7 @@ public class EntrcInfo {
 	@Getter
 	private double lac, lon;
 	
-	public String sicode, entrance, rname, buildname;
+	public String sicode, entrance, roadname, buildname;
 	
 	public EntrcInfo() {}
 	

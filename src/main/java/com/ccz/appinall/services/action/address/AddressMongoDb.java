@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import org.bson.Document;
 
 import com.mongodb.MongoClient;
+import com.mongodb.client.FindIterable;
 import com.mongodb.client.ListIndexesIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
@@ -44,7 +45,7 @@ public class AddressMongoDb {
 	
 	public void createUpsertIndex() {
 		IndexOptions indexOptions = new IndexOptions().unique(true);//.defaultLanguage("kr");
-		this.getCollection().createIndex(Indexes.ascending("buildmgr"), indexOptions);
+		this.getCollection().createIndex(Indexes.ascending("buildid"), indexOptions);
 	}
 	
 	public void createSearchIndex() {
@@ -54,7 +55,7 @@ public class AddressMongoDb {
 				return;
 		
 		this.getCollection().createIndex(Indexes.compoundIndex(Indexes.text("zip"), Indexes.text("sido"), Indexes.text("sigu"), Indexes.text("eub")
-				, Indexes.text("rname"), Indexes.text("delivery"), Indexes.text("buildname"), Indexes.text("dongname"), Indexes.text("liname"), 
+				, Indexes.text("roadname"), Indexes.text("delivery"), Indexes.text("buildname"), Indexes.text("dongname"), Indexes.text("liname"), 
 				Indexes.text("hjdongname"), Indexes.text("buildno"), Indexes.text("buildsubno"), Indexes.text("jino"), Indexes.text("jisubno")) , new IndexOptions().name("SearchIndex"));
 	}
 	
@@ -81,7 +82,7 @@ public class AddressMongoDb {
 
 	public void upsertMany(List<Document> docs) {
 		UpdateOptions updateOptions = new UpdateOptions().upsert(true);
-		List<UpdateOneModel<Document>> bulkList = docs.stream().map(item -> new UpdateOneModel<Document>(new Document("buildmgr", item.get("buildmgr")), item, updateOptions)).collect(Collectors.toList());
+		List<UpdateOneModel<Document>> bulkList = docs.stream().map(item -> new UpdateOneModel<Document>(new Document("buildid", item.get("buildid")), item, updateOptions)).collect(Collectors.toList());
 		this.getCollection().bulkWrite(bulkList, new BulkWriteOptions().ordered(false));
 	}
 	
@@ -102,6 +103,15 @@ public class AddressMongoDb {
 
 	public void searchAddr(String words) {
 		//this.getCollection(collectionName).bulkWrite(requests)
+	}
+	
+	public List<Document> findAddr(AddressInference ai) {
+		List<Document> findList = new ArrayList<>();
+		FindIterable<Document> find = this.getCollection().find(ai.getMongoDbFindDoc(ai.hasAddress()));
+		for(Document doc : find) {
+			findList.add(doc);
+		}
+		return findList;
 	}
 	
 	

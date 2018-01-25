@@ -168,6 +168,11 @@
 		    <artifactId>transport</artifactId>
 		    <version>6.1.1</version>
 		</dependency>
+		<dependency>
+		    <groupId>org.elasticsearch.client</groupId>
+		    <artifactId>elasticsearch-rest-client</artifactId>
+		    <version>6.1.1</version>
+		</dependency>
 		<!-- https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-java -->
 		<dependency>
 		    <groupId>org.seleniumhq.selenium</groupId>
@@ -195,7 +200,7 @@
 		    <artifactId>geoapi-proj4</artifactId>
 		    <version>4.0-M02</version>
 		</dependency>
-				
+
 	</dependencies>
 
 	<build>

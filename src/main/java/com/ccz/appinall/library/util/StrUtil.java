@@ -4,7 +4,9 @@ import java.io.File;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
+import java.util.Arrays;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.UUID;
 
 import org.apache.commons.codec.digest.DigestUtils;
@@ -24,6 +26,19 @@ public class StrUtil {
 
 	static public boolean isAlphaNumeric(String name) {
 	    return name.matches("^[a-zA-Z0-9]+$");
+	}
+
+	static String ALPHA_NUMERIC_PATTERN = "((?<=[a-zA-Z])(?=[0-9]))|((?<=[0-9])(?=[a-zA-Z]))";
+	static public List<String> splitAlphaNumeric(String str) {
+		return Arrays.asList(str.split(ALPHA_NUMERIC_PATTERN));
+	}
+	static String KOREAN_NUMERIC_PATTERN = "((?<=[ㄱ-ㅎ가-힣])(?=[0-9]))|((?<=[0-9])(?=[ㄱ-ㅎ가-힣]))";
+	static public List<String> splitKoreanNumeric(String str) {
+		return Arrays.asList(str.split(KOREAN_NUMERIC_PATTERN));
+	}
+	static String NUMERIC_DASH_PATTERN = "[0-9][0-9-]*[0-9]";
+	static public boolean isNumericDash(String str) {
+		return str.matches(NUMERIC_DASH_PATTERN);
 	}
 	
 	static public String getUuid(String prefix) {

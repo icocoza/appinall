@@ -46,10 +46,16 @@ public class AddressGRS80Info {
 	Map<String, EntrcInfo> entMap = new ConcurrentHashMap<>();
 	@Test
 	public void loadGRS80Address() throws InterruptedException, ExecutionException, IOException {
+		String settings = resourceLoaderService.loadText("/static/addrsetting.cfg");	//셋팅은 index 생성과 함께 만들어져야 한다.
+		String mappings = resourceLoaderService.loadText("/static/addrkormapping.cfg");
+
 		AddressElasticSearch addressElasticSearch = new AddressElasticSearch();
 		addressElasticSearch.init(servicesConfig.getElasticClusterName(), servicesConfig.getElasticClusterNode(), 
 				servicesConfig.getElasticUrl(), servicesConfig.getElasticPort(), 
-				servicesConfig.getElasticIndex(), servicesConfig.getElasticType(), null);
+				servicesConfig.getElasticIndex(), servicesConfig.getElasticType(), settings);
+		
+		addressElasticSearch.setMappings(mappings);
+
 		
 			System.out.println("start reading the address db");
 			InputStream is = getClass().getResourceAsStream("/static/entrc_seoul.txt");
@@ -94,31 +100,50 @@ public class AddressGRS80Info {
 			BufferedReader reader2  = new BufferedReader(new InputStreamReader(is2, "EUC-KR"));
 			List<ElasticSourcePair> pairs = new ArrayList<>();
 			task = () -> {
+				List<ElasticSourcePair> bulkList = new ArrayList<>();
 				String line = reader2.readLine();
 				int count = 0;
 				while ( (line = reader2.readLine())!=null) {
-				  String[] sp = line.split("\\|", -1);
-				  Document doc = CommonAddressUtils.makeDocument(sp);
-				  if(entMap.containsKey((String)doc.get("id"))) {
-					  EntrcInfo ent = entMap.get((String)doc.get("id"));
-					  doc.put("x", ent.x);
-					  doc.put("y", ent.y);
-					  doc.put("lac", ent.getLac());
-					  doc.put("lon", ent.getLon());
-					  doc.put("lactitude", ent.getLactitude());
-					  doc.put("longitude", ent.getLongitude());
+					String[] sp = line.split("\\|", -1);
+					Document doc = CommonAddressUtils.makeDocument(sp);
+					if(entMap.containsKey((String)doc.get("id"))) {
+						EntrcInfo ent = entMap.get((String)doc.get("id"));
+						doc.put("x", ent.x);
+						doc.put("y", ent.y);
+						doc.put("lac", ent.getLac());
+						doc.put("lon", ent.getLon());
+						doc.put("lactitude", ent.getLactitude());
+						doc.put("longitude", ent.getLongitude());
 
-					  doc.remove("id");
-					  try {
-					  addressElasticSearch.updateAddress(new ElasticSourcePair((String)doc.get("buildmgr"), doc.toJson()));
-					  }catch(Exception e) {
-						  e.printStackTrace();
-						  return false;
+						doc.remove("id");
+/*					  bulkList.add(new ElasticSourcePair((String)doc.get("buildid"), doc.toJson()));
+					  if(bulkList.size()>=128) {
+						  if(addressElasticSearch.bulkInsert(bulkList)==false) {
+							  System.out.println("Insert Failed");
+							  return false;
+						  }
+						  bulkList.clear();
+						  System.out.println("@");
 					  }
-				  }else
-					  System.out.println("mismatch cnt: "+(++count));
+*/
+						addressElasticSearch.insertAddress(new ElasticSourcePair((String)doc.get("buildid"), doc.toJson()));
+						//System.out.printf(".");
+						if(++count>128) {
+							System.out.println("@");
+							count=0;
+						}
+					}else
+						System.out.printf("mismatched");
+					System.out.printf(".");
 				}
-				return true;
+/*				  	if(bulkList.size() > 0) {
+				  		if(addressElasticSearch.bulkInsert(bulkList)==false)
+				  			System.out.println("*****Failed to insert");
+				  		bulkList.clear();
+				  		System.out.println("@");
+				  	}
+*/
+			  	return true;
 			};
 			
 			executor = Executors.newFixedThreadPool(1);

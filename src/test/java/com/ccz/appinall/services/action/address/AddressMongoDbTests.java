@@ -31,8 +31,18 @@ public class AddressMongoDbTests {
 	final String collectionName = "korea";
 	
 	
-	public void copyElasticSearchToMongoDb() {
+	public void findAddress() {
+		AddressMongoDb mongo = new AddressMongoDb("localhost", 27017, "address", collectionName);
+		AddressInference ai = new AddressInference("고덕로131");
+		List<Document> list = mongo.findAddr(ai);
+		list.forEach(item -> System.out.println(item.toJson()));
+		ai = new AddressInference("상인동 1149");
+		list = mongo.findAddr(ai);
+		list.forEach(item -> System.out.println(item.toJson()));
 		
+		ai = new AddressInference("화원읍 구라리 1557");
+		list = mongo.findAddr(ai);
+		list.forEach(item -> System.out.println(item.toJson()));
 	}
 	
 	@Test

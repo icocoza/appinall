@@ -1,11 +1,15 @@
 package com.ccz.appinall.library.module.elasticsearch;
 
+import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
+import org.apache.lucene.queryparser.classic.QueryParser;
+import org.apache.lucene.queryparser.flexible.standard.QueryParserUtil;
+import org.apache.lucene.search.Query;
 import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsResponse;
 import org.elasticsearch.action.admin.indices.settings.get.GetSettingsResponse;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
@@ -17,6 +21,7 @@ import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.Requests;
@@ -24,12 +29,17 @@ import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.cluster.metadata.IndexMetaData;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.TransportAddress;
+import org.elasticsearch.common.unit.Fuzziness;
+import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.MultiMatchQueryBuilder;
+import org.elasticsearch.index.query.Operator;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.QueryStringQueryBuilder;
 import org.elasticsearch.index.search.MatchQuery;
 import org.elasticsearch.index.search.MultiMatchQuery;
 import org.elasticsearch.index.search.MultiMatchQuery.QueryBuilder;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
 
 import com.ccz.appinall.services.entity.elasticsearch.ElasticSourcePair;
@@ -113,11 +123,12 @@ public class ElasticTransportMgr {
 		BulkRequestBuilder bulkRequestBuilder = transportClient.prepareBulk();
 		for(ElasticSourcePair pair : pairs) {
 			IndexRequestBuilder indexRequestBuilder = transportClient.prepareIndex(index, type, pair.id);
-            indexRequestBuilder.setSource(pair.json, XContentType.JSON).setRefreshPolicy("true");
+            indexRequestBuilder.setSource(pair.json, XContentType.JSON);
             bulkRequestBuilder.add(indexRequestBuilder);
 		}
-		 BulkResponse bulkResponse = bulkRequestBuilder.get();
-	     return bulkResponse.hasFailures();
+		BulkResponse bulkResponse = bulkRequestBuilder.get();
+		System.out.println(bulkResponse.buildFailureMessage());
+		return bulkResponse.hasFailures();
 	}
 	
 	public IndexResponse insert(String index, String type, String id, String json) {
@@ -140,8 +151,10 @@ public class ElasticTransportMgr {
 	public GetResponse get(String index, String type, String id) {
 		return transportClient.prepareGet(index, type, id).get();
 	}
-	public SearchResponse matchSearch(String index, String type, String field, String word) throws InterruptedException, ExecutionException {
-		return transportClient.prepareSearch(index).setTypes(type).setQuery(QueryBuilders.matchQuery(field, word)).execute().get();
+	
+	public SearchResponse querySearch(String index, String type, String query) throws InterruptedException, ExecutionException, UnsupportedEncodingException {
+		String s = QueryParser.escape(query);
+		return transportClient.prepareSearch(index).setTypes(type).setQuery(QueryBuilders.queryStringQuery(s)).setTimeout(TimeValue.timeValueSeconds(3)).execute().actionGet();
 	}
 	
 	public DeleteResponse remove(String index, String type, String id) {

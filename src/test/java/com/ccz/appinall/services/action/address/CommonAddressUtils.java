@@ -49,21 +49,21 @@ public class CommonAddressUtils {
 		doc.put("sigu", sp[3]);	//시군구
 		doc.put("eub", sp[5]);	//읍면 
 		doc.put("rcode", sp[7]); //도로명코드 
-		doc.put("rname", sp[8]);	//도로명 
-		doc.put("buildmgr", sp[13]);	//건물관리번호 
+		doc.put("roadname", sp[8]);	//도로명 
+		doc.put("buildid", sp[13]);	//건물관리번호 
 		doc.put("delivery", sp[14]);	//다량배달처명 
 		doc.put("buildname", sp[15]);	//시군구용건물명 
 		doc.put("dongname", sp[17]);	//법정동명 
 		doc.put("liname", sp[18]);	//리명 
 		doc.put("hjdongname", sp[19]);	//행정동명 
-		doc.put("buildno", sp[11]);	//건물번호본번 
-		doc.put("buildsubno", sp[12]);	//건물번호부번 
+		doc.put("buildno", Integer.parseInt(sp[11]));	//건물번호본번 
+		doc.put("buildsubno", Integer.parseInt(sp[12]));	//건물번호부번 
 		doc.put("dongcode", sp[16]);	//법정동코드 
-		doc.put("jino", sp[21]);	//지번본번 
-		doc.put("eubseq", sp[22]);	//읍면동일련번호 
-		doc.put("jisubno", sp[23]);	//지번부번 
-		doc.put("base", sp[10]); //지하유무 
-		doc.put("mnt", sp[20]);	//산유무 
+		doc.put("jino", Integer.parseInt(sp[21]));	//지번본번 
+		doc.put("eubseq", Integer.parseInt(sp[22]));	//읍면동일련번호 
+		doc.put("jisubno", Integer.parseInt(sp[23]));	//지번부번 
+		doc.put("base", Integer.parseInt(sp[10])); //지하유무 
+		doc.put("mnt", Integer.parseInt(sp[20]));	//산유무 
 		doc.put("id", sp[16] + sp[7] +"-"+ sp[11] +"-"+ sp[12] +"-"+ sp[10]);
 		return doc;
 	}
@@ -80,7 +80,7 @@ public class CommonAddressUtils {
 		ent.y = sp[17].length()>0?Double.parseDouble(sp[17]) : 0L;
 		ent.sicode = sp[0];
 		ent.entrance = sp[1];
-		ent.rname = sp[7];
+		ent.roadname = sp[7];
 		ent.buildname = sp[11];
 		ent.makeId();
 		//System.out.println(ent.getId()+ "," +ent.sicode + "," + ent.entrance + "," + ent.rname );

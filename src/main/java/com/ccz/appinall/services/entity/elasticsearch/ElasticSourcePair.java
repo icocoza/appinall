@@ -14,7 +14,7 @@ public class ElasticSourcePair {
 	}
 	
 	public ElasticSourcePair(Document doc) {
-		this.id = (String)doc.get("buildmgr");
+		this.id = (String)doc.get("buildid");
 		this.json = doc.toJson();
 	}
 }
@@ -26,10 +26,10 @@ public class ElasticSourcePair {
 		doc.put("sido", sp[1]);	//시
 		doc.put("sigu", sp[3]);	//시군구
 		doc.put("eub", sp[5]);	//읍면 
-		doc.put("rname", sp[8]);	//도로명 
+		doc.put("roadname", sp[8]);	//도로명 
 		doc.put("buildno", sp[11]);	//건물번호본번 
 		doc.put("buildsubno", sp[12]);	//건물번호부번 
-		doc.put("buildmgr", sp[13]);	//건물관리번호 
+		doc.put("buildid", sp[13]);	//건물관리번호 
 		doc.put("delivery", sp[14]);	//다량배달처명 
 		doc.put("buildname", sp[15]);	//시군구용건물명 
 		doc.put("dongname", sp[17]);	//법정동명 

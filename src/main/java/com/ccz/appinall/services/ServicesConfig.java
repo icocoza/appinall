@@ -34,4 +34,6 @@ public class ServicesConfig {
 	@Value("${elastic.type_table}")
     private String elasticType;
 	
+	@Value("${elastic.client.transport.sniff}")
+	private boolean elasticSniff;
 }
