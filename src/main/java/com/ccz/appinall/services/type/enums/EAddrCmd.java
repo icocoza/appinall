@@ -5,8 +5,12 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public enum EAddrCmd {
 	none("none"), search("search"), orderrequest("orderrequest"), orderlist("orderlist"), orderdetail("orderdetail"),
-	deliverselect("deliverselect"), ordersearch("ordersearch"), orderselect("orderselect"),
-	watchorder("watchorder"), ordercancel("ordercancel"), ordercomplete("ordercomplete"), deliverplan("deliverplan"); 
+	orderselectdeliver("orderselectdeliver"), ordercanceldeliver("ordercanceldeliver"), deliversearchorder("deliversearchorder"), 
+	deliverselectorder("deliverselectorder"),
+	delivercheckinorder("delivercheckinorder"), delivermoving("delivermoving"), delivergotcha("delivergotcha"),
+	deliverdelivering("deliverdelivering"), deliverdeliverycomplete("deliverdeliverycomplete"),
+	senderdeliveryconfirm("senderdeliveryconfirm"),
+	watchorder("watchorder"), ordercancel("ordercancel"), deliverplan("deliverplan"); 
 	
 	public final String value;
 	

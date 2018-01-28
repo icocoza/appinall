@@ -1,9 +1,9 @@
 package com.ccz.appinall.application.server;
 
 import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -11,6 +11,9 @@ import org.springframework.stereotype.Component;
 import com.ccz.appinall.application.ApplicationConfig;
 import com.ccz.appinall.application.server.websocket.AppInAllServiceAction;
 import com.ccz.appinall.application.server.websocket.AppInAllWebsocketInitializer;
+import com.ccz.appinall.services.ServicesConfig;
+import com.ccz.appinall.services.action.address.AddressElasticSearch;
+import com.ccz.appinall.services.action.address.AddressMongoDb;
 import com.ccz.appinall.services.action.db.DbAppManager;
 
 import io.netty.bootstrap.ServerBootstrap;
@@ -26,6 +29,8 @@ public class AppInAllWebsocketServer {
 	@Autowired
 	ApplicationConfig applicationConfig;
 	@Autowired
+	ServicesConfig servicesConfig;
+	@Autowired
 	AppInAllWebsocketInitializer appInAllWebsocketInitializer;
 	
 	private ServerBootstrap bootstrap;
@@ -33,8 +38,11 @@ public class AppInAllWebsocketServer {
 	private EventLoopGroup workerGroup;
     private ChannelFuture channelFuture;
     
-	public void start() throws InterruptedException {
+	public void start() throws InterruptedException, UnknownHostException {
 		initDatabase();
+		initElasticSearch();
+		initMongoDb();
+		
 		bootstrap = new ServerBootstrap();
 		bossGroup = new NioEventLoopGroup();
 	    workerGroup = new NioEventLoopGroup();
@@ -75,5 +83,16 @@ public class AppInAllWebsocketServer {
         DbAppManager.getInst().createAdminDatabase(applicationConfig.getAdminMysqlUrl(), applicationConfig.getAdminMysqlDbName(), applicationConfig.getAdminMysqlUser(), applicationConfig.getAdminMysqlPw());
         DbAppManager.getInst().initAdmin(applicationConfig.getAdminMysqlPoolname(), applicationConfig.getAdminMysqlUrl(), applicationConfig.getAdminMysqlDbName(), applicationConfig.getAdminMysqlUser(), applicationConfig.getAdminMysqlPw(), 4, 8);
         DbAppManager.getInst().initAdminApp();
+	}
+	
+	public void initElasticSearch() throws UnknownHostException {
+		AddressElasticSearch.getInst().init(servicesConfig.getElasticClusterName(), servicesConfig.getElasticClusterNode(), 
+				servicesConfig.getElasticUrl(), servicesConfig.getElasticPort(), 
+				servicesConfig.getElasticIndex(), servicesConfig.getElasticType(), null);
+	}
+	
+	public void initMongoDb() {
+		AddressMongoDb.getInst().init(applicationConfig.getMongoDbUrl(), applicationConfig.getMongoDbPort(), 
+									 applicationConfig.getAddressMongoDatabase(), applicationConfig.getAddressMongocollection());
 	}
 }

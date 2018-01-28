@@ -1,6 +1,8 @@
 package com.ccz.appinall;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -11,6 +13,9 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import com.ccz.appinall.library.util.CoordPoint;
 import com.ccz.appinall.library.util.TransCoord;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -18,7 +23,14 @@ public class AppinallApplicationTests {
 
 	@Test
 	public void contextLoads() {
-
+		ObjectMapper mapper = new ObjectMapper();
+		List<String> e = new ArrayList<String>();
+		e.add("abcd");
+		e.add("efgh");
+		ArrayNode array = mapper.valueToTree(e);
+		for(JsonNode node : array) {
+			System.out.println(node.asText());
+		}
 		//Bessel정규화(36000 곱한 정수형)  to WGS84
 		//double mCoordX = (double)4572443/36000;
 		//double mCoordY = (double)1353791/36000;

@@ -32,16 +32,16 @@ public class AddressMongoDbTests {
 	
 	
 	public void findAddress() {
-		AddressMongoDb mongo = new AddressMongoDb("localhost", 27017, "address", collectionName);
+		AddressMongoDb.getInst().init("localhost", 27017, "address", collectionName);
 		AddressInference ai = new AddressInference("고덕로131");
-		List<Document> list = mongo.findAddr(ai);
+		List<Document> list = AddressMongoDb.getInst().findAddr(ai);
 		list.forEach(item -> System.out.println(item.toJson()));
 		ai = new AddressInference("상인동 1149");
-		list = mongo.findAddr(ai);
+		list = AddressMongoDb.getInst().findAddr(ai);
 		list.forEach(item -> System.out.println(item.toJson()));
 		
 		ai = new AddressInference("화원읍 구라리 1557");
-		list = mongo.findAddr(ai);
+		list = AddressMongoDb.getInst().findAddr(ai);
 		list.forEach(item -> System.out.println(item.toJson()));
 	}
 	
@@ -94,9 +94,9 @@ public class AddressMongoDbTests {
 		System.out.println("finsih converting");
 		System.out.println("start saving to MongoDb");
 		{
-			AddressMongoDb mongo = new AddressMongoDb("localhost", 27017, "address", collectionName);
-			mongo.createUpsertIndex();
-			mongo.createSearchIndex();
+			AddressMongoDb.getInst().init("localhost", 27017, "address", collectionName);
+			AddressMongoDb.getInst().createUpsertIndex();
+			AddressMongoDb.getInst().createSearchIndex();
 			
 			List<Document> docList = new ArrayList<>();
 			InputStream is = getClass().getResourceAsStream("/static/seoul.txt");
@@ -120,13 +120,13 @@ public class AddressMongoDbTests {
 				  }
 				  docList.add(doc);
 				  if(docList.size() >= MAX_DOC_SIZE) {
-					  mongo.bulkInsert(docList);
+					  AddressMongoDb.getInst().bulkInsert(docList);
 					  docList.clear();
 				  }
 				  System.out.println(++count + "");
 				}
 				if(docList.size()>0)
-					mongo.bulkInsert(docList);
+					AddressMongoDb.getInst().bulkInsert(docList);
 				return true;
 			};
 			

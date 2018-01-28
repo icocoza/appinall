@@ -4,9 +4,12 @@ import java.util.LinkedList;
 import java.util.List;
 
 import com.ccz.appinall.library.type.enums.EDbTypes;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public abstract class DbRecord {
+	@JsonIgnore
 	public String poolName, serviceCode;
+	@JsonIgnore
 	public static final DbRecord Empty = null;
 
 	abstract public boolean createTable();
@@ -41,6 +44,17 @@ public abstract class DbRecord {
     protected List<DbRecord> getList(String sql)
     {
         DbReader rd = DbHelper.select(poolName, sql);
+        return getList(rd);
+    }
+    
+    protected List<DbRecord> getList(String sql, String ids[])
+    {
+        DbReader rd = DbHelper.preparedSelect(poolName, sql, ids);
+        return getList(rd);
+    }
+
+    private List<DbRecord> getList(DbReader rd)
+    {
         List<DbRecord> records = new LinkedList<DbRecord>();
         try
         {

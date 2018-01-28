@@ -4,13 +4,20 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.ccz.appinall.library.dbhelper.DbConnMgr;
 import com.ccz.appinall.library.dbhelper.DbRecord;
 import com.ccz.appinall.services.entity.db.*;
 import com.ccz.appinall.services.type.enums.EAdminAppStatus;
 import com.ccz.appinall.services.type.enums.EAdminStatus;
+import com.ccz.appinall.services.type.enums.EDeliverType;
+import com.ccz.appinall.services.type.enums.EDeliveryStatus;
+import com.ccz.appinall.services.type.enums.EDeliveryType;
 import com.ccz.appinall.services.type.enums.EFriendStatus;
+import com.ccz.appinall.services.type.enums.EGoodsSize;
+import com.ccz.appinall.services.type.enums.EGoodsType;
+import com.ccz.appinall.services.type.enums.EGoodsWeight;
 import com.ccz.appinall.services.type.enums.EMessageType;
 import com.ccz.appinall.services.type.enums.EUserAuthType;
 import com.ccz.appinall.services.type.enums.EUserRole;
@@ -157,6 +164,7 @@ public class DbAppManager {
 			new RecEpid(scode).createTable();
 			new RecImage(scode).createTable();
 			new RecWebScrab(scode).createTable();
+			new RecDeliveryOrder(scode).createTable();
 		} catch (SQLException e) {
 			return false;
 		}
@@ -578,5 +586,70 @@ public class DbAppManager {
 	
 	public boolean incAccessUrl(String scode, String imgid) {
 		return new RecWebScrab(scode).inc(imgid);
+	}
+	
+	//for delivery order
+	public boolean addOrder(String scode, String orderid, String userid, String from, String to, String name, String notice,
+			EGoodsSize size, EGoodsWeight weight, EGoodsType type, int price, long begintime, long endtime, String photourl) {
+		return new RecDeliveryOrder(scode).insert(orderid, userid, from, to, name, notice, size, weight, type, price, begintime, endtime, photourl);
+	}
+	public DbRecord getOrder(String scode, String orderid) {
+		return new RecDeliveryOrder(scode).getOrder(orderid);
+	}
+	public boolean updateOrder(String scode, String orderid, String from, String to, String name, String notice,
+			EGoodsSize size, EGoodsWeight weight, EGoodsType type, int price, long begintime, long endtime, String photourl ) {
+		return new RecDeliveryOrder(scode).update(orderid, from, to, name, notice, size, weight, type, price, begintime, endtime, photourl);
+	}
+	public List<RecDeliveryOrder> getOrderList(String scode, String userid, int offset, int count) {
+		return new RecDeliveryOrder(scode).getListOrder(userid, offset, count);
+	}
+	public List<RecDeliveryOrder> getOrderBeginList(String scode, String userid, int offset, int count) {
+		return new RecDeliveryOrder(scode).getListBegin(userid, offset, count);
+	}
+	public List<RecDeliveryOrder> getOrderEndList(String scode, String userid, int offset, int count) {
+		return new RecDeliveryOrder(scode).getListEnd(userid, offset, count);
+	}
+
+	public List<RecDeliveryOrder> getOrderListByIds(String scode, String[] orderids) {
+		return new RecDeliveryOrder(scode).getListByIds(orderids);
+	}
+
+	//for delivery apply
+	public boolean addDeliveryApply(String scode, String orderid, String deliverid, long begintime, long endtime, int price, EDeliverType delivertype, EDeliveryType deliverytype) {
+		return new RecDeliveryApply(scode).insert(orderid, deliverid, begintime, endtime, price, delivertype, deliverytype);
+	}
+	public List<RecDeliveryApply> getDeliverList(String scode, String orderid) {
+		return new RecDeliveryApply(scode).getDeliverList(orderid);
+	}
+	public boolean updateDeliveryEnabled(String scode, String orderid, String deliverid, boolean enabled) {
+		return new RecDeliveryApply(scode).updateEnabled(orderid, deliverid, enabled);
+	}
+
+	//for delivery status management
+	public boolean addDeliveryStatus(String scode, String orderid, String deliverid, EDeliveryStatus status) {
+		return new RecDeliveryStatus(scode).insert(orderid, deliverid, status);
+	}
+	public boolean updateDeliveryStatus(String scode, String orderid, String deliverid, EDeliveryStatus status) {
+		return new RecDeliveryStatus(scode).updateStatus(orderid, deliverid, status);
+	}
+	public boolean updateDeliveryStatus(String scode, String orderid, String deliverid, EDeliveryStatus status, String passcode) {
+		return new RecDeliveryStatus(scode).updateStatus(orderid, deliverid, status, passcode);
+	}
+	public RecDeliveryStatus getDeliveryStatus(String scode, String orderid) {
+		return new RecDeliveryStatus(scode).getStatus(orderid);
+	}
+	public RecDeliveryStatus getDeliveryStatus(String scode, String orderid, String deliverid) {
+		return new RecDeliveryStatus(scode).getStatus(orderid, deliverid);
+	}
+	public boolean delDeliveryStatus(String scode, String orderid) {
+		return new RecDeliveryStatus(scode).deleteStatus(orderid);
+	}
+
+	//for delivery history
+	public boolean addDeliveryHistory(String scode, String orderid, String deliverid, EDeliveryStatus status, String message) {
+		return new RecDeliveryHistory(scode).insert(orderid, deliverid, status, message);
+	}
+	public List<RecDeliveryHistory> getDeliveryHistoryList(String scode, String orderid) {
+		return new RecDeliveryHistory(scode).getHistoryList(orderid);
 	}
 }

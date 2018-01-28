@@ -67,6 +67,12 @@ public class ApplicationConfig {
 
     @Value("${mongodb.port}")
 	private int mongoDbPort;
+    
+    @Value("${address.mongodb.database}")
+    private String addressMongoDatabase;
+    	@Value("${address.mongodb.collection}")
+    private String addressMongocollection;
+    		  
 
     @Bean(name = "webSocketPort")
     public InetSocketAddress wsPort() {

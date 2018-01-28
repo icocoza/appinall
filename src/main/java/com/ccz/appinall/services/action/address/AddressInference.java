@@ -69,7 +69,12 @@ public class AddressInference {
 		doc.put("base", sp[10]); //지하유무 
 		doc.put("mnt", sp[20]);	//산유무 
 
- * */	
+ * */
+	static public Document getMongoAddrId(String addrid) {
+		Document doc = new Document();
+		doc.put("buildid", addrid);
+		return doc;
+	}
 	public Document getMongoDbFindDoc(boolean addrOnly) {
 		Document doc = new Document();
 		if(this.sido != null) doc.put("sido", this.sido);

@@ -7,6 +7,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import com.ccz.appinall.library.util.AsciiSplitter;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -26,6 +27,8 @@ public class ResponseData<T> {
 	
 	boolean bjson;
 	Map<String, String> mapParam = new HashMap<>();
+	
+	JsonNode jsonData;
 	
 	public ResponseData(String serviceCode, String code, String cmd) {
 		this.serviceCode = serviceCode;
@@ -63,6 +66,11 @@ public class ResponseData<T> {
 		return this;
 	}
 	
+	public ResponseData<T> setData(JsonNode jdata) {
+		this.jsonData = jdata;
+		return this;
+	}
+	
 	public String toString() {
 		if(bjson)
 			return toJsonString();
@@ -92,6 +100,8 @@ public class ResponseData<T> {
 		Set<Entry<String, String>> sets = mapParam.entrySet();
 		for(Entry<String,String> item : sets)
 			objNode.put(item.getKey(), item.getValue());
+		if(jsonData != null)
+			objNode.set("data", jsonData);
 		return objNode.toString();
 	}
 }

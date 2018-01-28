@@ -13,10 +13,10 @@ import org.apache.lucene.queryparser.classic.QueryParser;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.RestClient;
 
-public class ElasticRestMgr {
+public class ElasticRestApiMgr {
 
-	static ElasticRestMgr s_pThis;
-	public static ElasticRestMgr getInst() { return s_pThis = (s_pThis == null) ? new ElasticRestMgr() : s_pThis;	}
+	static ElasticRestApiMgr s_pThis;
+	public static ElasticRestApiMgr getInst() { return s_pThis = (s_pThis == null) ? new ElasticRestApiMgr() : s_pThis;	}
 	public static void freeInst() {		s_pThis = null;		}
 
 	RestClient restClient;

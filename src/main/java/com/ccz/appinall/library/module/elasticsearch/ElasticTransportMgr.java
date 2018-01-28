@@ -8,8 +8,6 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 import org.apache.lucene.queryparser.classic.QueryParser;
-import org.apache.lucene.queryparser.flexible.standard.QueryParserUtil;
-import org.apache.lucene.search.Query;
 import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsResponse;
 import org.elasticsearch.action.admin.indices.settings.get.GetSettingsResponse;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
@@ -21,7 +19,6 @@ import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.Requests;
@@ -29,26 +26,20 @@ import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.cluster.metadata.IndexMetaData;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.TransportAddress;
-import org.elasticsearch.common.unit.Fuzziness;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.MultiMatchQueryBuilder;
-import org.elasticsearch.index.query.Operator;
 import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.index.query.QueryStringQueryBuilder;
 import org.elasticsearch.index.search.MatchQuery;
-import org.elasticsearch.index.search.MultiMatchQuery;
-import org.elasticsearch.index.search.MultiMatchQuery.QueryBuilder;
-import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
 
 import com.ccz.appinall.services.entity.elasticsearch.ElasticSourcePair;
 
 public class ElasticTransportMgr {
 	
-	static ElasticTransportMgr s_pThis;
-	public static ElasticTransportMgr getInst() { return s_pThis = (s_pThis == null) ? new ElasticTransportMgr() : s_pThis;	}
-	public static void freeInst() {		s_pThis = null;		}
+	//static ElasticTransportMgr s_pThis;
+	//public static ElasticTransportMgr getInst() { return s_pThis = (s_pThis == null) ? new ElasticTransportMgr() : s_pThis;	}
+	//public static void freeInst() {		s_pThis = null;		}
 	
 	TransportClient transportClient;
 	

@@ -11,55 +11,71 @@ import org.elasticsearch.index.query.MultiMatchQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.search.MatchQuery;
 
-import com.ccz.appinall.library.module.elasticsearch.ElasticRestMgr;
+import com.ccz.appinall.library.module.elasticsearch.ElasticRestApiMgr;
 import com.ccz.appinall.library.module.elasticsearch.ElasticTransportMgr;
 import com.ccz.appinall.services.entity.elasticsearch.ElasticSourcePair;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class AddressElasticSearch {
+	
+	static AddressElasticSearch s_pThis;
+	public static AddressElasticSearch getInst() { return s_pThis = (s_pThis == null) ? new AddressElasticSearch() : s_pThis;	}
+	public static void freeInst() {		s_pThis = null;		}
+
 	private String indexDb, typeTable;
+	private ElasticTransportMgr elasticTransportMgr;
 	
 	public boolean init(String clusterName, String nodeName, String hostNameOrIp, int port, String index, String type, String settings) throws UnknownHostException {
 		this.indexDb = index;
 		this.typeTable = type;
-		ElasticTransportMgr.getInst().init(clusterName, nodeName, hostNameOrIp, port);
-		if(ElasticTransportMgr.getInst().hasIndexInCluster(indexDb) == false)
-			return ElasticTransportMgr.getInst().createIndex(indexDb, settings);
-		ElasticRestMgr.getInst().init(hostNameOrIp, 9200);
+		elasticTransportMgr = new ElasticTransportMgr();
+		elasticTransportMgr.init(clusterName, nodeName, hostNameOrIp, port);
+		if(elasticTransportMgr.hasIndexInCluster(indexDb) == false)
+			return elasticTransportMgr.createIndex(indexDb, settings);
+		ElasticRestApiMgr.getInst().init(hostNameOrIp, 9200);
 		return true;
 	}
 
 	public void setSettings(String settings) {
-		if(ElasticTransportMgr.getInst().hasSettings(indexDb) == false)
-			ElasticTransportMgr.getInst().putSettings(indexDb, settings);
+		if(elasticTransportMgr.hasSettings(indexDb) == false)
+			elasticTransportMgr.putSettings(indexDb, settings);
 	}
 
 	public void setMappings(String mappings) {
-		//if(ElasticTransportMgr.getInst().hasMappings(indexDb, typeTable) == false)
-		ElasticTransportMgr.getInst().putMappings(indexDb, typeTable, mappings);
+		//if(elasticTransportMgr.hasMappings(indexDb, typeTable) == false)
+		elasticTransportMgr.putMappings(indexDb, typeTable, mappings);
 	}
 	
 	public boolean bulkInsert(List<ElasticSourcePair> pairs) {
-		return ElasticTransportMgr.getInst().bulkInsert(indexDb, typeTable, pairs);
+		return elasticTransportMgr.bulkInsert(indexDb, typeTable, pairs);
 	}
 	
 	public void insertAddress(ElasticSourcePair pair) {
-		ElasticTransportMgr.getInst().insert(indexDb, typeTable, pair.id, pair.json).forcedRefresh();
+		elasticTransportMgr.insert(indexDb, typeTable, pair.id, pair.json).forcedRefresh();
 	}
 
 	public void updateAddress(ElasticSourcePair pair) throws InterruptedException, ExecutionException {
-		ElasticTransportMgr.getInst().update(indexDb, typeTable, pair.id, pair.json).forcedRefresh();
+		elasticTransportMgr.update(indexDb, typeTable, pair.id, pair.json).forcedRefresh();
 	}
 
 	public SearchResponse searchAddress(String query) throws InterruptedException, ExecutionException, UnsupportedEncodingException {
-		return ElasticTransportMgr.getInst().querySearch(indexDb, typeTable, query);
+		return elasticTransportMgr.querySearch(indexDb, typeTable, query);
 	}
 	
 	public SearchResponse searchAddress(AddressInference ai) throws InterruptedException, ExecutionException, JsonProcessingException, UnsupportedEncodingException {
-		return ElasticTransportMgr.getInst().querySearch(indexDb, typeTable, ai.getElasticSearchQuery());
+		return elasticTransportMgr.querySearch(indexDb, typeTable, ai.getElasticSearchQuery());
 	}
 	
 	public String searchAddresByRest(AddressInference ai) throws JsonProcessingException, IOException {
-		return ElasticRestMgr.getInst().querySearch(indexDb, ai.getElasticSearchQuery());
+		return ElasticRestApiMgr.getInst().querySearch(indexDb, ai.getElasticSearchQuery());
 	}
+	
+	public JsonNode searchAddresByRestJson(AddressInference ai) throws JsonProcessingException, IOException {
+		String res = this.searchAddresByRest(ai);
+		ObjectMapper mapper = new ObjectMapper();
+		return mapper.readTree(res);
+	}
+
 }

@@ -1,8 +1,13 @@
 package com.ccz.appinall.library.dbhelper;
 
+import java.sql.Array;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.List;
+
+import com.ccz.appinall.services.entity.db.RecDeliveryOrder;
 
 public class DbHelper {
 	static int CURSOR_TYPE = ResultSet.TYPE_SCROLL_INSENSITIVE;
@@ -39,23 +44,42 @@ public class DbHelper {
     
     static public DbReader select(String poolName, String sql, int resultSetType)
     {
-    	DbConnection conn = null;
+    		DbConnection conn = null;
         try
         {
-        	conn = DbConnMgr.getInst().getConnection(poolName);
-        	Statement stmt = conn.getConn(true).createStatement();
-        	ResultSet rs = stmt.executeQuery(sql);
-            return new DbReader(poolName, conn, stmt, rs);
+	        	conn = DbConnMgr.getInst().getConnection(poolName);
+	        	Statement stmt = conn.getConn(true).createStatement();
+	        	ResultSet rs = stmt.executeQuery(sql);
+	        return new DbReader(poolName, conn, stmt, rs);
         }
         catch (Exception e)
         {
-        	System.out.println(e.getMessage());
-        	if(conn!=null)
-        		DbConnMgr.getInst().freeConnection(poolName, conn);
+	        	System.out.println(e.getMessage());
+	        	if(conn!=null)
+	        		DbConnMgr.getInst().freeConnection(poolName, conn);
             return DbReader.Empty;
         }
     }
     
+    static public DbReader preparedSelect(String poolName, String sql, String[] ids) {
+		DbConnection conn = null;
+        try
+        {
+	        	conn = DbConnMgr.getInst().getConnection(poolName);
+	        	PreparedStatement stmt = conn.connection.prepareStatement(sql);
+	        	Array array = stmt.getConnection().createArrayOf("String", ids);
+	        	stmt.setArray(1, array);
+	        	ResultSet rs = stmt.executeQuery(sql);
+		    return new DbReader(poolName, conn, stmt, rs);
+        }
+        catch (Exception e) {
+	        	System.out.println(e.getMessage());
+	        	if(conn!=null)
+	        		DbConnMgr.getInst().freeConnection(poolName, conn);
+	        return DbReader.Empty;
+        }
+    }
+
     static public DbReader getMetaData(String poolName) {
     	DbConnection conn = null;
         try
@@ -75,23 +99,22 @@ public class DbHelper {
     
     static public boolean nonSelect(String poolName, String sql)
     {
-    	DbConnection conn = null;
-    	Statement stmt = null;
+    		DbConnection conn = null;
+    		Statement stmt = null;
         try
         {
-        	conn = DbConnMgr.getInst().getConnection(poolName);
-        	stmt = conn.getConn(true).createStatement();
-        	boolean bok = (stmt.executeUpdate(sql)>0 ? true : false);
-        	stmt.close();
-        	return bok;
+	        	conn = DbConnMgr.getInst().getConnection(poolName);
+	        	stmt = conn.getConn(true).createStatement();
+	        	boolean bok = (stmt.executeUpdate(sql)>0 ? true : false);
+	        	stmt.close();
+	        	return bok;
         }
-        catch (Exception e)
-        {
-        	System.out.println(e.getMessage());
-            return false;
+        catch (Exception e) {
+	        	System.out.println(e.getMessage());
+	            return false;
         }finally {
-        	if(conn != null)
-        		DbConnMgr.getInst().freeConnection(poolName, conn);
+	        	if(conn != null)
+	        		DbConnMgr.getInst().freeConnection(poolName, conn);
         }
     }
     
@@ -151,23 +174,24 @@ public class DbHelper {
     
    
     static public boolean exist(String poolName, String sql) {
-    	DbConnection conn = null;
+    		DbConnection conn = null;
         try
         {
-        	conn = DbConnMgr.getInst().getConnection(poolName);
-        	Statement stmt = conn.getConn(true).createStatement();
-        	ResultSet result = stmt.executeQuery(sql);
-        	boolean bOk = result.next();
-        	result.close();
-        	stmt.close();
-        	return bOk;
+	        	conn = DbConnMgr.getInst().getConnection(poolName);
+	        	Statement stmt = conn.getConn(true).createStatement();
+	        	ResultSet result = stmt.executeQuery(sql);
+	        	boolean bOk = result.next();
+	        	result.close();
+	        	stmt.close();
+	        	return bOk;
         }
         catch (Exception e)
         {
             return false;
         }finally {
-        	if(conn!=null)
-        		DbConnMgr.getInst().freeConnection(poolName, conn);
+	        	if(conn!=null)
+	        		DbConnMgr.getInst().freeConnection(poolName, conn);
         }
     }
+    
 }
