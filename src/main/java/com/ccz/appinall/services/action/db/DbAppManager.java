@@ -38,6 +38,9 @@ public class DbAppManager {
 	String dbUrl, dbUser, dbPw;
 	String poolName;
 	public boolean createAdminDatabase(String url, String dbName, String user, String pw) {
+		this.dbUrl = url;
+		this.dbUser = user;
+		this.dbPw = pw;
 		return new DatabaseMaker().createDatabase(url, dbName, user, pw);
 	}
 	
@@ -164,7 +167,11 @@ public class DbAppManager {
 			new RecEpid(scode).createTable();
 			new RecImage(scode).createTable();
 			new RecWebScrab(scode).createTable();
+			new RecDeliveryApply(scode).createTable();
+			new RecDeliveryHistory(scode).createTable();
 			new RecDeliveryOrder(scode).createTable();
+			new RecDeliveryPhoto(scode).createTable();
+			new RecDeliveryStatus(scode).createTable();
 		} catch (SQLException e) {
 			return false;
 		}
@@ -563,7 +570,7 @@ public class DbAppManager {
 	}
 
 	//for images info
-	public DbRecord addImageInfo(String scode, String imgid, String imgname, String thumbname, long width, long height, long thumbwidth, long thumbheight) {
+	public DbRecord addImageInfo(String scode, String imgid, String imgname, String thumbname, int width, int height, int thumbwidth, int thumbheight) {
 		return new RecImage(scode).insert(imgid, imgname, thumbname, width, height, thumbwidth, thumbheight);
 	}
 	public boolean delImageInfo(String scode, String imgid) {
@@ -574,7 +581,7 @@ public class DbAppManager {
 	}
 	
 	//for webscrab
-	public DbRecord addWebScrab(String scode, String webid, String url, String title, String scrabpath, long width, long height) {
+	public DbRecord addWebScrab(String scode, String webid, String url, String title, String scrabpath, int width, int height) {
 		return new RecWebScrab(scode).insert(webid, url, title, scrabpath, width, height);
 	}
 	public boolean delWebScrab(String scode, String imgid) {

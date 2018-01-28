@@ -26,7 +26,8 @@ public class RecDataCommon {
 			apptoken = jnode.get("apptoken").asText();
 			decodeToken();
 		}
-		this.userid = jnode.get("userid").asText();
+		if(jnode.has("userid"))
+			this.userid = jnode.get("userid").asText();
 	}
 	
 	private void decodeToken() {

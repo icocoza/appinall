@@ -24,7 +24,7 @@ public class RecImage extends DbRecord{
 	static final String TBL_NAME = "images";
 	
 	public String imgid, imgname, thumbname;
-	public long width, height, thumbwidth, thumbheight;
+	public int width, height, thumbwidth, thumbheight;
 	public Timestamp regtime;
 	
 	public RecImage(String poolName) {
@@ -35,7 +35,7 @@ public class RecImage extends DbRecord{
 	public boolean createTable() {
 		String sql = String.format("CREATE TABLE IF NOT EXISTS %s (imgid VARCHAR(64) NOT NULL PRIMARY KEY,"
 				+ "imgname VARCHAR(256) NOT NULL, thumbname VARCHAR(256) NOT NULL, "
-				+ "width LONG DEFAULT 0, height LONG DEFAULT 0, thumbwidth LONG DEFAULT 0, thumbheight LONG DEFAULT 0,"
+				+ "width INTEGER DEFAULT 0, height INTEGER DEFAULT 0, thumbwidth INTEGER DEFAULT 0, thumbheight INTEGER DEFAULT 0,"
 				+ "regtime DATETIME DEFAULT  now())", RecImage.TBL_NAME);
 		return super.createTable(sql);
 	}
@@ -46,10 +46,10 @@ public class RecImage extends DbRecord{
 		rec.imgid = rd.getString("imgid");
 		rec.imgname = rd.getString("imgname");
 		rec.thumbname = rd.getString("thumbname");
-		rec.width = rd.getLong("width");
-		rec.height = rd.getLong("height");
-		rec.thumbwidth = rd.getLong("thumbwidth");
-		rec.thumbheight = rd.getLong("thumbheight");
+		rec.width = rd.getInt("width");
+		rec.height = rd.getInt("height");
+		rec.thumbwidth = rd.getInt("thumbwidth");
+		rec.thumbheight = rd.getInt("thumbheight");
 		rec.regtime = rd.getDate("regtime");
 		return rec;
 	}
@@ -64,7 +64,7 @@ public class RecImage extends DbRecord{
 		return doLoad(rd, new RecImage(poolName));
 	}
 
-	public DbRecord insert(String imgid, String imgname, String thumbname, long width, long height, long thumbwidth, long thumbheight) {
+	public DbRecord insert(String imgid, String imgname, String thumbname, int width, int height, int thumbwidth, int thumbheight) {
 		this.imgid = imgid;
 		this.imgname = imgname;
 		this.thumbname = thumbname;

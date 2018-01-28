@@ -127,14 +127,13 @@ public class AddressGRS80Info {
 					  }
 */
 						addressElasticSearch.insertAddress(new ElasticSourcePair((String)doc.get("buildid"), doc.toJson()));
-						//System.out.printf(".");
+						System.out.printf(".");
 						if(++count>128) {
 							System.out.println("@");
 							count=0;
 						}
 					}else
 						System.out.printf("mismatched");
-					System.out.printf(".");
 				}
 /*				  	if(bulkList.size() > 0) {
 				  		if(addressElasticSearch.bulkInsert(bulkList)==false)

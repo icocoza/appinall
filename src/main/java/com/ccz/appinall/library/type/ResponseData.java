@@ -25,9 +25,10 @@ public class ResponseData<T> {
 	@Getter @Setter
 	String token;
 	
-	boolean bjson;
+	boolean bjson = true;
 	Map<String, String> mapParam = new HashMap<>();
 	
+	@Getter
 	JsonNode jsonData;
 	
 	public ResponseData(String serviceCode, String code, String cmd) {

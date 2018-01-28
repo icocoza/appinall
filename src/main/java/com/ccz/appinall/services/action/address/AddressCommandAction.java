@@ -40,9 +40,14 @@ public class AddressCommandAction extends CommonAction {
 
 	final int MAX_LIST_COUNT = 20;
 	
+	public ResponseData<EAddrError> result;
+	
 	@Autowired
 	GeoRepository geoRepository;
 	
+	public AddressCommandAction() {
+		super(null);
+	}
 	public AddressCommandAction(Object sessionKey) {
 		super(sessionKey);
 	}
@@ -111,7 +116,8 @@ public class AddressCommandAction extends CommonAction {
 		default:
 			return false;
 		}
-		if(res != null)
+		result = res;
+		if(res != null && ch != null) 
 			send(ch, res.toString());
 		return true;
 	}

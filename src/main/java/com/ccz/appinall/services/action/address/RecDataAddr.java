@@ -53,7 +53,8 @@ public class RecDataAddr {
 			this.price = jnode.get("price").asInt();
 			this.begintime = jnode.get("begintime").asLong();
 			this.endtime = jnode.get("endtime").asLong();
-			this.photourl = jnode.get("photourl").asText();
+			if(jnode.has("photourl"))
+				this.photourl = jnode.get("photourl").asText();
 		}
 	}
 	

@@ -37,9 +37,9 @@ public class EntrcInfo {
 		if(sp.length<2)
 			return;
 		String[] coords = sp[0].split("\t", -1);
-		lactitude = coords[0];
-		longitude = coords[1];
-		lac = Double.parseDouble(lactitude.replace(".", "").replace("'", "").replace("\"", "").replace("E", "").replace("d", "."));
-		lon = Double.parseDouble(longitude.replace(".", "").replace("'", "").replace("\"", "").replace("N", "").replace("d", "."));
+		lactitude = coords[1];
+		longitude = coords[0];
+		lac = Double.parseDouble(lactitude.replace(".", "").replace("'", "").replace("\"", "").replace("N", "").replace("d", "."));
+		lon = Double.parseDouble(longitude.replace(".", "").replace("'", "").replace("\"", "").replace("E", "").replace("d", "."));
 	}
 }

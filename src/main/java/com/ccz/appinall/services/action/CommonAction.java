@@ -12,6 +12,8 @@ public abstract class CommonAction implements ICommandProcess {
 	
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public CommonAction(Object sessionKey) {
+		if(sessionKey == null)
+			return;
 		this.sessionKey = (AttributeKey<SessionItem>) sessionKey;
 	}
 

@@ -24,7 +24,7 @@ public class RecWebScrab extends DbRecord {
 	static final String TBL_NAME = "webscrab";
 	
 	public String webid, url, title, scrabpath;
-	public long width, height, count;
+	public int width, height, count;
 	public Timestamp regtime;
 	
 	public RecWebScrab(String poolName) {
@@ -35,7 +35,7 @@ public class RecWebScrab extends DbRecord {
 	public boolean createTable() {
 		String sql = String.format("CREATE TABLE IF NOT EXISTS %s (webid VARCHAR(64) NOT NULL PRIMARY KEY,"
 				+ "url VARCHAR(256) NOT NULL, title VARCHAR(128) DEFAULT '', scrabpath VARCHAR(128) NOT NULL, "
-				+ "width LONG DEFAULT 0, height LONG DEFAULT 0, count LONG DEFAULT 0, "
+				+ "width INTEGER DEFAULT 0, height INTEGER DEFAULT 0, count INTEGER DEFAULT 0, "
 				+ "regtime DATETIME DEFAULT  now())", RecWebScrab.TBL_NAME);
 		return super.createTable(sql);
 	}
@@ -47,9 +47,9 @@ public class RecWebScrab extends DbRecord {
 		rec.url = rd.getString("url");
 		rec.title = rd.getString("title");
 		rec.scrabpath = rd.getString("scrabpath");
-		rec.width = rd.getLong("width");
-		rec.height = rd.getLong("height");
-		rec.count = rd.getLong("count");
+		rec.width = rd.getInt("width");
+		rec.height = rd.getInt("height");
+		rec.count = rd.getInt("count");
 		rec.regtime = rd.getDate("regtime");
 		return rec;
 	}
@@ -64,7 +64,7 @@ public class RecWebScrab extends DbRecord {
 		return doLoad(rd, new RecWebScrab(poolName));
 	}
 
-	public DbRecord insert(String webid, String url, String title, String scrabpath, long width, long height) {
+	public DbRecord insert(String webid, String url, String title, String scrabpath, int width, int height) {
 		this.webid = webid;
 		this.url = url;
 		this.title = title;

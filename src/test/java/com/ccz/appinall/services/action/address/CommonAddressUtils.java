@@ -76,8 +76,8 @@ public class CommonAddressUtils {
 		ent.buildno = sp[9];
 		ent.buildsubno = sp[10];
 		ent.base = sp[8];
-		ent.x = sp[16].length()>0?Double.parseDouble(sp[16]) : 0L;
-		ent.y = sp[17].length()>0?Double.parseDouble(sp[17]) : 0L;
+		ent.x = sp[17].length()>0?Double.parseDouble(sp[16]) : 0L;
+		ent.y = sp[16].length()>0?Double.parseDouble(sp[17]) : 0L;
 		ent.sicode = sp[0];
 		ent.entrance = sp[1];
 		ent.roadname = sp[7];

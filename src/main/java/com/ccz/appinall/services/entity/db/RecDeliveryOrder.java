@@ -23,11 +23,11 @@ public class RecDeliveryOrder extends DbRecord {
 	public String orderid;
 	@JsonIgnore
 	public String senderid;
-	public String from, to;
+	public String fromid, toid;
 	public String name, notice;
 	public EGoodsSize size;
 	public EGoodsWeight weight;
-	public EGoodsType type;
+	public EGoodsType goodstype;
 	public int price;
 	public Timestamp begintime, endtime, createtime;
 	public String photourl;
@@ -43,8 +43,8 @@ public class RecDeliveryOrder extends DbRecord {
 	@Override
 	public boolean createTable() {
 		String sql = String.format("CREATE TABLE IF NOT EXISTS %s (orderid VARCHAR(64) NOT NULL PRIMARY KEY, "
-				+ "senderid VARCHAR(64) NOT NULL, from VARCHAR(32) NOT NULL, to VARCHAR(32) NOT NULL, name VARCHAR(32) NOT NULL, "
-				+ "notice VARCHAR(128), size VARCHAR(16) NOT NULL, weight VARCHAR(16) NOT NULL, type VARCHAR(16) NOT NULL, "
+				+ "senderid VARCHAR(64) NOT NULL, fromid VARCHAR(32) NOT NULL, toid VARCHAR(32) NOT NULL, name VARCHAR(32) NOT NULL, "
+				+ "notice VARCHAR(128), size VARCHAR(16) NOT NULL, weight VARCHAR(16) NOT NULL, goodstype VARCHAR(16) NOT NULL, "
 				+ "price INTEGER NOT NULL, begintime DATETIME NOT NULL, endtime DATETIME NOT NULL, photourl VARCHAR(128), "
 				+ "createtime DATETIME DEFAULT now(), "
 				+ "INDEX idx_userid(senderid), INDEX idx_size(size), INDEX idx_weight(weight), "
@@ -57,13 +57,13 @@ public class RecDeliveryOrder extends DbRecord {
 		RecDeliveryOrder rec = (RecDeliveryOrder)r;
 		rec.orderid = rd.getString("orderid");
 		rec.senderid = rd.getString("senderid");
-		rec.from = rd.getString("from");
-		rec.to = rd.getString("to");		
+		rec.fromid = rd.getString("fromid");
+		rec.toid = rd.getString("toid");		
 		rec.name = rd.getString("name");
 		rec.notice = rd.getString("notice");
 		rec.size = EGoodsSize.getType(rd.getString("size"));
 		rec.weight = EGoodsWeight.getType(rd.getString("weight"));
-		rec.type = EGoodsType.getType(rd.getString("type"));
+		rec.goodstype = EGoodsType.getType(rd.getString("goodstype"));
 		rec.price = rd.getInt("price");
 		rec.begintime = rd.getDate("begintime");
 		rec.endtime = rd.getDate("endtime");
@@ -82,21 +82,21 @@ public class RecDeliveryOrder extends DbRecord {
 		return doLoad(rd, new RecDeliveryOrder(poolName));
 	}
 	
-	public boolean insert(String orderid, String senderid, String from, String to, String name, String notice,
-			EGoodsSize size, EGoodsWeight weight, EGoodsType type, int price, long begintime, long endtime, String photourl) {
+	public boolean insert(String orderid, String senderid, String fromid, String toid, String name, String notice,
+			EGoodsSize size, EGoodsWeight weight, EGoodsType goodstype, int price, long begintime, long endtime, String photourl) {
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		Date begindt =  new Date(begintime);
 		Date enddt = new Date(endtime);
 		
-		String sql = String.format("INSERT INTO %s (orderid, senderid, from, to, name, notice, size, weight, "
-				+ "type, price, begintime, endtime, photourl) "
+		String sql = String.format("INSERT INTO %s (orderid, senderid, fromid, toid, name, notice, size, weight, "
+				+ "goodstype, price, begintime, endtime, photourl) "
 				+ "VALUES ('%s','%s','%s','%s','%s','%s','%s','%s','%s',%d,'%s','%s','%s')", RecDeliveryOrder.TBL_NAME,
-				orderid, senderid, from, to, name, notice, size, weight, type, price, sdf.format(begindt), sdf.format(enddt), photourl);
+				orderid, senderid, fromid, toid, name, notice, size, weight, goodstype, price, sdf.format(begindt), sdf.format(enddt), photourl);
 		return super.insert(sql);
 	}
 	
 	public List<String> getBuildIds() {
-		return Arrays.asList(from, to);
+		return Arrays.asList(fromid, toid);
 	}
 	
 	public DbRecord getOrder(String orderid) {
@@ -106,26 +106,26 @@ public class RecDeliveryOrder extends DbRecord {
 		return this;
 	}
 	
-	public boolean update(String orderid, String from, String to, String name, String notice,
-			EGoodsSize size, EGoodsWeight weight, EGoodsType type, int price, long begintime, long endtime, String photourl ) {
+	public boolean update(String orderid, String fromid, String toid, String name, String notice,
+			EGoodsSize size, EGoodsWeight weight, EGoodsType goodstype, int price, long begintime, long endtime, String photourl ) {
 		if(getOrder(orderid) == DbRecord.Empty)
 			return false;
 		
-		if(from!=null && from.length()>0) this.from = from;
-		if(to!=null && to.length()>0) this.to = to;
+		if(fromid!=null && fromid.length()>0) this.fromid = fromid;
+		if(toid!=null && toid.length()>0) this.toid = toid;
 		if(name!=null && name.length()>0) this.name = name;
 		if(notice!=null && notice.length()>0) this.notice = notice;
 		if(size!=null && size!=EGoodsSize.none) this.size = size;
 		if(weight!=null && weight!=EGoodsWeight.none) this.weight = weight;
-		if(type!=null && type!=EGoodsType.none) this.type = type; 
+		if(goodstype!=null && goodstype!=EGoodsType.none) this.goodstype = goodstype; 
 		if(price!=-1) this.price = price; 
 		if(begintime!=-1) this.begintime = DateUtils.getTimestamp(begintime); 
 		if(endtime!=-1) this.endtime = DateUtils.getTimestamp(endtime); 
 		if(photourl!=null && photourl.length()>0) this.photourl = photourl;
 		
-		String sql = String.format("UPDATE %s SET from='%s', to='%s', name='%s', notice='%s', size='%s', weight='%s', type='%s', "
+		String sql = String.format("UPDATE %s SET fromid='%s', toid='%s', name='%s', notice='%s', size='%s', weight='%s', goodstype='%s', "
 				+ "price='%d', begintime='%s', endtime='%s', photourl='%s' WHERE orderid='%s'", RecDeliveryOrder.TBL_NAME,
-				this.from, this.to, this.name, this.notice, this.size, this.weight, this.type, this.price, 
+				this.fromid, this.toid, this.name, this.notice, this.size, this.weight, this.goodstype, this.price, 
 				this.begintime, this.endtime, this.photourl, this.orderid);
 		return super.update(sql);
 	}

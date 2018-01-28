@@ -40,10 +40,14 @@ public class GeoRepository {
 		geoOperations.execute(new RedisCallback() {
 			@Override
 			public Object doInRedis(RedisConnection connection) throws DataAccessException {
+				try {
 				connection.multi();
 				connection.geoAdd(ORDER_START.getBytes(), new Point(fromLon, fromLac), orderid.getBytes());
 				connection.geoAdd(ORDER_END.getBytes(), new Point(toLon, toLac), orderid.getBytes());
 				connection.exec();
+				}catch(Exception e) {
+					e.printStackTrace();
+				}
 				return null;
 			}
 		});

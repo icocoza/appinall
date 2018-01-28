@@ -24,11 +24,11 @@ public class RecUserAuth  extends DbRecord {
 	
 	@Override
 	public boolean createTable() {
-		String sql = String.format("CREATE TABLE IF NOT EXISTS %s (userid VARCHAR(64) NOT NULL PRIMARY KEY"
+		String sql = String.format("CREATE TABLE IF NOT EXISTS %s (userid VARCHAR(64) NOT NULL PRIMARY KEY, "
 				+ "uid VARCHAR(64), email VARCHAR(64) DEFAULT '', phoneno VARCHAR(64) DEFAULT '', "
 				+ "pw VARCHAR(64) DEFAULT '', emailcode VARCHAR(32) DEFAULT '', smscode VARCHAR(6) DEFAULT '', "
 				+ "regdate DATETIME DEFAULT now(), leavedate DATETIME, authtype VARCHAR(12) NOT NULL,"
-				+ "idx_uid(uid), INDEX idx_email(email), INDEX idx_phoneno(phoneno)) ", RecUserAuth.TBL_NAME);
+				+ "INDEX idx_uid(uid), INDEX idx_email(email), INDEX idx_phoneno(phoneno)) ", RecUserAuth.TBL_NAME);
 		return super.createTable(sql);
 	}
 
