@@ -17,6 +17,9 @@ import com.ccz.appinall.services.type.enums.EGoodsWeight;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.mysql.jdbc.PreparedStatement;
 
+import lombok.Getter;
+import lombok.Setter;
+
 public class RecDeliveryOrder extends DbRecord {
 	static final String TBL_NAME = "deliveryorder";
 	
@@ -32,6 +35,7 @@ public class RecDeliveryOrder extends DbRecord {
 	public Timestamp begintime, endtime, createtime;
 	public String photourl;
 	
+	public int deliverCount = 0;	//from count(*)
 	public RecDeliveryOrder() {
 		super("");
 	}
@@ -149,7 +153,9 @@ public class RecDeliveryOrder extends DbRecord {
 	}
 
 	public List<RecDeliveryOrder> getListByIds(String[] orderids) {
-		String sql = String.format("SELECT * FROM %s WHERE orderid in (?)", RecDeliveryOrder.TBL_NAME);
-		return super.getList(sql, orderids).stream().map(e->(RecDeliveryOrder)e).collect(Collectors.toList());
+		String qOrderids = Arrays.stream(orderids).map(x -> "'" + x + "'").collect(Collectors.joining(","));
+		String sql = String.format("SELECT * FROM %s WHERE orderid in (%s)", RecDeliveryOrder.TBL_NAME, qOrderids);
+		return super.getList(sql).stream().map(e->(RecDeliveryOrder)e).collect(Collectors.toList());
 	}
+
 }

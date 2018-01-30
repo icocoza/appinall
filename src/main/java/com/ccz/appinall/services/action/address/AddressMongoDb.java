@@ -8,8 +8,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import org.bson.BsonArray;
+import org.bson.BsonString;
 import org.bson.Document;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -135,13 +137,11 @@ public class AddressMongoDb {
 	}
 	
 	public List<Document> getAddrs(List<String> addrids) {	//[TODO] 코드 정리 필요 
-		ObjectMapper mapper = new ObjectMapper();
-		ArrayNode arrNode = mapper.createArrayNode();
-		addrids.stream().forEach(x -> arrNode.add(x));
-
-		ObjectNode node = mapper.createObjectNode();
-		node.set("buildid", arrNode);
-		FindIterable<Document> find = this.getCollection().find(Document.parse(node.toString()));
+		BsonArray arrBson = new BsonArray();
+		addrids.stream().forEach(x -> arrBson.add(new BsonString(x)));
+		Document findDoc = new Document("buildid", new Document("$in", arrBson));
+		
+		FindIterable<Document> find = this.getCollection().find(findDoc);
 		List<Document> findList = new ArrayList<>();
 		for(Document doc : find) 
 			findList.add(doc);

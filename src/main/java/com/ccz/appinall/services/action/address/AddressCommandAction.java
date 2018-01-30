@@ -2,6 +2,7 @@ package com.ccz.appinall.services.action.address;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -16,6 +17,7 @@ import com.ccz.appinall.library.util.KeyGen;
 import com.ccz.appinall.services.action.CommonAction;
 import com.ccz.appinall.services.action.address.RecDataAddr.*;
 import com.ccz.appinall.services.action.db.DbAppManager;
+import com.ccz.appinall.services.entity.db.RecDeliverCount;
 import com.ccz.appinall.services.entity.db.RecDeliveryOrder;
 import com.ccz.appinall.services.entity.db.RecDeliveryStatus;
 import com.ccz.appinall.services.repository.redis.GeoRepository;
@@ -62,16 +64,16 @@ public class AddressCommandAction extends CommonAction {
 		ResponseData<EAddrError> res = new ResponseData<EAddrError>(jdata.get("scode").asText(), jdata.get("rcode").asText(), jdata.get("cmd").asText());
 		
 		switch(EAddrCmd.getType(res.getCommand())) {
-		case search:
+		case search: //()
 			res = this.doSearch(res, new RecDataAddr().new DataSearchAddr(jdata));
 			break;
-		case orderrequest:
+		case orderrequest: //()
 			res = this.doOrderRequest(res, new RecDataAddr().new DataOrderRequest(jdata));
 			break;
-		case orderlist:
+		case orderlist: //()
 			res = this.doOrderList(res, new RecDataAddr().new DataOrderList(jdata));
 			break;
-		case orderdetail:
+		case orderdetail: //()
 			res = this.doOrderDetail(res, new RecDataAddr().new DataOrderDetail(jdata));
 			break;
 		case orderselectdeliver:
@@ -80,10 +82,10 @@ public class AddressCommandAction extends CommonAction {
 		case ordercanceldeliver:
 			res = this.doDeliverCancelBySender(res, new RecDataAddr().new DataCancelDeliverBySender(jdata));
 			break;
-		case deliversearchorder:
+		case deliversearchorder: //()
 			res = this.doOrderSearch(res, new RecDataAddr().new DataOrderSearch(jdata));
 			break;
-		case deliverselectorder:
+		case deliverselectorder:  //()
 			res = this.doOrderSelectByDeliver(res, new RecDataAddr().new DataOrderSelectByDelivers(jdata));
 			break;
 		case delivercheckinorder:
@@ -176,6 +178,11 @@ public class AddressCommandAction extends CommonAction {
 		List<RecDeliveryOrder> orderList = DbAppManager.getInst().getOrderList(data.getScode(), data.getUserid(), data.getOffset(), data.getCount());
 		if(orderList.size() < 1)
 			return res.setError(EAddrError.empty_order_list);
+		List<String> orderids = orderList.stream().map(x -> x.orderid).collect(Collectors.toList());
+		Map<String, Integer> deliverCountMap = DbAppManager.getInst().getDeliverCountByOrderId(data.getScode(), orderids.toArray(new String[orderids.size()]));
+		if(deliverCountMap.size()>0) {
+			orderList.stream().filter(x -> deliverCountMap.containsKey((String)x.orderid)).map(x->x.deliverCount = deliverCountMap.get(x.orderid));
+		}
 		ObjectMapper mapper = new ObjectMapper();
 		ArrayNode arrayNode = mapper.valueToTree(orderList);
 		return res.setData(arrayNode).setError(EAddrError.ok);
@@ -251,8 +258,8 @@ public class AddressCommandAction extends CommonAction {
 		RecDeliveryOrder order = (RecDeliveryOrder) DbAppManager.getInst().getOrder(data.getScode(), data.getOrderid());
 		if(order == DbRecord.Empty)
 			return res.setError(EAddrError.not_exist_order);
-		if(order.begintime.getTime() < System.currentTimeMillis())
-			return res.setError(EAddrError.late_delivery_request);
+		//if(order.begintime.getTime() < System.currentTimeMillis())
+		//	return res.setError(EAddrError.late_delivery_request);
 		RecDeliveryStatus status =  DbAppManager.getInst().getDeliveryStatus(data.getScode(), data.getOrderid());
 		if(status != DbRecord.Empty)
 			return res.setError(EAddrError.already_occupied_order);
@@ -285,7 +292,7 @@ public class AddressCommandAction extends CommonAction {
 		if(status.status != EDeliveryStatus.assign)
 			return res.setError(EAddrError.not_assigned_order);
 		String randomcode = "" + (new Random().nextInt(99999-10000)+10000);
-		if(DbAppManager.getInst().updateDeliveryStatus(data.getScode(), data.getOrderid(), data.getUserid(), EDeliveryStatus.start, randomcode) == false)
+		if(DbAppManager.getInst().updateDeliveryStartCode(data.getScode(), data.getOrderid(), data.getUserid(), EDeliveryStatus.start, randomcode) == false)
 			return res.setError(EAddrError.failed_to_savestartmoving);
 		
 		//[TODO] Seder 에게 푸시나 메시지 전송해야 함, randomcode도 같이 전달
@@ -317,7 +324,7 @@ public class AddressCommandAction extends CommonAction {
 		if(status.status != EDeliveryStatus.gotcha)
 			return res.setError(EAddrError.not_receipt_order);
 		String randomcode = "" + (new Random().nextInt(99999-10000)+10000);
-		if(DbAppManager.getInst().updateDeliveryStatus(data.getScode(), data.getOrderid(), data.getUserid(), EDeliveryStatus.delivering, randomcode)==false)
+		if(DbAppManager.getInst().updateDeliveryEndCode(data.getScode(), data.getOrderid(), data.getUserid(), EDeliveryStatus.delivering, randomcode)==false)
 			return res.setError(EAddrError.failed_to_savedelivering);
 		
 		return res.setError(EAddrError.ok);

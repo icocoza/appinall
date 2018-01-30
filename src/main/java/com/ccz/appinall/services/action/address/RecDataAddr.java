@@ -30,7 +30,7 @@ public class RecDataAddr {
 	
 	@Getter
 	public class DataOrderRequest extends RecDataCommon {
-		private String senderid;
+		//private String senderid;
 		private String to_addrid, from_addrid; /*not null*/
 		private String name, notice;
 		private EGoodsSize size;		/*not null*/
@@ -42,7 +42,7 @@ public class RecDataAddr {
 		
 		public DataOrderRequest(JsonNode jnode) {
 			super(jnode);
-			this.senderid = jnode.get("senderid").asText();
+			//this.senderid = jnode.get("senderid").asText();
 			this.to_addrid = jnode.get("to_addrid").asText();
 			this.from_addrid = jnode.get("from_addrid").asText();
 			this.name = jnode.get("name").asText();
@@ -130,12 +130,12 @@ public class RecDataAddr {
 		public DataOrderSelectByDelivers(JsonNode jnode) {
 			super(jnode);
 			this.orderid = jnode.get("orderid").asText();
-			this.deliverid = jnode.get("deliverid").asText();
+			this.deliverid = jnode.get("userid").asText();
 			this.begintime = jnode.get("begintime").asLong();
 			this.endtime = jnode.get("endtime").asLong();
 			this.price = jnode.get("price").asInt();
-			//this.delivertype = EDeliverType.valueOf(arg0);
-			//this.delivertype = 	EDeliverType.
+			this.delivertype = EDeliverType.valueOf(jnode.get("delivertype").asText());
+			this.deliverytype = EDeliveryType.valueOf(jnode.get("deliverytype").asText());
 		}
 	}
 

@@ -11,6 +11,8 @@ import org.springframework.test.context.junit4.SpringRunner;
 import com.ccz.appinall.application.ApplicationConfig;
 import com.ccz.appinall.services.ServicesConfig;
 import com.ccz.appinall.services.action.db.DbAppManager;
+import com.ccz.appinall.services.type.enums.EDeliverType;
+import com.ccz.appinall.services.type.enums.EDeliveryType;
 import com.ccz.appinall.services.type.enums.EGoodsSize;
 import com.ccz.appinall.services.type.enums.EGoodsType;
 import com.ccz.appinall.services.type.enums.EGoodsWeight;
@@ -29,9 +31,7 @@ public class AddressCommandActionTest {
 	AddressCommandAction addressCommandAction;
 	@Autowired
 	ServicesConfig servicesConfig;
-	
-	@Test
-	public void testActions() throws UnknownHostException {
+	private void init()  throws UnknownHostException{
 		if(DbAppManager.getInst().createAdminDatabase(applicationConfig.getAdminMysqlUrl(), "owy", applicationConfig.getAdminMysqlUser(), applicationConfig.getAdminMysqlPw())==false)
 			return;
 		if(DbAppManager.getInst().initApp("owy", 2, 3)==false)
@@ -41,7 +41,10 @@ public class AddressCommandActionTest {
 				servicesConfig.getElasticIndex(), servicesConfig.getElasticType(), null);
 		AddressMongoDb.getInst().init(applicationConfig.getMongoDbUrl(), applicationConfig.getMongoDbPort(), 
 				 applicationConfig.getAddressMongoDatabase(), applicationConfig.getAddressMongocollection());
-		
+	}
+	@Test
+	public void testActions()  throws UnknownHostException{
+		init();
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode node = mapper.createObjectNode();
 		node.put("scode", "owy").put("rcode", "r001").put("cmd", "search").put("userid", "user001").put("search", "고덕로 131");
@@ -50,6 +53,7 @@ public class AddressCommandActionTest {
 		
 		String srcBuildId01 = addressCommandAction.result.getJsonData().get(0).get("buildid").asText();
 		System.out.println("id: " + srcBuildId01);
+
 		node.removeAll();
 		node.put("scode", "owy").put("rcode", "r001").put("cmd", "search").put("userid", "user001").put("search", "상인동 1149");
 		addressCommandAction.processJsonData(null, node);
@@ -57,25 +61,45 @@ public class AddressCommandActionTest {
 		String srcBuildId02 = addressCommandAction.result.getJsonData().get(0).get("buildid").asText();
 		System.out.println("id: " + srcBuildId02);
 		
+//		node.removeAll();
+//		node.put("scode", "owy").put("rcode", "r001").put("cmd", "orderrequest").put("userid", "user001").put("to_addrid", srcBuildId01).put("from_addrid", srcBuildId02);
+//		node.put("name", "testuser").put("notice", "fragile").put("size", EGoodsSize.mediumbox.getValue()).put("weight", EGoodsWeight.under5kg.getValue()).put("type", EGoodsType.envelop.getValue());
+//		node.put("price", 5000).put("begintime", System.currentTimeMillis()).put("endtime", System.currentTimeMillis()+ 1000000);
+//		addressCommandAction.processJsonData(null, node);
+//		System.out.println(addressCommandAction.result.toString());
+		
 		node.removeAll();
-		node.put("scode", "owy").put("rcode", "r001").put("cmd", "orderrequest").put("senderid", "user001").put("to_addrid", srcBuildId01).put("from_addrid", srcBuildId02);
-		node.put("name", "testuser").put("notice", "fragile").put("size", EGoodsSize.mediumbox.getValue()).put("weight", EGoodsWeight.under5kg.getValue()).put("type", EGoodsType.envelop.getValue());
-		node.put("price", 5000).put("begintime", System.currentTimeMillis()).put("endtime", System.currentTimeMillis()+ 1000000);
+		node.put("scode", "owy").put("rcode", "r001").put("cmd", "orderlist").put("userid", "user001").put("offset", 0).put("count", 10);
 		addressCommandAction.processJsonData(null, node);
 		System.out.println(addressCommandAction.result.toString());
 		
+		node.removeAll();
+		node.put("scode", "owy").put("rcode", "r001").put("cmd", "orderdetail").put("userid", "user001").put("orderid", "order9b7ebf432f5548608288074b14cf886220180129074213");
+		addressCommandAction.processJsonData(null, node);
+		System.out.println(addressCommandAction.result.toString());
+
+		node.removeAll();
+		node.put("scode", "owy").put("rcode", "r001").put("cmd", "deliversearchorder").put("userid", "deliver001").put("to_addrid", "1174010700104140002000001").put("from_addrid", "1123010300111490012000004")
+		.put("size", EGoodsSize.mediumbox.getValue()).put("weight", EGoodsWeight.under5kg.getValue()).put("type", EGoodsType.envelop.getValue());
+		addressCommandAction.processJsonData(null, node);
+		System.out.println(addressCommandAction.result.toString());
+
+		long startTime = System.currentTimeMillis() + 3600000;
+		long endTime = System.currentTimeMillis() + 7200000;
+		node.removeAll();
+		node.put("scode", "owy").put("rcode", "r001").put("cmd", "deliverselectorder").put("userid", "deliver001").put("orderid", "order9b7ebf432f5548608288074b14cf886220180129074213").put("begintime", startTime).put("endtime", endTime)
+		.put("price", 5000).put("delivertype", EDeliverType.personal.getValue()).put("deliverytype", EDeliveryType.car.getValue());
+		addressCommandAction.processJsonData(null, node);
+		System.out.println(addressCommandAction.result.toString());
+
 	}
 }
 
 /*
-		private String senderid;
-		private String to_addrid, from_addrid; 
-		private String name, notice;
-		private EGoodsSize size;		
-		private EGoodsWeight weight;	
-		private EGoodsType type;	
-		private int price;	
-		private long begintime, endtime;	
-		private String photourl;
+		private String orderid, deliverid;
+		private long begintime, endtime;	//deliver가 제안하는 시작시간, 끝시간
+		private int price;
+		private EDeliverType delivertype;
+		private EDeliveryType deliverytype;
 
  * */

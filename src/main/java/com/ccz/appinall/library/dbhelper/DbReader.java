@@ -98,6 +98,17 @@ public class DbReader {
 			return 0; 
 		}
     }
+    
+    public int getInt(int index)
+    {
+        try
+        {
+            return rs.getInt(index);
+        }
+        catch (SQLException e) { 
+			return 0; 
+		}
+    }
 
     public long getLong(String field)
     {

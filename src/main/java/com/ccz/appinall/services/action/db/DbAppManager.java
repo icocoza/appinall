@@ -2,8 +2,10 @@ package com.ccz.appinall.services.action.db;
 
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.ccz.appinall.library.dbhelper.DbConnMgr;
@@ -21,6 +23,7 @@ import com.ccz.appinall.services.type.enums.EGoodsWeight;
 import com.ccz.appinall.services.type.enums.EMessageType;
 import com.ccz.appinall.services.type.enums.EUserAuthType;
 import com.ccz.appinall.services.type.enums.EUserRole;
+import com.google.gson.internal.Streams;
 import com.ccz.appinall.services.entity.db.RecFriend.RecFriendInfo;
 import com.ccz.appinall.services.entity.db.RecChannel.RecChLastMsg;
 import com.ccz.appinall.services.entity.db.RecChMime.RecChMimeExt;
@@ -621,6 +624,9 @@ public class DbAppManager {
 		return new RecDeliveryOrder(scode).getListByIds(orderids);
 	}
 
+	public Map<String, Integer> getDeliverCountByOrderId(String scode, String[] orderids) {
+		return new RecDeliverCount(scode).getDeliverCount(orderids);
+	}
 	//for delivery apply
 	public boolean addDeliveryApply(String scode, String orderid, String deliverid, long begintime, long endtime, int price, EDeliverType delivertype, EDeliveryType deliverytype) {
 		return new RecDeliveryApply(scode).insert(orderid, deliverid, begintime, endtime, price, delivertype, deliverytype);
@@ -639,9 +645,13 @@ public class DbAppManager {
 	public boolean updateDeliveryStatus(String scode, String orderid, String deliverid, EDeliveryStatus status) {
 		return new RecDeliveryStatus(scode).updateStatus(orderid, deliverid, status);
 	}
-	public boolean updateDeliveryStatus(String scode, String orderid, String deliverid, EDeliveryStatus status, String passcode) {
-		return new RecDeliveryStatus(scode).updateStatus(orderid, deliverid, status, passcode);
+	public boolean updateDeliveryStartCode(String scode, String orderid, String deliverid, EDeliveryStatus status, String passcode) {
+		return new RecDeliveryStatus(scode).updateStartStatus(orderid, deliverid, status, passcode);
 	}
+	public boolean updateDeliveryEndCode(String scode, String orderid, String deliverid, EDeliveryStatus status, String passcode) {
+		return new RecDeliveryStatus(scode).updateEndStatus(orderid, deliverid, status, passcode);
+	}
+
 	public RecDeliveryStatus getDeliveryStatus(String scode, String orderid) {
 		return new RecDeliveryStatus(scode).getStatus(orderid);
 	}

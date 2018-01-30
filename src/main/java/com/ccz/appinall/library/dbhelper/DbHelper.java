@@ -67,7 +67,7 @@ public class DbHelper {
         {
 	        	conn = DbConnMgr.getInst().getConnection(poolName);
 	        	PreparedStatement stmt = conn.connection.prepareStatement(sql);
-	        	Array array = stmt.getConnection().createArrayOf("String", ids);
+	        	Array array = conn.getConn().createArrayOf("VARCHAR", ids);
 	        	stmt.setArray(1, array);
 	        	ResultSet rs = stmt.executeQuery(sql);
 		    return new DbReader(poolName, conn, stmt, rs);
