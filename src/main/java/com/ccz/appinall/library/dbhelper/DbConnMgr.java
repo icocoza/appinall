@@ -9,7 +9,6 @@ public class DbConnMgr {
 	public static synchronized DbConnMgr getInst() {
 		return s_pThis = (s_pThis == null? new DbConnMgr() : s_pThis);
 	}
-	
 	public static void freeInst() {	s_pThis = null;	}
 	
 	private ConcurrentHashMap<String, DbConnPool> connectionMap = new ConcurrentHashMap<String, DbConnPool>();

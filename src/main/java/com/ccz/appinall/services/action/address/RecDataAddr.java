@@ -141,12 +141,11 @@ public class RecDataAddr {
 
 	@Getter
 	public class DataOrderCheckInByDelivers extends RecDataCommon {
-		private String orderid, deliverid;
+		private String orderid;
 
 		public DataOrderCheckInByDelivers(JsonNode jnode) {
 			super(jnode);
 			this.orderid = jnode.get("orderid").asText();
-			this.deliverid = jnode.get("deliverid").asText();
 		}
 	}
 	
@@ -163,7 +162,8 @@ public class RecDataAddr {
 		
 		public DataDeliverGotcha(JsonNode jnode) {
 			super(jnode);
-			this.startcode = jnode.get("startcode").asText();
+			if(jnode.has("startcode"))
+				this.startcode = jnode.get("startcode").asText();
 		}
 	}
 
@@ -184,9 +184,11 @@ public class RecDataAddr {
 		public DataDeliveryCompleteByDelivers(JsonNode jnode) {
 			super(jnode);
 			this.orderid = jnode.get("orderid").asText();
-			this.endcode = jnode.get("endcode").asText();
+			if(jnode.has("endcode"))
+				this.endcode = jnode.get("endcode").asText();
 			//this.photourl = jnode.get("photourl").asText();
-			this.message = jnode.get("message").asText();
+			if(jnode.has("message"))
+				this.message = jnode.get("message").asText();
 		}
 	}
 

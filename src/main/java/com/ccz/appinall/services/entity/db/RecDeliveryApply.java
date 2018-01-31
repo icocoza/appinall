@@ -13,11 +13,15 @@ import com.ccz.appinall.services.type.enums.EDeliveryType;
 import com.ccz.appinall.services.type.enums.EGoodsSize;
 import com.ccz.appinall.services.type.enums.EGoodsType;
 import com.ccz.appinall.services.type.enums.EGoodsWeight;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public class RecDeliveryApply extends DbRecord {
 	static final String TBL_NAME = "deliveryapply";
-	
-	public String orderid, deliverid;
+
+	@JsonIgnore
+	public String orderid;
+	public String deliverid;
+	public String username;
 	public Timestamp begintime, endtime, choosetime;
 	public int price;
 	public EDeliverType delivertype;
@@ -31,7 +35,7 @@ public class RecDeliveryApply extends DbRecord {
 	@Override
 	public boolean createTable() {
 		String sql = String.format("CREATE TABLE IF NOT EXISTS %s (orderid VARCHAR(64) NOT NULL, deliverid VARCHAR(64) NOT NULL, "
-				+ "begintime DATETIME NOT NULL, endtime DATETIME NOT NULL, choosetime DATETIME DEFAULT now(), "
+				+ "username VARCHAR(64) NOT NULL, begintime DATETIME NOT NULL, endtime DATETIME NOT NULL, choosetime DATETIME DEFAULT now(), "
 				+ "price INTEGER DEFAULT 0, delivertype VARCHAR(12), deliverytype VARCHAR(12), enabled BOOLEAN DEFAULT true,"
 				+ "PRIMARY KEY(orderid, deliverid), INDEX idx_begintime(begintime), INDEX idx_endtime(endtime))",  RecDeliveryApply.TBL_NAME);
 		return super.createTable(sql); 
@@ -42,6 +46,7 @@ public class RecDeliveryApply extends DbRecord {
 		RecDeliveryApply rec = (RecDeliveryApply)r;
 		rec.orderid = rd.getString("orderid");
 		rec.deliverid = rd.getString("deliverid");
+		rec.username = rd.getString("username");
 		rec.begintime = rd.getDate("begintime");
 		rec.endtime = rd.getDate("endtime");
 		rec.choosetime = rd.getDate("choosetime");
@@ -62,14 +67,14 @@ public class RecDeliveryApply extends DbRecord {
 		return doLoad(rd, new RecDeliveryApply(poolName));
 	}
 
-	public boolean insert(String orderid, String deliverid, long begintime, long endtime, int price, EDeliverType delivertype, EDeliveryType deliverytype) {
+	public boolean insert(String orderid, String deliverid, String username, long begintime, long endtime, int price, EDeliverType delivertype, EDeliveryType deliverytype) {
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		Date begindt =  new Date(begintime);
 		Date enddt = new Date(endtime);
 		
-		String sql = String.format("INSERT INTO %s (orderid, deliverid, begintime, endtime, price, delivertype, deliverytype) "
-				+ "VALUES ('%s','%s','%s','%s',%d,'%s','%s')", RecDeliveryApply.TBL_NAME,
-				orderid, deliverid, sdf.format(begindt), sdf.format(enddt), price, delivertype.getValue(), deliverytype.getValue());
+		String sql = String.format("INSERT INTO %s (orderid, deliverid, username, begintime, endtime, price, delivertype, deliverytype) "
+				+ "VALUES ('%s','%s','%s','%s','%s',%d,'%s','%s')", RecDeliveryApply.TBL_NAME,
+				orderid, deliverid, username, sdf.format(begindt), sdf.format(enddt), price, delivertype.getValue(), deliverytype.getValue());
 		return super.insert(sql);
 	}
 	

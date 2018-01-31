@@ -77,11 +77,11 @@ public class RecDeliveryStatus extends DbRecord{
 	}
 
 	public RecDeliveryStatus getStatus(String orderid) {
-		String sql = String.format("SELECT * FROM %s WHERE devuuid='%s'", RecDeliveryStatus.TBL_NAME, orderid);
+		String sql = String.format("SELECT * FROM %s WHERE orderid='%s'", RecDeliveryStatus.TBL_NAME, orderid);
 		return (RecDeliveryStatus) super.getOne(sql);
 	}
 	public RecDeliveryStatus getStatus(String orderid, String deliverid) {
-		String sql = String.format("SELECT * FROM %s WHERE devuuid='%s' AND deliverid='%s'", RecDeliveryStatus.TBL_NAME, orderid, deliverid);
+		String sql = String.format("SELECT * FROM %s WHERE orderid='%s' AND deliverid='%s'", RecDeliveryStatus.TBL_NAME, orderid, deliverid);
 		return (RecDeliveryStatus) super.getOne(sql);
 	}
 	

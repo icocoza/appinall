@@ -48,7 +48,6 @@ public class AddressCommandActionTest {
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode node = mapper.createObjectNode();
 		node.put("scode", "owy").put("rcode", "r001").put("cmd", "search").put("userid", "user001").put("search", "고덕로 131");
-		
 		addressCommandAction.processJsonData(null, node);
 		
 		String srcBuildId01 = addressCommandAction.result.getJsonData().get(0).get("buildid").asText();
@@ -61,12 +60,13 @@ public class AddressCommandActionTest {
 		String srcBuildId02 = addressCommandAction.result.getJsonData().get(0).get("buildid").asText();
 		System.out.println("id: " + srcBuildId02);
 		
-//		node.removeAll();
-//		node.put("scode", "owy").put("rcode", "r001").put("cmd", "orderrequest").put("userid", "user001").put("to_addrid", srcBuildId01).put("from_addrid", srcBuildId02);
-//		node.put("name", "testuser").put("notice", "fragile").put("size", EGoodsSize.mediumbox.getValue()).put("weight", EGoodsWeight.under5kg.getValue()).put("type", EGoodsType.envelop.getValue());
-//		node.put("price", 5000).put("begintime", System.currentTimeMillis()).put("endtime", System.currentTimeMillis()+ 1000000);
-//		addressCommandAction.processJsonData(null, node);
-//		System.out.println(addressCommandAction.result.toString());
+		node.removeAll();
+		node.put("scode", "owy").put("rcode", "r001").put("cmd", "orderrequest").put("userid", "user001").put("to_addrid", srcBuildId01).put("from_addrid", srcBuildId02);
+		node.put("name", "testuser").put("notice", "fragile").put("size", EGoodsSize.mediumbox.getValue()).put("weight", EGoodsWeight.under5kg.getValue()).put("type", EGoodsType.envelop.getValue());
+		node.put("price", 5000).put("begintime", System.currentTimeMillis()).put("endtime", System.currentTimeMillis()+ 1000000);
+		addressCommandAction.processJsonData(null, node);
+		System.out.println(addressCommandAction.result.toString());
+		String orderid = addressCommandAction.result.getParams().get("orderid");
 		
 		node.removeAll();
 		node.put("scode", "owy").put("rcode", "r001").put("cmd", "orderlist").put("userid", "user001").put("offset", 0).put("count", 10);
@@ -74,7 +74,7 @@ public class AddressCommandActionTest {
 		System.out.println(addressCommandAction.result.toString());
 		
 		node.removeAll();
-		node.put("scode", "owy").put("rcode", "r001").put("cmd", "orderdetail").put("userid", "user001").put("orderid", "order9b7ebf432f5548608288074b14cf886220180129074213");
+		node.put("scode", "owy").put("rcode", "r001").put("cmd", "orderdetail").put("userid", "user001").put("orderid", orderid);
 		addressCommandAction.processJsonData(null, node);
 		System.out.println(addressCommandAction.result.toString());
 
@@ -87,8 +87,53 @@ public class AddressCommandActionTest {
 		long startTime = System.currentTimeMillis() + 3600000;
 		long endTime = System.currentTimeMillis() + 7200000;
 		node.removeAll();
-		node.put("scode", "owy").put("rcode", "r001").put("cmd", "deliverselectorder").put("userid", "deliver001").put("orderid", "order9b7ebf432f5548608288074b14cf886220180129074213").put("begintime", startTime).put("endtime", endTime)
+		node.put("scode", "owy").put("rcode", "r001").put("cmd", "deliverselectorder").put("userid", "deliver001").put("orderid", orderid).put("begintime", startTime).put("endtime", endTime)
 		.put("price", 5000).put("delivertype", EDeliverType.personal.getValue()).put("deliverytype", EDeliveryType.car.getValue());
+		addressCommandAction.processJsonData(null, node);
+		System.out.println(addressCommandAction.result.toString());
+		
+		node.removeAll();
+		node.put("scode", "owy").put("rcode", "r001").put("cmd", "orderlist").put("userid", "user001").put("offset", 0).put("count", 10);
+		addressCommandAction.processJsonData(null, node);
+		System.out.println(addressCommandAction.result.toString());
+		
+		node.removeAll();
+		node.put("scode", "owy").put("rcode", "r001").put("cmd", "orderdetail").put("userid", "user001").put("orderid", orderid);
+		addressCommandAction.processJsonData(null, node);
+		System.out.println(addressCommandAction.result.toString());
+		
+		node.removeAll();
+		node.put("scode", "owy").put("rcode", "r001").put("cmd", "orderselectdeliver").put("userid", "user001").put("orderid", orderid).put("deliverid", "deliver001");
+		addressCommandAction.processJsonData(null, node);
+		System.out.println(addressCommandAction.result.toString());
+		
+//		node.removeAll();
+//		node.put("scode", "owy").put("rcode", "r001").put("cmd", "ordercanceldeliver").put("userid", "user001").put("orderid", orderid).put("deliverid", "deliver001");
+//		addressCommandAction.processJsonData(null, node);
+//		System.out.println(addressCommandAction.result.toString());
+
+//		node.removeAll();
+//		node.put("scode", "owy").put("rcode", "r001").put("cmd", "delivercheckinorder").put("userid", "deliver001").put("orderid", orderid);
+//		addressCommandAction.processJsonData(null, node);
+//		System.out.println(addressCommandAction.result.toString());
+		
+//		node.removeAll();
+//		node.put("scode", "owy").put("rcode", "r001").put("cmd", "delivermoving").put("userid", "deliver001").put("orderid", "orderd6d013d01c18464a8bd657a586f73a3c20180130074502");
+//		addressCommandAction.processJsonData(null, node);
+//		System.out.println(addressCommandAction.result.toString());
+		
+//		node.removeAll();
+//		node.put("scode", "owy").put("rcode", "r001").put("cmd", "delivergotcha").put("userid", "deliver001").put("orderid", "orderd6d013d01c18464a8bd657a586f73a3c20180130074502").put("startcode", "48827");
+//		addressCommandAction.processJsonData(null, node);
+//		System.out.println(addressCommandAction.result.toString());
+		
+//		node.removeAll();
+//		node.put("scode", "owy").put("rcode", "r001").put("cmd", "deliverdelivering").put("userid", "deliver001").put("orderid", "orderd6d013d01c18464a8bd657a586f73a3c20180130074502").put("startcode", "48827");
+//		addressCommandAction.processJsonData(null, node);
+//		System.out.println(addressCommandAction.result.toString());
+
+		node.removeAll();
+		node.put("scode", "owy").put("rcode", "r001").put("cmd", "deliverdeliverycomplete").put("userid", "deliver001").put("orderid", "orderd6d013d01c18464a8bd657a586f73a3c20180130074502").put("endcode", "48827").put("message", "thank you");
 		addressCommandAction.processJsonData(null, node);
 		System.out.println(addressCommandAction.result.toString());
 

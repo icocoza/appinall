@@ -32,6 +32,8 @@ public class AppInAllWebsocketServer {
 	ServicesConfig servicesConfig;
 	@Autowired
 	AppInAllWebsocketInitializer appInAllWebsocketInitializer;
+	@Autowired
+	AppInAllServiceAction appInAllServiceAction;
 	
 	private ServerBootstrap bootstrap;
 	private EventLoopGroup bossGroup;
@@ -47,7 +49,7 @@ public class AppInAllWebsocketServer {
 		bossGroup = new NioEventLoopGroup();
 	    workerGroup = new NioEventLoopGroup();
 		
-	    appInAllWebsocketInitializer.AddAction(new AppInAllServiceAction());
+	    appInAllWebsocketInitializer.AddAction(appInAllServiceAction);
 	    
 		bootstrap.group(bossGroup, workerGroup);
 		bootstrap.channel(NioServerSocketChannel.class);

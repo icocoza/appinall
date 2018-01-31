@@ -146,8 +146,8 @@
 		<!-- https://mvnrepository.com/artifact/org.igniterealtime.smack/smack -->
 		<dependency>
 		    <groupId>org.igniterealtime.smack</groupId>
-		    <artifactId>smack</artifactId>
-		    <version>3.2.1</version>
+		    <artifactId>smack-tcp</artifactId>
+		    <version>4.0.7</version>
 		</dependency>
 	
 		<!-- https://mvnrepository.com/artifact/org.chasen.mecab/mecab-java -->

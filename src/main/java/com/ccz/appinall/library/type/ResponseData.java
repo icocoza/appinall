@@ -72,6 +72,10 @@ public class ResponseData<T> {
 		return this;
 	}
 	
+	public Map<String, String> getParams() {
+		return mapParam;
+	}
+	
 	public String toString() {
 		if(bjson)
 			return toJsonString();

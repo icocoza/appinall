@@ -49,6 +49,7 @@ public enum EAddrError {
 	invalid_start_passcode,
 	invalid_end_passcode,
 	no_permission,
+	not_exist_deliver,
 	
 	unknown_error
 }

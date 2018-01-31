@@ -1,8 +1,16 @@
 package com.ccz.appinall.services;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
+import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.serializer.GenericToStringSerializer;
+import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
+import org.springframework.data.redis.serializer.StringRedisSerializer;
+
+import com.ccz.appinall.services.entity.redis.SessionInfo;
 
 import lombok.Getter;
 
@@ -36,4 +44,40 @@ public class ServicesConfig {
 	
 	@Value("${elastic.client.transport.sniff}")
 	private boolean elasticSniff;
+	
+	@Value("${fcm.poolname}")
+	private String fcmPoolName;
+	
+	@Value("${fcm.senderid}")
+	private String fcmSenderId;
+	
+	@Value("${fcm.senderkey}")
+	private String fcmSenderKey;
+	
+	@Value("${fcm.url}")
+	private String fcmUrl;
+	
+	@Value("${fcm.port}")
+	private int fcmPort;
+	
+	@Value("${fcm.initcount}")
+	private int fcmInitCount;
+	
+	@Value("${fcm.maxcount}")
+	private int fcmMaxCount;
+	
+    @Bean
+    JedisConnectionFactory jedisConnectionFactory() {
+    		return new JedisConnectionFactory();
+    }
+    
+    @Bean
+    public RedisTemplate<String, SessionInfo> redisSessionIpTemplate() {
+		final RedisTemplate< String, SessionInfo> template =  new RedisTemplate< String, SessionInfo>();
+		template.setConnectionFactory( jedisConnectionFactory() );
+		template.setKeySerializer( new StringRedisSerializer() );
+		template.setHashValueSerializer( new GenericToStringSerializer< SessionInfo >( SessionInfo.class ) );
+		template.setValueSerializer( new Jackson2JsonRedisSerializer< SessionInfo >( SessionInfo.class ) );
+		return template;
+    }
 }

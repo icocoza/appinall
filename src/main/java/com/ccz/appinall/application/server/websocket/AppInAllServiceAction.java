@@ -8,11 +8,15 @@ import org.springframework.stereotype.Component;
 
 import com.ccz.appinall.config.DefaultPropertyKey;
 import com.ccz.appinall.library.datastore.HttpMultipart;
+import com.ccz.appinall.library.module.fcm.FCMConnMgr;
+import com.ccz.appinall.library.module.redisqueue.RedisQueueKeyController;
 import com.ccz.appinall.library.server.session.SessionManager;
 import com.ccz.appinall.library.type.inf.ICommandProcess;
 import com.ccz.appinall.library.type.inf.IDataAccess;
 import com.ccz.appinall.library.type.inf.IServiceAction;
+import com.ccz.appinall.library.util.StrUtil;
 import com.ccz.appinall.library.util.ProtocolWriter.IWriteProtocol;
+import com.ccz.appinall.services.ServicesConfig;
 import com.ccz.appinall.services.action.admin.AdminCommandAction;
 import com.ccz.appinall.services.action.auth.AuthCommandAction;
 import com.ccz.appinall.services.action.auth.AuthSession;
@@ -25,7 +29,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import io.netty.channel.Channel;
 import io.netty.util.AttributeKey;
 
-//@Component
+@Component
 public class AppInAllServiceAction  implements IServiceAction {
 	public final AttributeKey<AuthSession> aptSession = AttributeKey.valueOf("APT_SESSION");
 	
@@ -33,8 +37,8 @@ public class AppInAllServiceAction  implements IServiceAction {
 	private List<ICommandProcess> cmdProcess = new ArrayList<>();
 	//private CommonAction fileCmd = new CommonAction(aptSession);
 	
-//	@Autowired
-//	SessionManager sessionManager;
+	@Autowired
+	ServicesConfig servicesConfig;
 	
 	public AppInAllServiceAction() {
 		cmdProcess.add(new AdminCommandAction(aptSession));
@@ -43,6 +47,25 @@ public class AppInAllServiceAction  implements IServiceAction {
 		cmdProcess.add(new ChannelCommandAction(aptSession));
 		cmdProcess.add(new FriendCommandAction(aptSession));
 		cmdProcess.add(new MessageCommandAction(aptSession));
+		
+/*		RedisQueueKeyController messageQueueKeyController = new RedisQueueKeyController("chsvc:server:" + StrUtil.getHostIp(), servicesConfig.getFcmMaxCount());
+		messageQueueKeyController.addWorker(new RedisOnSignOutQueueWorker(sessionManager));
+		redisQueueManager.addController(messageQueueKeyController);
+		
+		RedisQueueKeyController pushQueueKeyController = new RedisQueueKeyController("chsvc:queue", redisQueueConfig.getThreadPushQueueCount());
+		pushQueueKeyController.addWorker(new RedisOnPushQueueWorker(serverConfig, commonService));
+		pushQueueKeyController.addWorker(new RedisOnAllocStatusQueueWorker(sessionManager, sessionRepository, queueServerRepository));
+		redisQueueManager.addController(pushQueueKeyController);
+
+		redisQueueManager.startRedisQueue();
+*/
+		try {
+			FCMConnMgr.getInst().createConnectionPool(servicesConfig.getFcmPoolName(), servicesConfig.getFcmSenderId(), servicesConfig.getFcmSenderKey(), 
+					servicesConfig.getFcmUrl(), servicesConfig.getFcmPort(), servicesConfig.getFcmInitCount(), servicesConfig.getFcmMaxCount());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
 	}
 	
 	@Override

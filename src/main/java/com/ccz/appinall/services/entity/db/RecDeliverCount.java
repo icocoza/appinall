@@ -26,7 +26,7 @@ public class RecDeliverCount extends DbRecord{
 	@Override
 	protected DbRecord doLoad(DbReader rd, DbRecord r) {
 		RecDeliverCount rec = (RecDeliverCount)r;
-		rec.orderid = rd.getString("appid");
+		rec.orderid = rd.getString("orderid");
 		rec.count = rd.getInt(2);
 		return rec;
 	}
@@ -43,7 +43,7 @@ public class RecDeliverCount extends DbRecord{
 	
 	public Map<String, Integer> getDeliverCount(String[] orderids) {
 		String qOrderids = Arrays.stream(orderids).map(x -> "'" + x + "'").collect(Collectors.joining(","));
-		String sql = String.format("SELECT orderid, count(*) FROM %s WHERE orderid in (%s)", RecDeliverCount.TBL_NAME, qOrderids);
+		String sql = String.format("SELECT orderid, count(*) FROM %s WHERE orderid in (%s) group by orderid", RecDeliverCount.TBL_NAME, qOrderids);
 		return super.getList(sql).stream().map(e->(RecDeliverCount)e).collect(Collectors.toMap(x->x.orderid, x->x.count));
 	}
 
