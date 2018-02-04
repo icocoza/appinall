@@ -10,7 +10,9 @@ import org.springframework.data.redis.serializer.GenericToStringSerializer;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
+import com.ccz.appinall.library.module.redisqueue.RedisQueueManager;
 import com.ccz.appinall.services.entity.redis.SessionInfo;
+import com.ccz.appinall.services.type.enums.ERedisQueueCmd;
 
 import lombok.Getter;
 
@@ -66,6 +68,9 @@ public class ServicesConfig {
 	@Value("${fcm.maxcount}")
 	private int fcmMaxCount;
 	
+	@Value("${redisqueue.maxcount}")
+	private int redisQueueCount;
+	
     @Bean
     JedisConnectionFactory jedisConnectionFactory() {
     		return new JedisConnectionFactory();
@@ -80,4 +85,9 @@ public class ServicesConfig {
 		template.setValueSerializer( new Jackson2JsonRedisSerializer< SessionInfo >( SessionInfo.class ) );
 		return template;
     }
+    
+	@Bean(name="redisQueueManager") 
+	public RedisQueueManager<ERedisQueueCmd> redisQueueManager() {
+		return new RedisQueueManager<ERedisQueueCmd>();
+	}
 }

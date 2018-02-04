@@ -20,27 +20,28 @@ import lombok.Data;
 //@Entity
 //@Data
 //@Table(name="epid")
-public class RecEpid extends DbRecord {
+public class RecPushToken extends DbRecord {
 	static final String TBL_NAME = "epid";
 	
-	public String devuuid, epid;
+	public String devuuid, userid, epid;
 	public Timestamp regtime;
 	
-	public RecEpid(String poolName) {
+	public RecPushToken(String poolName) {
 		super(poolName);
 	}
 
 	@Override
 	public boolean createTable() {
-		String sql = String.format("CREATE TABLE IF NOT EXISTS %s (devuuid VARCHAR(128) NOT NULL,"
-				+ "epid VARCHAR(256) NOT NULL, regtime DATETIME DEFAULT  now(), PRIMARY KEY (devuuid)) ", RecEpid.TBL_NAME);
+		String sql = String.format("CREATE TABLE IF NOT EXISTS %s (devuuid VARCHAR(128) NOT NULL, userid VARCHAR(64) NOT NULL, "
+				+ "epid VARCHAR(256) NOT NULL, regtime DATETIME DEFAULT  now(), PRIMARY KEY (devuuid), INDEX idx_userid(userid)) ", RecPushToken.TBL_NAME);
 		return super.createTable(sql);
 	}
 
 	@Override
 	protected DbRecord doLoad(DbReader rd, DbRecord r) {
-		RecEpid rec = (RecEpid)r;
+		RecPushToken rec = (RecPushToken)r;
 		rec.devuuid = rd.getString("devuuid");
+		rec.userid = rd.getString("userid");
 		rec.epid = rd.getString("epid");
 		rec.regtime = rd.getDate("regtime");
 		return rec;
@@ -53,29 +54,30 @@ public class RecEpid extends DbRecord {
 
 	@Override
 	protected DbRecord onLoadList(DbReader rd) {
-		return doLoad(rd, new RecEpid(poolName));
+		return doLoad(rd, new RecPushToken(poolName));
 	}
 
-	public DbRecord insert(String devuuid, String scode, String epid) {
+	public DbRecord insert(String devuuid, String userid, String scode, String epid) {
 		this.devuuid = devuuid;
+		this.userid = userid;
 		this.epid = epid;
 		
-		String sql = String.format("INSERT INTO %s (devuuid, epid) VALUES('%s', '%s')", RecEpid.TBL_NAME, devuuid, epid);
+		String sql = String.format("INSERT INTO %s (devuuid, userid, epid) VALUES('%s', '%s', '%s')", RecPushToken.TBL_NAME, devuuid, userid, epid);
 		return super.insert(sql) ? this : DbRecord.Empty;
 	}
 	
 	public boolean delete(String devuuid) {
-		String sql = String.format("DELETE FROM %s WHERE devuuid='%s'", RecEpid.TBL_NAME, devuuid);
+		String sql = String.format("DELETE FROM %s WHERE devuuid='%s'", RecPushToken.TBL_NAME, devuuid);
 		return super.delete(sql);
 	}
 
-	public RecEpid getEpid(String devuuid) {
-		String sql = String.format("SELECT * FROM %s WHERE devuuid='%s'", RecEpid.TBL_NAME, devuuid);
-		return (RecEpid) super.getOne(sql);
+	public RecPushToken getEpid(String devuuid) {
+		String sql = String.format("SELECT * FROM %s WHERE devuuid='%s'", RecPushToken.TBL_NAME, devuuid);
+		return (RecPushToken) super.getOne(sql);
 	}
 	
 	public boolean updateEpid(String devuuid, String epid) {
-		String sql = String.format("UPDATE %s SET epid='%s' WHERE devuuid='%s'", RecEpid.TBL_NAME, epid, devuuid);
+		String sql = String.format("UPDATE %s SET epid='%s' WHERE devuuid='%s'", RecPushToken.TBL_NAME, epid, devuuid);
 		return super.update(sql);
 	}
 

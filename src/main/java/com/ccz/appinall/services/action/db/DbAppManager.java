@@ -167,7 +167,7 @@ public class DbAppManager {
 			new RecVoteUser(scode).createTable();
 			new RecFriend(scode).createTable();
 			new RecMessageDel(scode).createTable();
-			new RecEpid(scode).createTable();
+			new RecPushToken(scode).createTable();
 			new RecImage(scode).createTable();
 			new RecWebScrab(scode).createTable();
 			new RecDeliveryApply(scode).createTable();
@@ -298,17 +298,28 @@ public class DbAppManager {
 	}
 	
 	//for user epid for fcm push
-	public DbRecord addEpid(String scode, String devuuid, String epid) {
-		return new RecEpid(scode).insert(devuuid, scode, epid);
+	public DbRecord addEpid(String scode, String userid, String devuuid, String epid) {
+		return new RecPushToken(scode).insert(devuuid, userid, scode, epid);
 	}
 	public boolean delEpid(String scode, String devuuid) {
-		return new RecEpid(scode).delete(devuuid);
+		return new RecPushToken(scode).delete(devuuid);
 	}
-	public RecEpid getEpid(String scode, String devuuid) {
-		return new RecEpid(scode).getEpid(devuuid);
+	public RecPushToken getEpid(String scode, String devuuid) {
+		return new RecPushToken(scode).getEpid(devuuid);
 	}
 	public boolean updateEpid(String scode, String devuuid, String epid) {
-		return new RecEpid(scode).updateEpid(devuuid, epid);
+		return new RecPushToken(scode).updateEpid(devuuid, epid);
+	}
+	
+	//for push message which be failed
+	public DbRecord addFailedPushMsg(String scode, String msgid, String devuuid, String userid, String epid, String msg) {
+		return new RecPushFailMsg(scode).insert(msgid, devuuid, userid, epid, msg);
+	}
+	public boolean delete(String scode, String msgid) {
+		return new RecPushFailMsg(scode).delete(msgid);
+	}
+	public List<RecPushFailMsg> getMsgs(String scode, int offset, int count) {
+		return new RecPushFailMsg(scode).getMsgs(offset, count);
 	}
 	
 	/** 

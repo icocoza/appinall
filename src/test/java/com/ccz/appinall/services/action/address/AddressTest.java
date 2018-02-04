@@ -19,10 +19,10 @@ public class AddressTest {
 
 	@Test
 	public void testAddressInference() {
-		AddressInference ai = new AddressInference("대구시 달서구 상인동 1149번지");
+		AddressInference ai = new AddressInference("상인동 1149");
 		System.out.println(ai.toFormat());
 		System.out.println(ai.toString());
-		ai = new AddressInference("강동구 고덕로 131길 442 강동롯데캐슬 1101");
+		ai = new AddressInference("강동롯데");
 		System.out.println(ai.toString());
 	}
 	

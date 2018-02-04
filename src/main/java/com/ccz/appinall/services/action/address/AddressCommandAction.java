@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.ccz.appinall.library.dbhelper.DbRecord;
+import com.ccz.appinall.library.module.fcm.FCMConnMgr;
 import com.ccz.appinall.library.type.ResponseData;
 import com.ccz.appinall.library.util.KeyGen;
 import com.ccz.appinall.services.action.CommonAction;
@@ -128,7 +129,7 @@ public class AddressCommandAction extends CommonAction {
 
 	/*
 	 * 1. fail 된 검색어를 별도로 모아두어야 함
-	 * 2. 한 사용자에 의해 반복적으로 검색어가 들어 올 경우 모아두어야 함 
+	 * 2. 한 사용자에 의해 반복적으로 검색어가 들어 올 경우 모아 두어야 함 
 	 * */
 	private ResponseData<EAddrError> doSearch(ResponseData<EAddrError> res, DataSearchAddr data) {
 		JsonNode jsonNode =  null;
@@ -167,9 +168,9 @@ public class AddressCommandAction extends CommonAction {
 				data.getPrice(), data.getBegintime(), data.getEndtime(), data.getPhotourl()) == false)
 			return res.setError(EAddrError.failed_to_saveorder);
 		
-		//geoRepository.addStartLocation(orderid, from.getDouble("lon"), from.getDouble("lac"));
-		//geoRepository.addEndLocation(orderid, to.getDouble("lon"), to.getDouble("lac"));
 		geoRepository.addLocation(orderid, from.getDouble("lon"), from.getDouble("lac"), to.getDouble("lon"), to.getDouble("lac"));
+		
+		//[TODO] 우선 지정 Deliver가 있을 경우, 들어온 배송을 우선적으로 배정할 수 있도록 함
 		
 		return res.setParam("orderid", orderid).setError(EAddrError.ok);		//param : orderid
 	}
@@ -201,8 +202,7 @@ public class AddressCommandAction extends CommonAction {
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode jnode = mapper.valueToTree(order);
 		
-		//배송 전달 요청자 리스트 전달해야 함 {"data": { "delivers": [ {...} ] } }
-		List<RecDeliveryApply> delivers = DbAppManager.getInst().getDeliverList(data.getScode(), order.orderid);
+		List<RecDeliveryApply> delivers = DbAppManager.getInst().getDeliverList(data.getScode(), order.orderid);	//the deliver list whose apply the order
 		ArrayNode deliversNode = mapper.valueToTree(delivers);
 		jnode.putArray("delivers").addAll(deliversNode);
 		return res.setData(jnode).setError(EAddrError.ok);
@@ -215,8 +215,13 @@ public class AddressCommandAction extends CommonAction {
 		RecDeliveryStatus status =  DbAppManager.getInst().getDeliveryStatus(data.getScode(), data.getOrderid());
 		if(status != DbRecord.Empty)
 			return res.setError(EAddrError.already_assigned_order);
+		
 		if(DbAppManager.getInst().addDeliveryStatus(data.getScode(), data.getOrderid(), data.getDeliverid(), EDeliveryStatus.ready) == false)
 			return res.setError(EAddrError.failed_assign_deliver);
+		
+		//[TODO] Send a Push to deliver to let know the deliver be choosed
+		DeliveryPushGenerator.makeDeliveryStatus(data.getScode(), data.getUserid(), data.getDeliverid(), order.orderid, EDeliveryStatus.ready, "no msg");
+		FCMConnMgr.getInst().getConnection(data.getScode()).send(to, msgid, json, badgeCount);
 		return res.setError(EAddrError.ok);
 	}
 	

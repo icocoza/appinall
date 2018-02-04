@@ -1,14 +1,12 @@
 package com.ccz.appinall.services.redisqueue;
 
-import org.bson.Document;
-
 import com.ccz.appinall.library.module.fcm.FCMConnMgr;
 import com.ccz.appinall.library.module.fcm.FCMConnection;
 import com.ccz.appinall.library.module.redisqueue.IRedisQueueWorker;
 import com.ccz.appinall.library.util.KeyGen;
 import com.ccz.appinall.services.action.db.DbAppManager;
-import com.ccz.appinall.services.entity.db.RecEpid;
-import com.ccz.appinall.services.entity.redis.QueueHeader;
+import com.ccz.appinall.services.entity.db.RecPushToken;
+import com.ccz.appinall.services.entity.redis.QueueCmd;
 import com.ccz.appinall.services.type.enums.ERedisQueueCmd;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -25,18 +23,17 @@ private final ERedisQueueCmd cmd = ERedisQueueCmd.owy_status;
 
 	@Override
 	public boolean doWork(String json) throws Exception {
-		QueueHeader header = (QueueHeader) objectMapper.readValue(json, QueueHeader.class);
+		QueueCmd header = (QueueCmd) objectMapper.readValue(json, QueueCmd.class);
 		if(null == header || null == header.to)
 			return false;
-		RecEpid epid = DbAppManager.getInst().getEpid(header.scode, header.to);
+		RecPushToken epid = DbAppManager.getInst().getEpid(header.scode, header.to);
+		String msgid = KeyGen.makeKey("msgid");
 		FCMConnection conn = FCMConnMgr.getInst().getConnection(header.scode);
-		conn.send(epid.epid, KeyGen.makeKey("msgid"), json, 1);
-		return false;
+		boolean bOk = conn.send(epid.epid, msgid, json, 1);
+		if(bOk==false) {
+			DbAppManager.getInst().addFailedPushMsg(header.scode, msgid, header.to, header.to, epid.epid, json);
+		}
+		return bOk;
 	}
 
-	private Document makePayload(String to, String from, String json) {
-		Document doc = new Document();
-		
-		return doc;
-	}
 }
