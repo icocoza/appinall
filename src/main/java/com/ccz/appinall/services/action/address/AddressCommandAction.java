@@ -1,5 +1,6 @@
 package com.ccz.appinall.services.action.address;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -22,7 +23,9 @@ import com.ccz.appinall.services.entity.db.RecDeliverCount;
 import com.ccz.appinall.services.entity.db.RecDeliveryApply;
 import com.ccz.appinall.services.entity.db.RecDeliveryOrder;
 import com.ccz.appinall.services.entity.db.RecDeliveryStatus;
+import com.ccz.appinall.services.entity.db.RecPushToken;
 import com.ccz.appinall.services.entity.db.RecUser;
+import com.ccz.appinall.services.entity.redis.QueueDeliveryStatus;
 import com.ccz.appinall.services.repository.redis.GeoRepository;
 import com.ccz.appinall.services.repository.redis.GeoRepository.Location;
 import com.ccz.appinall.services.type.enums.EAddrCmd;
@@ -220,10 +223,10 @@ public class AddressCommandAction extends CommonAction {
 			return res.setError(EAddrError.failed_assign_deliver);
 		
 		//[TODO] Send a Push to deliver to let know the deliver be choosed
-		DeliveryPushGenerator.makeDeliveryStatus(data.getScode(), data.getUserid(), data.getDeliverid(), order.orderid, EDeliveryStatus.ready, "no msg");
-		FCMConnMgr.getInst().getConnection(data.getScode()).send(to, msgid, json, badgeCount);
+		DeliveryPushGenerator.sendDeliveryStatus(data.getScode(), data.getUserid(), data.getDeliverid(), order.orderid, EDeliveryStatus.ready, "no msg");
 		return res.setError(EAddrError.ok);
 	}
+
 	
 	private ResponseData<EAddrError> doDeliverCancelBySender(ResponseData<EAddrError> res, DataCancelDeliverBySender data) {
 		RecDeliveryOrder order = (RecDeliveryOrder) DbAppManager.getInst().getOrder(data.getScode(), data.getOrderid());
@@ -240,7 +243,7 @@ public class AddressCommandAction extends CommonAction {
 			return res.setError(EAddrError.failed_cancel_delivery_ready);
 		
 		//[TODO] 이전에 선택된 delivery에게 푸시나 문자 전송해야 함(취소알림)
-		
+		DeliveryPushGenerator.sendDeliveryStatus(data.getScode(), data.getUserid(), data.getDeliverid(), order.orderid, EDeliveryStatus.cancel, "no msg");
 		return res.setError(EAddrError.ok);
 	}
 	
@@ -287,10 +290,13 @@ public class AddressCommandAction extends CommonAction {
 			return res.setError(EAddrError.failed_apply_order);
 		
 		//[TODO] order 에게 푸시나 온라인 메시지 보내야 함
-		
+		DeliveryPushGenerator.sendDeliveryStatus(data.getScode(), data.getUserid(), order.senderid, order.orderid, EDeliveryStatus.apply, "no msg");
 		return res.setError(EAddrError.ok);
 	}
 	private ResponseData<EAddrError> doOrderCheckInByDeliver(ResponseData<EAddrError> res, DataOrderCheckInByDelivers data) {
+		RecDeliveryOrder order = (RecDeliveryOrder) DbAppManager.getInst().getOrder(data.getScode(), data.getOrderid());
+		if(order == DbRecord.Empty)
+			return res.setError(EAddrError.not_exist_order);
 		RecDeliveryStatus status =  DbAppManager.getInst().getDeliveryStatus(data.getScode(), data.getOrderid(), data.getUserid());
 		if(status == DbRecord.Empty)
 			return res.setError(EAddrError.not_allowed_order);
@@ -300,11 +306,14 @@ public class AddressCommandAction extends CommonAction {
 			return res.setError(EAddrError.failed_to_saveassign);
 		
 		//[TODO] Seder 에게 푸시나 메시지 전송해야 함 
-		
+		DeliveryPushGenerator.sendDeliveryStatus(data.getScode(), data.getUserid(), order.senderid, order.orderid, EDeliveryStatus.assign, "no msg");
 		return res.setError(EAddrError.ok);
 	}
 
 	private ResponseData<EAddrError> doDeliverMoving(ResponseData<EAddrError> res, DataDeliverMoving data) {
+		RecDeliveryOrder order = (RecDeliveryOrder) DbAppManager.getInst().getOrder(data.getScode(), data.getOrderid());
+		if(order == DbRecord.Empty)
+			return res.setError(EAddrError.not_exist_order);
 		RecDeliveryStatus status =  DbAppManager.getInst().getDeliveryStatus(data.getScode(), data.getOrderid(), data.getUserid());
 		if(status == DbRecord.Empty)
 			return res.setError(EAddrError.not_allowed_order);
@@ -315,12 +324,15 @@ public class AddressCommandAction extends CommonAction {
 			return res.setError(EAddrError.failed_to_savestartmoving);
 		
 		//[TODO] Seder 에게 푸시나 메시지 전송해야 함, randomcode도 같이 전달
-		
+		DeliveryPushGenerator.sendDeliveryStatus(data.getScode(), data.getUserid(), order.senderid, order.orderid, EDeliveryStatus.start, "no msg");
 		
 		return res.setError(EAddrError.ok);
 	}
 
 	private ResponseData<EAddrError> doDeliverGotchaOrder(ResponseData<EAddrError> res, DataDeliverGotcha data) {
+		RecDeliveryOrder order = (RecDeliveryOrder) DbAppManager.getInst().getOrder(data.getScode(), data.getOrderid());
+		if(order == DbRecord.Empty)
+			return res.setError(EAddrError.not_exist_order);
 		RecDeliveryStatus status =  DbAppManager.getInst().getDeliveryStatus(data.getScode(), data.getOrderid(), data.getUserid());
 		if(status == DbRecord.Empty)
 			return res.setError(EAddrError.not_allowed_order);
@@ -332,7 +344,7 @@ public class AddressCommandAction extends CommonAction {
 			return res.setError(EAddrError.failed_to_savegotcha);
 		
 		//[TODO] Seder 에게 푸시나 메시지 전송해야 함 
-		
+		DeliveryPushGenerator.sendDeliveryStatus(data.getScode(), data.getUserid(), order.senderid, order.orderid, EDeliveryStatus.gotcha, "no msg");
 		return res.setError(EAddrError.ok);
 	}
 	
@@ -345,6 +357,7 @@ public class AddressCommandAction extends CommonAction {
 		String randomcode = "" + (new Random().nextInt(99999-10000)+10000);
 		if(DbAppManager.getInst().updateDeliveryEndCode(data.getScode(), data.getOrderid(), data.getUserid(), EDeliveryStatus.delivering, randomcode)==false)
 			return res.setError(EAddrError.failed_to_savedelivering);
+		//SMS to Receiver
 		return res.setError(EAddrError.ok);
 	}
 

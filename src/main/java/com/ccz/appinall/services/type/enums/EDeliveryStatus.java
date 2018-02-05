@@ -4,7 +4,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public enum EDeliveryStatus {
-	none("none"), ready("ready"), 
+	none("none"), apply("apply"), ready("ready"), 
 	assign("assign"), start("start"), 
 	gotcha("gotcha"), delivering("delivering"), 
 	delivered("delivered"), 
