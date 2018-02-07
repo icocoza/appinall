@@ -33,7 +33,7 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.search.MatchQuery;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
 
-import com.ccz.appinall.services.entity.elasticsearch.ElasticSourcePair;
+import com.ccz.appinall.services.model.elasticsearch.ElasticSourcePair;
 
 public class ElasticTransportMgr {
 	

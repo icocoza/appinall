@@ -7,7 +7,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.ccz.appinall.config.DefaultConfig;
+import com.ccz.appinall.common.config.DefaultConfig;
 import com.ccz.appinall.library.type.enums.EHttpStatus;
 import com.ccz.appinall.library.util.HttpUtil;
 import com.ccz.appinall.library.util.QueuedBuffer;

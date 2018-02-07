@@ -2,7 +2,7 @@ package com.ccz.appinall.library.server.handler;
 
 import java.util.List;
 
-import com.ccz.appinall.config.DefaultPropertyKey;
+import com.ccz.appinall.common.config.DefaultPropertyKey;
 import com.ccz.appinall.library.type.inf.IDataAccess;
 import com.ccz.appinall.library.type.inf.IServiceAction;
 import com.ccz.appinall.library.util.ProtocolWriter;

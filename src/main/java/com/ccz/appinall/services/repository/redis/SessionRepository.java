@@ -4,7 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
 
-import com.ccz.appinall.services.entity.redis.SessionInfo;
+import com.ccz.appinall.services.model.redis.SessionInfo;
 
 @Repository
 public class SessionRepository {

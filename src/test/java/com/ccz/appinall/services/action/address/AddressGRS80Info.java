@@ -26,10 +26,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import com.ccz.appinall.application.server.http.admin.business.service.ResourceLoaderService;
-import com.ccz.appinall.services.ServicesConfig;
-import com.ccz.appinall.services.entity.elasticsearch.ElasticSourcePair;
-import com.ccz.appinall.services.entity.elasticsearch.EntrcInfo;
+import com.ccz.appinall.application.http.admin.business.service.ResourceLoaderService;
+import com.ccz.appinall.common.config.ServicesConfig;
+import com.ccz.appinall.services.controller.address.AddressElasticSearch;
+import com.ccz.appinall.services.model.elasticsearch.ElasticSourcePair;
+import com.ccz.appinall.services.model.elasticsearch.EntrcInfo;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest

@@ -22,7 +22,9 @@ import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import com.ccz.appinall.services.entity.elasticsearch.EntrcInfo;
+import com.ccz.appinall.services.controller.address.AddressInference;
+import com.ccz.appinall.services.controller.address.AddressMongoDb;
+import com.ccz.appinall.services.model.elasticsearch.EntrcInfo;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest

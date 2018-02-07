@@ -8,7 +8,7 @@ import java.util.List;
 
 import org.bson.Document;
 
-import com.ccz.appinall.services.entity.elasticsearch.EntrcInfo;
+import com.ccz.appinall.services.model.elasticsearch.EntrcInfo;
 
 public class CommonAddressUtils {
 	static public void updateCoordination(List<EntrcInfo> list) {

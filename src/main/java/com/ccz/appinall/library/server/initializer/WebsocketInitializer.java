@@ -3,7 +3,7 @@ package com.ccz.appinall.library.server.initializer;
 import java.util.LinkedList;
 import java.util.List;
 
-import com.ccz.appinall.config.DefaultConfig;
+import com.ccz.appinall.common.config.DefaultConfig;
 import com.ccz.appinall.library.server.handler.ServiceSelectionWebsocketDataHandler;
 import com.ccz.appinall.library.server.handler.WebsocketPacketDataHandler;
 import com.ccz.appinall.library.type.inf.IServiceAction;

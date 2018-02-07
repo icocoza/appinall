@@ -7,7 +7,7 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.List;
 
-import com.ccz.appinall.services.entity.db.RecDeliveryOrder;
+import com.ccz.appinall.services.model.db.RecDeliveryOrder;
 
 public class DbHelper {
 	static int CURSOR_TYPE = ResultSet.TYPE_SCROLL_INSENSITIVE;

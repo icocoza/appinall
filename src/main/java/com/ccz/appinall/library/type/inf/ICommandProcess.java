@@ -1,7 +1,7 @@
 package com.ccz.appinall.library.type.inf;
 
 
-import com.ccz.appinall.config.DefaultPropertyKey;
+import com.ccz.appinall.common.config.DefaultPropertyKey;
 import com.ccz.appinall.library.datastore.HttpMultipart;
 import com.ccz.appinall.library.util.ProtocolWriter.IWriteProtocol;
 import com.fasterxml.jackson.databind.JsonNode;

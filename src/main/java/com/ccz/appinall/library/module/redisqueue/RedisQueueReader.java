@@ -2,7 +2,7 @@ package com.ccz.appinall.library.module.redisqueue;
 
 import org.apache.log4j.Logger;
 
-import com.ccz.appinall.services.entity.redis.QueueCmd;
+import com.ccz.appinall.services.model.redis.QueueCmd;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class RedisQueueReader {
