@@ -40,8 +40,8 @@ public class DbTransaction {
 		return RecUserAuth.qUpdateSMSCode(phoneno, smscode);
 	}
 
-	public String queryInsertToken(String userid, String uuid, String tokenid, String token) {
-		return RecUserToken.qInsertToken(userid, uuid, tokenid, token);
+	public String queryInsertToken(String userid, String uuid, String tokenid, String token, boolean enabled) {
+		return RecUserToken.qInsertToken(userid, uuid, tokenid, token, enabled);
 	}
 	
 	public String queryInsertUser(String userid, String username, String usertype, String ostype, String osversion, String appversion) {

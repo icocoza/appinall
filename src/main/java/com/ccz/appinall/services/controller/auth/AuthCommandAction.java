@@ -67,10 +67,10 @@ public class AuthCommandAction extends CommonAction {
 			res = this.doRegister(res, new RecDataAuth().new DataRegPhone(jdata));
 			break;
 		case login:
-			res = this.doLogin(res, new RecDataAuth().new DataLogin(jdata));
+			res = this.doLogin(res, new RecDataAuth().new DataLogin(jdata)); //가입 후 한번은 로그인 해야 함
 			break;
 		case signin:
-			res = this.doSignin(ch, res, new RecDataAuth().new DataSignIn(jdata));
+			res = this.doSignin(ch, res, new RecDataAuth().new DataSignIn(jdata)); //한번 로그인 한 이후에는 토큰으로 로그인 하면 됨 
 			break;
 		case change_pw:
 			res = this.doUpdatePW(res, new RecDataAuth().new DataUpdateIdUser(jdata));
@@ -169,7 +169,7 @@ public class AuthCommandAction extends CommonAction {
 		List<String> queries = new ArrayList<>();
 		queries.add(authQuery);
 		queries.add(DbTransaction.getInst().queryInsertUser(userid, data.getUsername(), data.getUsertype(), data.getOstype(), data.getOsversion(), data.getAppversion()));
-		queries.add(DbTransaction.getInst().queryInsertToken(userid, data.getUuid(), tokenid, token));
+		queries.add(DbTransaction.getInst().queryInsertToken(userid, data.getUuid(), tokenid, token, false));
 		if(DbTransaction.getInst().transactionQuery(data.getTokenScode(), queries)==false)
 			return res.setError(EAuthError.failed_register);
 		
@@ -182,10 +182,16 @@ public class AuthCommandAction extends CommonAction {
 		RecAdminApp app = DbAppManager.getInst().getApp(data.getTokenAppId());	
 		if(app == DbRecord.Empty)
 			return res.setError(EAuthError.wrong_appid);
-		if(data.isValidUserToken()==false || data.isValidUuid()==false)
+		if(data.isValidUserToken() == true)
+			return doLoginByToken(res, data);
+		return doLoginByIdPw(res, data);
+	}
+	
+	private ResponseData<EAuthError> doLoginByToken(ResponseData<EAuthError> res, DataLogin data) {	//already signed user who has token
+		if(data.isValidUuid()==false)
 			return res.setError(EAuthError.invalid_user_token);
 		
-		RecUserToken token = DbAppManager.getInst().getUserToken(data.getTokenScode(), data.getTokenid());
+		RecUserToken token = DbAppManager.getInst().getUserTokenByTokenId(data.getTokenScode(), data.getTokenid());
 		if(token==DbRecord.Empty)
 			return res.setError(EAuthError.invalid_user_tokenid);
 		if(data.getTokenUuid().equals(token.uuid)==false)
@@ -203,6 +209,31 @@ public class AuthCommandAction extends CommonAction {
 		return res.setError(EAuthError.ok);
 	}
 	
+	private ResponseData<EAuthError> doLoginByIdPw(ResponseData<EAuthError> res, DataLogin data) {		//new login using id and pw
+		RecUserAuth auth = DbAppManager.getInst().getUserAuthByUid(data.getScode(), data.getUid());
+		if(DbRecord.Empty == auth)
+			return res.setError(EAuthError.not_exist_user);
+		if(auth.isSamePw(data.getPw())==false)
+			return res.setError(EAuthError.invalid_user);
+		RecUserToken recToken = DbAppManager.getInst().getUserTokenByUserId(data.getScode(), auth.getUserid());
+		if(recToken==DbRecord.Empty)
+			return res.setError(EAuthError.unauthorized_userid);
+		
+		if(recToken.uuid.equals(data.getUuid()) == true) {
+			String token = Crypto.AES256Cipher.getInst().enc(data.getUid()+ASS.UNIT+data.getUuid()+ASS.UNIT+auth.getAuthtype());
+			DbAppManager.getInst().updateToken(data.getScode(), auth.getUserid(), recToken.tokenid, token, true);
+			return res.setParam("tid", recToken.tokenid).setParam("token", token).setError(EAuthError.ok);
+		}
+		
+		String tokenid = StrUtil.getSha1Uuid("tid");
+		String token = Crypto.AES256Cipher.getInst().enc(data.getUid()+ASS.UNIT+data.getUuid()+ASS.UNIT+EUserAuthType.uid.getValue());
+		List<String> queries = new ArrayList<>();
+		queries.add(DbTransaction.getInst().queryDeleteTokenByUuid(auth.getUserid(), recToken.uuid));
+		queries.add(DbTransaction.getInst().queryInsertToken(auth.getUserid(), data.getUuid(), tokenid, token, true));
+		if(DbTransaction.getInst().transactionQuery(data.getTokenScode(), queries)==false)
+			return res.setError(EAuthError.failed_update_token);
+		return res.setParam("tid", tokenid).setParam("token", token).setError(EAuthError.ok);
+	}
 	/** 
 	 * login data
 	 * @param ch
@@ -221,7 +252,7 @@ public class AuthCommandAction extends CommonAction {
 		if(data.isValidUserToken()==false || data.isValidUuid()==false)
 			return res.setError(EAuthError.invalid_user_token);
 		
-		RecUserToken token = DbAppManager.getInst().getUserToken(data.getTokenScode(), data.getTokenid());
+		RecUserToken token = DbAppManager.getInst().getUserTokenByTokenId(data.getTokenScode(), data.getTokenid());
 		if(token==DbRecord.Empty)
 			return res.setError(EAuthError.invalid_user_tokenid);
 		if(data.getTokenUuid().equals(token.uuid)==false)
@@ -236,15 +267,15 @@ public class AuthCommandAction extends CommonAction {
 		RecUser user = DbAppManager.getInst().getUser(data.getTokenScode(), token.userid);
 		if(DbRecord.Empty == user)
 			return res.setError(EAuthError.not_exist_userinfo);
-		if(user.isSameApt(data.getTokenAppId()) == false)
-			DbAppManager.getInst().updateAppCode(data.getTokenScode(), token.userid, data.getTokenAppId());	//update apt code
+		if(user.isSameApt(data.getTokenScode()) == false)
+			DbAppManager.getInst().updateAppCode(data.getTokenScode(), token.userid, data.getTokenScode());	//update apt code
 		user.inappcode = data.getTokenAppId();
 		
 		AuthSession session = new AuthSession(ch, 1).putSession(user, data.getTokenScode());	//consider the sessionid to find instance when close
 		SessionManager.getInst().put(session);
 		ch.attr(sessionKey).set(session);
 		
-		return res.setError(EAuthError.eOK).setParam(""+user.lasttime);
+		return res.setError(EAuthError.ok).setParam(""+user.lasttime);
 	}
 
 	private ResponseData<EAuthError> doUpdatePW(ResponseData<EAuthError> res, DataUpdateIdUser data) {
@@ -268,7 +299,7 @@ public class AuthCommandAction extends CommonAction {
 		String token = Crypto.AES256Cipher.getInst().enc(data.getUid()+ASS.UNIT+data.getUuid()+ASS.UNIT+data.getAuthtype());
 		List<String> queries = new ArrayList<>();
 		queries.add(DbTransaction.getInst().queryDeleteTokenByUuid(auth.getUserid(), data.getUuid()));
-		queries.add(DbTransaction.getInst().queryInsertToken(auth.getUserid(), data.getUuid(), tokenid, token));
+		queries.add(DbTransaction.getInst().queryInsertToken(auth.getUserid(), data.getUuid(), tokenid, token, false));
 		queries.add(DbTransaction.getInst().queryUpdateUser(auth.getUserid(), data.getOstype(), data.getOsversion(), data.getAppversion()));
 		queries.add(DbTransaction.getInst().queryUpdatePw(data.getUid(), data.getNewpw()));
 		if(DbTransaction.getInst().transactionQuery(data.getTokenScode(), queries)==false)
@@ -296,7 +327,7 @@ public class AuthCommandAction extends CommonAction {
 		
 		List<String> queries = new ArrayList<>();
 		queries.add(DbTransaction.getInst().queryUpdateEmailCode(data.getEmail(), emailcode));
-		queries.add(DbTransaction.getInst().queryInsertToken(auth.getUserid(), data.getUuid(), tokenid, token));
+		queries.add(DbTransaction.getInst().queryInsertToken(auth.getUserid(), data.getUuid(), tokenid, token, false));
 		queries.add(DbTransaction.getInst().queryUpdateUser(auth.getUserid(), data.getOstype(), data.getOsversion(), data.getAppversion()));
 		if(DbTransaction.getInst().transactionQuery(data.getTokenScode(), queries)==false)
 			return res.setError(EAuthError.failed_email_verify);
@@ -326,7 +357,7 @@ public class AuthCommandAction extends CommonAction {
 		
 		List<String> queries = new ArrayList<>();
 		queries.add(DbTransaction.getInst().queryUpdateSMSCode(data.getPhoneno(), smscode));
-		queries.add(DbTransaction.getInst().queryInsertToken(auth.getUserid(), data.getUuid(), tokenid, token));
+		queries.add(DbTransaction.getInst().queryInsertToken(auth.getUserid(), data.getUuid(), tokenid, token, false));
 		queries.add(DbTransaction.getInst().queryUpdateUser(auth.getUserid(), data.getOstype(), data.getOsversion(), data.getAppversion()));
 		if(DbTransaction.getInst().transactionQuery(data.getTokenScode(), queries)==false)
 			return res.setError(EAuthError.failed_phone_Verify);

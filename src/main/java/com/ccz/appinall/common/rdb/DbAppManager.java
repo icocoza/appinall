@@ -175,6 +175,7 @@ public class DbAppManager {
 			new RecDeliveryOrder(scode).createTable();
 			new RecDeliveryPhoto(scode).createTable();
 			new RecDeliveryStatus(scode).createTable();
+			new RecUserToken(scode).createTable();
 		} catch (SQLException e) {
 			return false;
 		}
@@ -212,12 +213,16 @@ public class DbAppManager {
 	}
 	
 	//for user token
-	public RecUserToken getUserToken(String scode, String tokenid) {
-		return new RecUserToken(scode).getToken(tokenid);
+	public RecUserToken getUserTokenByUserId(String scode, String userid) {
+		return new RecUserToken(scode).getTokenByUserId(userid);
 	}
 
-	public RecUserToken getUserToken(String scode, String userid, String tokenid) {
-		return new RecUserToken(scode).getToken(userid, tokenid);
+	public RecUserToken getUserTokenByTokenId(String scode, String tokenid) {
+		return new RecUserToken(scode).getTokenByTokenId(tokenid);
+	}
+
+	public RecUserToken getUserTokenByUserTokenId(String scode, String userid, String tokenid) {
+		return new RecUserToken(scode).getTokenByUserTokenId(userid, tokenid);
 	}
 	
 	public boolean addUserToken(String scode, String userid, String uuid, String tokenid, String token) {
@@ -231,7 +236,11 @@ public class DbAppManager {
 	public boolean enableToken(String scode, String userid, String tokenid, boolean enabled) {
 		return new RecUserToken(scode).enableToken(userid, tokenid, enabled);
 	}
-	
+
+	public boolean updateToken(String scode, String userid, String tokenid, String token, boolean enabled) {
+		return new RecUserToken(scode).updateToken(userid, tokenid, token, enabled);
+	}
+
 	//for user authentication
 	public RecUserAuth insertUID(String scode, String userid, String uid, String pw) {
 		return (RecUserAuth) new RecUserAuth(scode).insertUID(userid, uid, pw);

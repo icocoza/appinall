@@ -74,14 +74,19 @@ public class RecDataAuth {
 		
 		public DataSignIn(JsonNode jnode) {
 			super(jnode);
-			this.regToken = jnode.get("regToken").asText();
-			this.tokenid = jnode.get("tokenid").asText();
-			this.uuid = jnode.get("uuid").asText();
+			if(jnode.has("regToken"))
+				this.regToken = jnode.get("regToken").asText();
+			if(jnode.has("tokenid"))
+				this.tokenid = jnode.get("tokenid").asText();
+			if(jnode.has("uuid"))
+				this.uuid = jnode.get("uuid").asText();
 			
 			decodeRegToken();
 		}
 		
 		private void decodeRegToken() {
+			if(this.regToken==null)
+				return;
 			String dec = Crypto.AES256Cipher.getInst().dec(regToken);
 			String[] chunk = dec.split(ASS.UNIT);
 			tokenUserid = chunk[0];

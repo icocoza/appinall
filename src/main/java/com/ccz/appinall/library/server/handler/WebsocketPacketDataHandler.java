@@ -16,14 +16,14 @@ public class WebsocketPacketDataHandler extends SimpleChannelInboundHandler<WebS
 	@Override
 	protected void channelRead0(ChannelHandlerContext ctx, WebSocketFrame msg) throws Exception {
 		WebsocketPacketData wsdata = ctx.channel().attr(property).get();
-    	if(wsdata==null)
-    		 ctx.channel().attr(property).set(wsdata = new WebsocketPacketData(ctx));
-    	wsdata.write(msg.content());
-    	
-    	if(msg instanceof TextWebSocketFrame)
-    		ctx.fireChannelRead(new WebsocketTextData(wsdata));
-    	else
-    		ctx.close();	//[TODO] add other types if you want ... binary, continous, close, ping, pong
+	    	if(wsdata==null)
+	    		 ctx.channel().attr(property).set(wsdata = new WebsocketPacketData(ctx));
+	    	wsdata.write(msg.content());
+	    	
+	    	if(msg instanceof TextWebSocketFrame)
+	    		ctx.fireChannelRead(new WebsocketTextData(wsdata));
+	    	else
+	    		ctx.close();	//[TODO] add other types if you want ... binary, continous, close, ping, pong
 	}
 
 }

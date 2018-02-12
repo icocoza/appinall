@@ -52,7 +52,7 @@ public class AppInAllWsServer {
 	    
 		bootstrap.group(bossGroup, workerGroup);
 		bootstrap.channel(NioServerSocketChannel.class);
-		bootstrap.localAddress(new InetSocketAddress(applicationConfig.getWebsocketPort()));
+		bootstrap.localAddress(new InetSocketAddress(servicesConfig.getWebsocketPort()));
 		bootstrap.childHandler(appInAllWebsocketInitializer);
 		
 //		Map<ChannelOption<?>, Object> tcpChannelOptions = channelOptions();
@@ -73,16 +73,16 @@ public class AppInAllWsServer {
 	
 	private Map<ChannelOption<?>, Object> channelOptions() {
 		Map<ChannelOption<?>, Object> options = new HashMap<ChannelOption<?>, Object>();
-	    options.put(ChannelOption.SO_KEEPALIVE, applicationConfig .getKeepAlive());
-	    options.put(ChannelOption.SO_BACKLOG, applicationConfig.getBacklog());
-	    options.put(ChannelOption.SO_REUSEADDR, applicationConfig.getReuseAddr());
-	    options.put(ChannelOption.SO_LINGER, applicationConfig.getLinger());
+	    options.put(ChannelOption.SO_KEEPALIVE, servicesConfig.isKeepAlive());
+	    options.put(ChannelOption.SO_BACKLOG, servicesConfig.getBacklog());
+	    options.put(ChannelOption.SO_REUSEADDR, servicesConfig.isReuseAddr());
+	    options.put(ChannelOption.SO_LINGER, servicesConfig.getLinger());
 	    return options;
 	}
 	
 	public void initDatabase() {
-        DbAppManager.getInst().createAdminDatabase(applicationConfig.getAdminMysqlUrl(), applicationConfig.getAdminMysqlDbName(), applicationConfig.getAdminMysqlUser(), applicationConfig.getAdminMysqlPw());
-        DbAppManager.getInst().initAdmin(applicationConfig.getAdminMysqlPoolname(), applicationConfig.getAdminMysqlUrl(), applicationConfig.getAdminMysqlDbName(), applicationConfig.getAdminMysqlUser(), applicationConfig.getAdminMysqlPw(), 4, 8);
+        DbAppManager.getInst().createAdminDatabase(servicesConfig.getAdminMysqlUrl(), servicesConfig.getAdminMysqlDbName(), servicesConfig.getAdminMysqlUser(), servicesConfig.getAdminMysqlPw());
+        DbAppManager.getInst().initAdmin(servicesConfig.getAdminMysqlPoolname(), servicesConfig.getAdminMysqlUrl(), servicesConfig.getAdminMysqlDbName(), servicesConfig.getAdminMysqlUser(), servicesConfig.getAdminMysqlPw(), 4, 8);
         DbAppManager.getInst().initAdminApp();
 	}
 	
@@ -93,7 +93,7 @@ public class AppInAllWsServer {
 	}
 	
 	public void initMongoDb() {
-		AddressMongoDb.getInst().init(applicationConfig.getMongoDbUrl(), applicationConfig.getMongoDbPort(), 
-									 applicationConfig.getAddressMongoDatabase(), applicationConfig.getAddressMongocollection());
+		AddressMongoDb.getInst().init(servicesConfig.getMongoDbUrl(), servicesConfig.getMongoDbPort(), 
+				servicesConfig.getAddressMongoDatabase(), servicesConfig.getAddressMongocollection());
 	}
 }

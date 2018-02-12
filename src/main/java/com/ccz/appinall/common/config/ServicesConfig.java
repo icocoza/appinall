@@ -1,21 +1,23 @@
 package com.ccz.appinall.common.config;
 
-import javax.servlet.MultipartConfigElement;
+
+import java.net.InetSocketAddress;
 
 import org.apache.coyote.http11.AbstractHttp11Protocol;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.embedded.tomcat.TomcatConnectorCustomizer;
 import org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedServletContainerFactory;
-import org.springframework.boot.web.servlet.MultipartConfigFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 import org.springframework.core.io.Resource;
 import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.GenericToStringSerializer;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
-import org.springframework.web.multipart.commons.CommonsMultipartResolver;
+import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
 import com.ccz.appinall.library.module.redisqueue.RedisQueueManager;
 import com.ccz.appinall.services.enums.ERedisQueueCmd;
@@ -26,6 +28,8 @@ import lombok.Getter;
 @Getter
 @Configuration
 public class ServicesConfig {
+	@Autowired
+	private Environment env;
 	
 	@Value("classpath:static/addrkormapping.cfg")
     private Resource korea_addr_mapping;
@@ -54,6 +58,21 @@ public class ServicesConfig {
 	@Value("${elastic.client.transport.sniff}")
 	private boolean elasticSniff;
 	
+    @Value("${admin.mysql.url}")
+    private String adminMysqlUrl;
+    
+    @Value("${admin.mysql.user}")
+    private String adminMysqlUser;
+    
+    @Value("${admin.mysql.pw}")
+    private String adminMysqlPw;
+    
+    @Value("${admin.mysql.poolname}")
+    private String adminMysqlPoolname;
+    
+    @Value("${admin.mysql.dbname}")
+    private String adminMysqlDbName;
+	
 	@Value("${fcm.poolname}")
 	private String fcmPoolName;
 	
@@ -78,6 +97,45 @@ public class ServicesConfig {
 	@Value("${redisqueue.maxcount}")
 	private int redisQueueCount;
 	
+    @Value("${mongodb.url}")
+	private String mongoDbUrl;
+
+    @Value("${mongodb.port}")
+	private int mongoDbPort;
+    
+    @Value("${address.mongodb.database}")
+    private String addressMongoDatabase;
+    	@Value("${address.mongodb.collection}")
+    private String addressMongocollection;
+
+	@Value("${websocket.port}")
+    private int websocketPort;
+
+    @Value("${websocket.path}")
+    private String websocketPath;
+
+    @Value("${so.keepalive}")
+    private boolean keepAlive;
+    
+    @Value("${so.backlog}")
+    private int backlog;
+
+    @Value("${so.reuseaddr}")
+    private boolean reuseAddr;
+    
+    @Value("${so.linger}")
+    private int linger;
+
+    @Bean(name = "webSocketPort")
+    public InetSocketAddress wsPort() {
+        return new InetSocketAddress(websocketPort);
+    }
+    
+    @Bean(name = "webSocketPath") 
+    public String getWebSocketPath() {
+    		return websocketPath;
+    }
+    
     @Bean
     JedisConnectionFactory jedisConnectionFactory() {
     		return new JedisConnectionFactory();
@@ -111,9 +169,16 @@ public class ServicesConfig {
                 ((AbstractHttp11Protocol<?>) connector.getProtocolHandler()).setMaxSwallowSize(-1);
             }
         });
-
         return tomcat;
-
     }
 
+	@Bean(name = "dataSource")
+	public DriverManagerDataSource getDataSource() {
+		DriverManagerDataSource driverManagerDataSource = new DriverManagerDataSource();
+	    driverManagerDataSource.setDriverClassName(env.getProperty("spring.datasource.driver-class-name"));
+	    driverManagerDataSource.setUrl(env.getProperty("spring.datasource.url"));
+	    driverManagerDataSource.setUsername(env.getProperty("spring.datasource.username"));
+	    driverManagerDataSource.setPassword(env.getProperty("spring.datasource.password"));
+	    return driverManagerDataSource;
+	}
 }

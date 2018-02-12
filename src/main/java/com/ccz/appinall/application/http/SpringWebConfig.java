@@ -1,4 +1,4 @@
-package com.ccz.appinall.application.http.admin.web;
+package com.ccz.appinall.application.http;
 
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;

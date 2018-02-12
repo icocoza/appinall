@@ -50,26 +50,36 @@ public class RecUserToken extends DbRecord {
 		return doLoad(rd, new RecUserToken(super.poolName));
 	}
 
-	public RecUserToken getToken(String tokenid) {
+	public RecUserToken getTokenByUserId(String userid) {		//if want to support multiple device, return List<RecUserToken>
+		String sql = String.format("SELECT * FROM %s WHERE userid='%s'", RecUserToken.TBL_NAME, userid);
+		return (RecUserToken) super.getOne(sql);
+	}
+
+	public RecUserToken getTokenByTokenId(String tokenid) {
 		String sql = String.format("SELECT * FROM %s WHERE tokenid='%s'", RecUserToken.TBL_NAME, tokenid);
 		return (RecUserToken) super.getOne(sql);
 	}
 
-	public RecUserToken getToken(String userid, String tokenid) {
+	public RecUserToken getTokenByUserTokenId(String userid, String tokenid) {
 		String sql = String.format("SELECT * FROM %s WHERE userid='%s' AND tokenid='%s'", RecUserToken.TBL_NAME, userid, tokenid);
 		return (RecUserToken) super.getOne(sql);
 	}
 
 	public boolean insertToken(String userid, String uuid, String tokenid, String token) {
-		return super.insert(qInsertToken(userid, uuid, tokenid, token));
+		return super.insert(qInsertToken(userid, uuid, tokenid, token, false));
 	}
 
-	static public String qInsertToken(String userid, String uuid, String tokenid, String token) {
-		return String.format("INSERT INTO %s (userid, uuid, tokenid, token) VALUES('%s', '%s', '%s', '%s')", RecUserToken.TBL_NAME, userid, uuid, tokenid, token);
+	static public String qInsertToken(String userid, String uuid, String tokenid, String token, boolean enabled) {
+		return String.format("INSERT INTO %s (userid, uuid, tokenid, token, enabled) VALUES('%s', '%s', '%s', '%s', %b)", RecUserToken.TBL_NAME, userid, uuid, tokenid, token, enabled);
 	}
 	
 	public boolean updateToken(String userid, String tokenid, String token) {
 		String sql = String.format("UPDATE %s SET token='%s' WHERE userid='%s' AND tokenid='%s'", RecUserToken.TBL_NAME, token, userid, tokenid);
+		return super.update(sql);
+	}
+	
+	public boolean updateToken(String userid, String tokenid, String token, boolean enabled) {
+		String sql = String.format("UPDATE %s SET token='%s', enabled=%b WHERE userid='%s' AND tokenid='%s'", RecUserToken.TBL_NAME, token, enabled, userid, tokenid);
 		return super.update(sql);
 	}
 

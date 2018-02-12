@@ -16,7 +16,7 @@ public class RecUserAuth  extends DbRecord {
 	String uid, email, phoneno;
 	String pw, emailcode, smscode;
 	public Timestamp regdate, leavedate;
-	EUserAuthType authtype;
+	@Getter EUserAuthType authtype;
 	
 	public RecUserAuth(String poolName) {
 		super(poolName);

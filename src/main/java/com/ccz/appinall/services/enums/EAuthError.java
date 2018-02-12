@@ -1,7 +1,7 @@
 package com.ccz.appinall.services.enums;
 
 public enum EAuthError {
-	eOK, ok,
+	ok,
 	wrong_appid,
 	unknown_datatype,
 	unknown_error,
@@ -36,6 +36,7 @@ public enum EAuthError {
 	failed_email_verify,
 	failed_phone_Verify,
 	failed_change_pw,
+	failed_update_token,
 	mismatch_pw,
 	
 	eNotExistIds,

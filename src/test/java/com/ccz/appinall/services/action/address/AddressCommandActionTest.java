@@ -35,15 +35,15 @@ public class AddressCommandActionTest {
 	@Autowired
 	ServicesConfig servicesConfig;
 	private void init()  throws UnknownHostException{
-		if(DbAppManager.getInst().createAdminDatabase(applicationConfig.getAdminMysqlUrl(), "owy", applicationConfig.getAdminMysqlUser(), applicationConfig.getAdminMysqlPw())==false)
+		if(DbAppManager.getInst().createAdminDatabase(servicesConfig.getAdminMysqlUrl(), "owy", servicesConfig.getAdminMysqlUser(), servicesConfig.getAdminMysqlPw())==false)
 			return;
 		if(DbAppManager.getInst().initApp("owy", 2, 3)==false)
 			return;
 		AddressElasticSearch.getInst().init(servicesConfig.getElasticClusterName(), servicesConfig.getElasticClusterNode(), 
 				servicesConfig.getElasticUrl(), servicesConfig.getElasticPort(), 
 				servicesConfig.getElasticIndex(), servicesConfig.getElasticType(), null);
-		AddressMongoDb.getInst().init(applicationConfig.getMongoDbUrl(), applicationConfig.getMongoDbPort(), 
-				 applicationConfig.getAddressMongoDatabase(), applicationConfig.getAddressMongocollection());
+		AddressMongoDb.getInst().init(servicesConfig.getMongoDbUrl(), servicesConfig.getMongoDbPort(), 
+				servicesConfig.getAddressMongoDatabase(), servicesConfig.getAddressMongocollection());
 	}
 	@Test
 	public void testActions()  throws UnknownHostException{

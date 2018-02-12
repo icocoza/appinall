@@ -3,11 +3,9 @@ package com.ccz.appinall.library.type;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.ccz.appinall.common.config.DefaultConfig;
 import com.ccz.appinall.library.type.enums.EHttpStatus;
 import com.ccz.appinall.library.util.HttpUtil;
 import com.ccz.appinall.library.util.QueuedBuffer;
