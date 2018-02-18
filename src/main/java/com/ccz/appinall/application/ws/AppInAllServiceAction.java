@@ -49,7 +49,9 @@ public class AppInAllServiceAction  implements IServiceAction {
 	RedisQueueManager<ERedisQueueCmd> redisQueueManager;
 	
 	@Autowired
-	public AppInAllServiceAction(ServicesConfig servicesConfig, RedisQueueManager<ERedisQueueCmd> redisQueueManager) {
+	public AppInAllServiceAction(ServicesConfig servicesConfig, RedisQueueManager<ERedisQueueCmd> redisQueueManager, AddressCommandAction addressCommandAction) {
+		addressCommandAction.setSessionKey(aptSession);
+		
 		this.servicesConfig = servicesConfig;
 		this.redisQueueManager = redisQueueManager; 
 		cmdProcess.add(new AdminCommandAction(aptSession));
@@ -58,7 +60,7 @@ public class AppInAllServiceAction  implements IServiceAction {
 		cmdProcess.add(new ChannelCommandAction(aptSession));
 		cmdProcess.add(new FriendCommandAction(aptSession));
 		cmdProcess.add(new MessageCommandAction(aptSession));
-		cmdProcess.add(new AddressCommandAction(aptSession));
+		cmdProcess.add(addressCommandAction);// AddressCommandAction(aptSession));
 		cmdProcess.add(new LocationCommandAction(aptSession));
 		
 		RedisQueueKeyController<ERedisQueueCmd> interServerQueueKeyController = new RedisQueueKeyController<ERedisQueueCmd>(RedisQueueRepository.INTER_SERVER_KEY + StrUtil.getHostIp(), servicesConfig.getRedisQueueCount());

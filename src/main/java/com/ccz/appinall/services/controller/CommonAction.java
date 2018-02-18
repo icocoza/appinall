@@ -4,6 +4,7 @@ import com.ccz.appinall.library.server.session.SessionItem;
 import com.ccz.appinall.library.type.inf.ICommandProcess;
 
 import io.netty.util.AttributeKey;
+import lombok.Setter;
 
 public abstract class CommonAction implements ICommandProcess {
 	
@@ -17,4 +18,8 @@ public abstract class CommonAction implements ICommandProcess {
 		this.sessionKey = (AttributeKey<SessionItem>) sessionKey;
 	}
 
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public void setSessionKey(Object sessionKey) {
+		this.sessionKey = (AttributeKey<SessionItem>) sessionKey;
+	}
 }

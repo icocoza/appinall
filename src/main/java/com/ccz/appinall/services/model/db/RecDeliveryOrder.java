@@ -99,6 +99,7 @@ public class RecDeliveryOrder extends DbRecord {
 		return super.insert(sql);
 	}
 	
+	@JsonIgnore
 	public List<String> getBuildIds() {
 		return Arrays.asList(fromid, toid);
 	}

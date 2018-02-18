@@ -15,7 +15,7 @@ public class RecDataCommon {
 	@Getter
 	private String tokenAppId, tokenScode;//by appToken
 	
-	@Getter private String userid;
+	//@Getter private String userid;
 	
 	public RecDataCommon(JsonNode jnode) {
 		scode = jnode.get("scode").asText();
@@ -26,8 +26,8 @@ public class RecDataCommon {
 			apptoken = jnode.get("apptoken").asText();
 			decodeToken();
 		}
-		if(jnode.has("userid"))
-			this.userid = jnode.get("userid").asText();
+		//if(jnode.has("userid"))
+		//	this.userid = jnode.get("userid").asText();
 	}
 	
 	private void decodeToken() {
