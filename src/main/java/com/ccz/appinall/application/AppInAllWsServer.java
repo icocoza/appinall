@@ -82,7 +82,7 @@ public class AppInAllWsServer {
 	
 	public void initDatabase() {
         DbAppManager.getInst().createAdminDatabase(servicesConfig.getAdminMysqlUrl(), servicesConfig.getAdminMysqlDbName(), servicesConfig.getAdminMysqlUser(), servicesConfig.getAdminMysqlPw());
-        DbAppManager.getInst().initAdmin(servicesConfig.getAdminMysqlPoolname(), servicesConfig.getAdminMysqlUrl(), servicesConfig.getAdminMysqlDbName(), servicesConfig.getAdminMysqlUser(), servicesConfig.getAdminMysqlPw(), 4, 8);
+        DbAppManager.getInst().initAdmin(servicesConfig.getAdminMysqlPoolname(), servicesConfig.getAdminMysqlUrl(), servicesConfig.getAdminMysqlDbName(), servicesConfig.getAdminMysqlUser(), servicesConfig.getAdminMysqlPw(), 4, 4);
         DbAppManager.getInst().initAdminApp();
 	}
 	

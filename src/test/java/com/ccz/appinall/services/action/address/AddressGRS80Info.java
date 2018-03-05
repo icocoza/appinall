@@ -56,7 +56,6 @@ public class AddressGRS80Info {
 				servicesConfig.getElasticIndex(), servicesConfig.getElasticType(), settings);
 		
 		addressElasticSearch.setMappings(mappings);
-
 		
 			System.out.println("start reading the address db");
 			InputStream is = getClass().getResourceAsStream("/static/entrc_seoul.txt");

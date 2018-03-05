@@ -14,7 +14,7 @@ public class QueueDeliveryStatus extends QueueCmd {
 	
 	public QueueDeliveryStatus(String scode, String from, String to, String orderid, EDeliveryStatus status, String msg) {
 		super.scode = scode;
-		super.cmd = ERedisQueueCmd.owy_status;
+		super.cmd = ERedisQueueCmd.oyw_status;
 		super.from = from;
 		super.to = to;
 		this.data = new QueueData(orderid, status, msg);

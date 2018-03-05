@@ -4,16 +4,14 @@ import java.util.List;
 
 import com.ccz.appinall.library.dbhelper.DbHelper;
 import com.ccz.appinall.library.util.StrUtil;
+import com.ccz.appinall.services.model.db.RecAddress;
 import com.ccz.appinall.services.model.db.RecUser;
 import com.ccz.appinall.services.model.db.RecUserAuth;
 import com.ccz.appinall.services.model.db.RecUserToken;
 
 public class DbTransaction {
 	public static DbTransaction s_pThis;
-	
-	public static DbTransaction getInst() {
-		return s_pThis = (s_pThis == null ? new DbTransaction() : s_pThis);
-	}
+	public static DbTransaction getInst() { return s_pThis = (s_pThis == null ? new DbTransaction() : s_pThis); }
 	public static void freeInst() {		s_pThis = null; 	}
 	
 	public boolean transactionQuery(String poolName, List<String> queries) {
@@ -58,6 +56,12 @@ public class DbTransaction {
 	
 	public String queryUpdatePw(String uid, String pw) {
 		return RecUserAuth.qUpdatePw(uid, pw);
+	}
+	
+	public String queryInsertAddress(String buildid, String zip, String sido, String sigu, String eub, String roadname, String delivery, 
+			 String buildname, String dongname, String liname, String hjdongname,
+			 int buildno, int buildsubno, int jino, int jisubno, double lon, double lat) {
+		return RecAddress.qInsertAddress(buildid, zip, sido, sigu, eub, roadname, delivery, buildname, dongname, liname, hjdongname, buildno, buildsubno, jino, jisubno, lon, lat);
 	}
 	
 }

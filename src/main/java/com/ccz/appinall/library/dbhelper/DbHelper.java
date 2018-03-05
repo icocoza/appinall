@@ -25,6 +25,8 @@ public class DbHelper {
 	
 	static public boolean findDatabase(String poolName, String dbName) {
 		DbReader reader = DbHelper.getMetaData(poolName);
+		if(reader==null)
+			return false;
 		try{
 			while (reader.hasNext()) {
 				String databaseName = reader.getString(1);

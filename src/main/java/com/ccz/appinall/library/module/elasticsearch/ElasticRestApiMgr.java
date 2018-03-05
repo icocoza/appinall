@@ -32,10 +32,10 @@ public class ElasticRestApiMgr {
 	
 	public String querySearch(String index, String query) throws IOException {
 		Map<String, String> params = Collections.emptyMap();
-		//String jsonQuery = QueryParser.escape(query);
 		HttpEntity entity = new NStringEntity(query, ContentType.APPLICATION_JSON);
 		String endPoint = String.format("/%s/_search", index);
 		Response res = restClient.performRequest("POST", endPoint, params, entity);
 		return EntityUtils.toString(res.getEntity());
 	}
+	
 }

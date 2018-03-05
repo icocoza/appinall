@@ -12,7 +12,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class RedisOnStatusQueueWorker implements IRedisQueueWorker<ERedisQueueCmd> {
 
-private final ERedisQueueCmd cmd = ERedisQueueCmd.owy_status;
+private final ERedisQueueCmd cmd = ERedisQueueCmd.oyw_status;
 	
 	private ObjectMapper objectMapper = new ObjectMapper();
 	

@@ -176,6 +176,7 @@ public class DbAppManager {
 			new RecDeliveryPhoto(scode).createTable();
 			new RecDeliveryStatus(scode).createTable();
 			new RecUserToken(scode).createTable();
+			new RecAddress(scode).createTable();
 		} catch (SQLException e) {
 			return false;
 		}
@@ -689,4 +690,15 @@ public class DbAppManager {
 	public List<RecDeliveryHistory> getDeliveryHistoryList(String scode, String orderid) {
 		return new RecDeliveryHistory(scode).getHistoryList(orderid);
 	}
+	
+	public boolean addAddress(String scode, String buildid, String zip, String sido, String sigu, String eub, String roadname, String delivery, 
+			 String buildname, String dongname, String liname, String hjdongname,
+			 int buildno, int buildsubno, int jino, int jisubno, double lon, double lat) {
+		return new RecAddress(scode).insertAddress(buildid, zip, sido, sigu, eub, roadname, delivery, buildname, dongname, liname, hjdongname, buildno, buildsubno, jino, jisubno, lon, lat);
+	}
+
+	public RecAddress getAddress(String scode, String buildid) {
+		return new RecAddress(scode).getAddress(buildid);
+	}
+
 }

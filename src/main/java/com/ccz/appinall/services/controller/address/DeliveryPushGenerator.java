@@ -70,8 +70,8 @@ public class DeliveryPushGenerator {
 
 /*
  {
-   scode: "owy", 
-   cmd: "owy_status",
+   scode: "oyw", 
+   cmd: "oyw_status",
    to: "receive001",
    from: "sender001",
    fromname: "sender user name or nickname",

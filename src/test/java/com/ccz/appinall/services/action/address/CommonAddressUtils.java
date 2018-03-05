@@ -69,7 +69,6 @@ public class CommonAddressUtils {
 	}
 	
 	static public EntrcInfo makeGRS80Map(String[] sp) {
-		//dongcode + rcode + buildno + buildsub + base
 		EntrcInfo ent = new EntrcInfo();
 		ent.dongcode = sp[2]; 
 		ent.rcode = sp[6];
@@ -83,7 +82,6 @@ public class CommonAddressUtils {
 		ent.roadname = sp[7];
 		ent.buildname = sp[11];
 		ent.makeId();
-		//System.out.println(ent.getId()+ "," +ent.sicode + "," + ent.entrance + "," + ent.rname );
 		return ent;
 	}
 }

@@ -121,6 +121,17 @@ public class DbReader {
 		}
     }
 
+    public double getDouble(String field)
+    {
+        try
+        {
+            return rs.getDouble(field);
+        }
+        catch (SQLException e) { 
+			return 0; 
+		}
+    }
+
     public Boolean getBoolean(String field)
     {
         try
