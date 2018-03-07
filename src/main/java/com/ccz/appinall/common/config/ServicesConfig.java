@@ -17,7 +17,6 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.GenericToStringSerializer;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
-import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
 import com.ccz.appinall.library.module.redisqueue.RedisQueueManager;
 import com.ccz.appinall.services.enums.ERedisQueueCmd;
@@ -172,13 +171,13 @@ public class ServicesConfig {
         return tomcat;
     }
 
-	@Bean(name = "dataSource")
-	public DriverManagerDataSource getDataSource() {
-		DriverManagerDataSource driverManagerDataSource = new DriverManagerDataSource();
-	    driverManagerDataSource.setDriverClassName(env.getProperty("spring.datasource.driver-class-name"));
-	    driverManagerDataSource.setUrl(env.getProperty("spring.datasource.url"));
-	    driverManagerDataSource.setUsername(env.getProperty("spring.datasource.username"));
-	    driverManagerDataSource.setPassword(env.getProperty("spring.datasource.password"));
-	    return driverManagerDataSource;
-	}
+//	@Bean(name = "dataSource")
+//	public DriverManagerDataSource getDataSource() {
+//		DriverManagerDataSource driverManagerDataSource = new DriverManagerDataSource();
+//	    driverManagerDataSource.setDriverClassName(env.getProperty("spring.datasource.driver-class-name"));
+//	    driverManagerDataSource.setUrl(env.getProperty("spring.datasource.url"));
+//	    driverManagerDataSource.setUsername(env.getProperty("spring.datasource.username"));
+//	    driverManagerDataSource.setPassword(env.getProperty("spring.datasource.password"));
+//	    return driverManagerDataSource;
+//	}
 }

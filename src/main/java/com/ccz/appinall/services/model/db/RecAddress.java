@@ -1,5 +1,8 @@
 package com.ccz.appinall.services.model.db;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import com.ccz.appinall.library.dbhelper.DbReader;
 import com.ccz.appinall.library.dbhelper.DbRecord;
 
@@ -75,8 +78,13 @@ public class RecAddress extends DbRecord {
 	}
 
 	public RecAddress getAddress(String buildid) {
-		String sql = String.format("select * from %s where buildid='%s'", RecAddress.TBL_NAME, buildid);
+		String sql = String.format("SELECT * FROM %s WHERE buildid='%s'", RecAddress.TBL_NAME, buildid);
 		return (RecAddress) super.getOne(sql);
 	}
 	
+	public List<RecAddress> getAddressList(List<String> buildids) {
+		String inClause = buildids.stream().map(x->"'" + x + "'").collect(Collectors.joining(","));
+		String sql = String.format("SELECT * FROM %s WHERE buildid IN (%s)", RecAddress.TBL_NAME, inClause);
+		return super.getList(sql).stream().map(e->(RecAddress)e).collect(Collectors.toList());
+	}
 }

@@ -58,15 +58,18 @@ public class DbAppManager {
 			new RecAdminToken(poolName).createTable();
 			new RecAdminApp(poolName).createTable();
 		} catch (SQLException e) {
+			e.printStackTrace();
 			return false;
 		}
 		return true;
 	}
 	
-	public void initAdminApp() {
+	public boolean initAdminApp() {
 		List<RecAdminApp> list = this.getAppList(EAdminAppStatus.all, 0, Integer.MAX_VALUE);
 		for(RecAdminApp item: list)
-			this.initApp(item.scode, 3, 6);
+			if(this.initApp(item.scode, 3, 6) == false)
+				return false;
+		return true;
 	}
 	
 	public void freeAdmin() {
@@ -701,4 +704,7 @@ public class DbAppManager {
 		return new RecAddress(scode).getAddress(buildid);
 	}
 
+	public List<RecAddress> getAddressList(String scode, List<String> buildids) {
+		return new RecAddress(scode).getAddressList(buildids);
+	}
 }

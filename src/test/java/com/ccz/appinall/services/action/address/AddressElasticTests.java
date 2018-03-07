@@ -38,8 +38,8 @@ import com.ccz.appinall.services.controller.address.AddressInference;
 import com.ccz.appinall.services.model.elasticsearch.ElasticSourcePair;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
-@RunWith(SpringRunner.class)
-@SpringBootTest
+//@RunWith(SpringRunner.class)
+//@SpringBootTest
 public class AddressElasticTests {
 
 	@Autowired
@@ -51,7 +51,7 @@ public class AddressElasticTests {
 	final int MAX_DOC_SIZE = 5;
 	final String collectionName = "korea";
 	
-	@Test
+	//@Test
 	public void findAddresByRest() throws JsonProcessingException, IOException {
 		AddressElasticSearch addressElasticSearch = new AddressElasticSearch();
 		addressElasticSearch.init(servicesConfig.getElasticClusterName(), servicesConfig.getElasticClusterNode(), 

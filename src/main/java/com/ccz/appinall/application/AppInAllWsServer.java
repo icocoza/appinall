@@ -13,7 +13,6 @@ import com.ccz.appinall.application.ws.AppInAllWebsocketInitializer;
 import com.ccz.appinall.common.config.ServicesConfig;
 import com.ccz.appinall.common.rdb.DbAppManager;
 import com.ccz.appinall.services.controller.address.AddressElasticSearch;
-import com.ccz.appinall.services.controller.address.AddressMongoDb;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
@@ -39,10 +38,12 @@ public class AppInAllWsServer {
 	private EventLoopGroup workerGroup;
     private ChannelFuture channelFuture;
     
-	public void start() throws InterruptedException, UnknownHostException {
-		initDatabase();
-		initElasticSearch();
-		initMongoDb();
+	public boolean start() throws InterruptedException, UnknownHostException {
+		if(initDatabase() == false)
+			return false;
+		if(initElasticSearch() == false)
+			return false;
+		//initMongoDb();
 		
 		bootstrap = new ServerBootstrap();
 		bossGroup = new NioEventLoopGroup();
@@ -61,6 +62,7 @@ public class AppInAllWsServer {
 //           bootstrap.option(option, tcpChannelOptions.get(option));
 //        }
 		channelFuture = bootstrap.bind().sync();
+		return true;
 	}
 	
 	public void closeSync() throws InterruptedException {
@@ -80,20 +82,32 @@ public class AppInAllWsServer {
 	    return options;
 	}
 	
-	public void initDatabase() {
-        DbAppManager.getInst().createAdminDatabase(servicesConfig.getAdminMysqlUrl(), servicesConfig.getAdminMysqlDbName(), servicesConfig.getAdminMysqlUser(), servicesConfig.getAdminMysqlPw());
-        DbAppManager.getInst().initAdmin(servicesConfig.getAdminMysqlPoolname(), servicesConfig.getAdminMysqlUrl(), servicesConfig.getAdminMysqlDbName(), servicesConfig.getAdminMysqlUser(), servicesConfig.getAdminMysqlPw(), 4, 4);
-        DbAppManager.getInst().initAdminApp();
+	public boolean initDatabase() {
+        if(DbAppManager.getInst().createAdminDatabase(servicesConfig.getAdminMysqlUrl(), servicesConfig.getAdminMysqlDbName(), 
+        		servicesConfig.getAdminMysqlUser(), servicesConfig.getAdminMysqlPw()) == false) {
+        		System.out.println("Fail to Create the Database for Admin");
+        		return false;
+        }
+        if(DbAppManager.getInst().initAdmin(servicesConfig.getAdminMysqlPoolname(), servicesConfig.getAdminMysqlUrl(), 
+        		servicesConfig.getAdminMysqlDbName(), servicesConfig.getAdminMysqlUser(), servicesConfig.getAdminMysqlPw(), 4, 4) == false) {
+        		System.out.println("Fail to Init Admin DB Table");
+        		return false;
+        }
+        if(DbAppManager.getInst().initAdminApp() == false) {
+        		System.out.println("Fail to Init App DB Table");
+        		return false;
+        }
+        return true;
 	}
 	
-	public void initElasticSearch() throws UnknownHostException {
-		AddressElasticSearch.getInst().init(servicesConfig.getElasticClusterName(), servicesConfig.getElasticClusterNode(), 
+	public boolean initElasticSearch() throws UnknownHostException {
+		return AddressElasticSearch.getInst().init(servicesConfig.getElasticClusterName(), servicesConfig.getElasticClusterNode(), 
 				servicesConfig.getElasticUrl(), servicesConfig.getElasticPort(), 
 				servicesConfig.getElasticIndex(), servicesConfig.getElasticType(), null);
 	}
 	
-	public void initMongoDb() {
-		AddressMongoDb.getInst().init(servicesConfig.getMongoDbUrl(), servicesConfig.getMongoDbPort(), 
-				servicesConfig.getAddressMongoDatabase(), servicesConfig.getAddressMongocollection());
-	}
+	//public void initMongoDb() {
+	//	AddressMongoDb.getInst().init(servicesConfig.getMongoDbUrl(), servicesConfig.getMongoDbPort(), 
+	//			servicesConfig.getAddressMongoDatabase(), servicesConfig.getAddressMongocollection());
+	//}
 }

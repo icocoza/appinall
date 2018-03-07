@@ -18,11 +18,17 @@ public class AppinallApplication {
 		try {
 			ConfigurableApplicationContext context = SpringApplication.run(AppinallApplication.class, args);
 			AppInAllWsServer tcs = context.getBean(AppInAllWsServer.class);
-			tcs.start();
+			if(tcs.start() == false) {
+				System.out.println("System Shutdown as the Initialize failed");
+				System.exit(0);
+				return;
+			}
+				
 			tcs.closeSync();
 			tcs.stop();
 		}catch(Exception e) {
 			e.printStackTrace();
+			System.exit(0);
 		}
 	}
 }

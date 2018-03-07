@@ -32,7 +32,7 @@ import com.mongodb.client.model.InsertOneModel;
 import com.mongodb.client.model.UpdateOneModel;
 import com.mongodb.client.model.UpdateOptions;
 
-public class AddressMongoDb {
+class AddressMongoDb {
 	
 	static AddressMongoDb s_pThis;
 	public static AddressMongoDb getInst() { return s_pThis = (s_pThis == null) ? new AddressMongoDb() : s_pThis;	}

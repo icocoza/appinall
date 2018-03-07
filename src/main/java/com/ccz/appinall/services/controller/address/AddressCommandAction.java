@@ -25,6 +25,7 @@ import com.ccz.appinall.services.enums.EDeliveryStatus;
 import com.ccz.appinall.services.enums.EGoodsSize;
 import com.ccz.appinall.services.enums.EGoodsType;
 import com.ccz.appinall.services.enums.EGoodsWeight;
+import com.ccz.appinall.services.model.db.RecAddress;
 import com.ccz.appinall.services.model.db.RecDeliveryApply;
 import com.ccz.appinall.services.model.db.RecDeliveryOrder;
 import com.ccz.appinall.services.model.db.RecDeliveryStatus;
@@ -153,10 +154,10 @@ public class AddressCommandAction extends CommonAction {
 	}
 	
 	private ResponseData<EAddrError> doOrderRequest(AuthSession session, ResponseData<EAddrError> res, DataOrderRequest data) {
-		Document from, to;
-		if( (from=AddressMongoDb.getInst().getAddr(data.getFrom_addrid()))==null)
+		RecAddress from, to;
+		if( (from = DbAppManager.getInst().getAddress(data.getTokenScode(), data.getFrom_addrid())) == null)
 			return res.setError(EAddrError.invalid_from_addressid);
-		if( (to=AddressMongoDb.getInst().getAddr(data.getTo_addrid()))==null)
+		if( (to = DbAppManager.getInst().getAddress(data.getTokenScode(), data.getTo_addrid()))==null)
 			return res.setError(EAddrError.invalid_to_addressid);
 		if(checkOrderData(res, data).getError() != EAddrError.ok)
 			return res;
@@ -167,7 +168,7 @@ public class AddressCommandAction extends CommonAction {
 				data.getPrice(), data.getBegintime(), data.getEndtime(), data.getPhotourl()) == false)
 			return res.setError(EAddrError.failed_to_saveorder);
 		
-		geoRepository.addLocation(orderid, from.getDouble("lon"), from.getDouble("lac"), to.getDouble("lon"), to.getDouble("lac"));
+		geoRepository.addLocation(orderid, from.lon, from.lat, to.lon, to.lat);
 		
 		//[TODO] 우선 지정 Deliver가 있을 경우, 들어온 배송을 우선적으로 배정할 수 있도록 함
 		
@@ -194,8 +195,8 @@ public class AddressCommandAction extends CommonAction {
 		
 		fromids.addAll(toids);
 		List<String> addrids = fromids.stream().collect(Collectors.toList());
-		List<Document> addrList = AddressMongoDb.getInst().getAddrs(addrids); //주소 데이터 
-		
+		//List<Document> addrList = AddressMongoDb.getInst().getAddrs(addrids); //주소 데이터 
+		List<RecAddress> addrList = DbAppManager.getInst().getAddressList(data.getScode(), addrids);
 		//[TODO]진행상태 추가 필요
 		
 		return res.setData(this.getOrderSearchData(orderList, addrList)).setError(EAddrError.ok);
@@ -251,14 +252,14 @@ public class AddressCommandAction extends CommonAction {
 	}
 	
 	private ResponseData<EAddrError> doOrderSearch(ResponseData<EAddrError> res, DataOrderSearch data) {
-		Document from, to;
-		if( (from=AddressMongoDb.getInst().getAddr(data.getFrom_addrid()))==null)
+		RecAddress from, to;
+		if( (from = DbAppManager.getInst().getAddress(data.getTokenScode(), data.getFrom_addrid())) == null)
 			return res.setError(EAddrError.invalid_from_addressid);
-		if( (to=AddressMongoDb.getInst().getAddr(data.getTo_addrid()))==null)
+		if( (to = DbAppManager.getInst().getAddress(data.getTokenScode(), data.getTo_addrid()))==null)
 			return res.setError(EAddrError.invalid_to_addressid);
 		
-		List<Location> fromList = geoRepository.searchOrderStart(from.getDouble("lon"), from.getDouble("lac"), 2000, 10);
-		List<Location> toList = geoRepository.searchOrderEnd(to.getDouble("lon"), to.getDouble("lac"), 2000, 10);
+		List<Location> fromList = geoRepository.searchOrderStart(from.lon, from.lat, 2000, 10);
+		List<Location> toList = geoRepository.searchOrderEnd(to.lon, to.lat, 2000, 10);
 		
 		Set<String> toOrderIds = toList.stream().map(item->item.getOrderid()).collect(Collectors.toSet());		//to compare orderid contained
 		List<String> matchOrderIdList = fromList.stream().filter(fromItem -> toOrderIds.contains(fromItem.getOrderid())).map(x->x.getOrderid()).collect(Collectors.toList());
@@ -268,8 +269,9 @@ public class AddressCommandAction extends CommonAction {
 		String[] orderids = matchOrderIdList.toArray(new String[matchOrderIdList.size()]);
 		List<RecDeliveryOrder> orderList = DbAppManager.getInst().getOrderListByIds(data.getScode(), orderids);
 
-		List<String> buildids = orderList.stream().map(x -> x.getBuildIds()).flatMap(Collection::stream).collect(Collectors.toList()); //insertsect between from and to
-		List<Document> addrList = AddressMongoDb.getInst().getAddrs(buildids); //주소 데이터 
+		List<String> addrids = orderList.stream().map(x -> x.getBuildIds()).flatMap(Collection::stream).collect(Collectors.toList()); //insertsect between from and to
+		//List<Document> addrList = AddressMongoDb.getInst().getAddrs(buildids); //주소 데이터
+		List<RecAddress> addrList = DbAppManager.getInst().getAddressList(data.getScode(), addrids);
 		
 		return res.setData(this.getOrderSearchData(orderList, addrList)).setError(EAddrError.ok);
 	}
@@ -463,15 +465,15 @@ public class AddressCommandAction extends CommonAction {
 		return res.setError(EAddrError.ok); 
 	}
 	
-	private JsonNode getOrderSearchData(List<RecDeliveryOrder> orderList, List<Document> addrList) {
+	private JsonNode getOrderSearchData(List<RecDeliveryOrder> orderList, List<RecAddress> addrList) {
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode orderNode = mapper.createObjectNode();
 		try {
 			ArrayNode arrOrder = mapper.valueToTree(orderList);
-			ArrayNode arrAddr = mapper.createArrayNode();
-			for(Document doc : addrList) {
-				arrAddr.add(mapper.readTree(doc.toJson()));
-			}
+			ArrayNode arrAddr = mapper.valueToTree(addrList);
+//			for(Document doc : addrList) {
+//				arrAddr.add(mapper.readTree(doc.toJson()));
+//			}
 			orderNode.putArray("orderlist").addAll(arrOrder);
 			orderNode.putArray("addrlist").addAll(arrAddr);
 		}catch(Exception e) {

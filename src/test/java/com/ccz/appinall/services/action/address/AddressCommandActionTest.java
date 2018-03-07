@@ -13,7 +13,6 @@ import com.ccz.appinall.common.config.ServicesConfig;
 import com.ccz.appinall.common.rdb.DbAppManager;
 import com.ccz.appinall.services.controller.address.AddressCommandAction;
 import com.ccz.appinall.services.controller.address.AddressElasticSearch;
-import com.ccz.appinall.services.controller.address.AddressMongoDb;
 import com.ccz.appinall.services.enums.EDeliverType;
 import com.ccz.appinall.services.enums.EDeliveryType;
 import com.ccz.appinall.services.enums.EGoodsSize;
@@ -24,8 +23,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-@RunWith(SpringRunner.class)
-@SpringBootTest
+//@RunWith(SpringRunner.class)
+//@SpringBootTest
 public class AddressCommandActionTest {
 
 	@Autowired
@@ -42,10 +41,10 @@ public class AddressCommandActionTest {
 		AddressElasticSearch.getInst().init(servicesConfig.getElasticClusterName(), servicesConfig.getElasticClusterNode(), 
 				servicesConfig.getElasticUrl(), servicesConfig.getElasticPort(), 
 				servicesConfig.getElasticIndex(), servicesConfig.getElasticType(), null);
-		AddressMongoDb.getInst().init(servicesConfig.getMongoDbUrl(), servicesConfig.getMongoDbPort(), 
-				servicesConfig.getAddressMongoDatabase(), servicesConfig.getAddressMongocollection());
+		//AddressMongoDb.getInst().init(servicesConfig.getMongoDbUrl(), servicesConfig.getMongoDbPort(), 
+		//		servicesConfig.getAddressMongoDatabase(), servicesConfig.getAddressMongocollection());
 	}
-	@Test
+	//@Test
 	public void testActions()  throws UnknownHostException{
 		init();
 		ObjectMapper mapper = new ObjectMapper();

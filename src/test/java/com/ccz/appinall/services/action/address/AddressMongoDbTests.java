@@ -23,18 +23,17 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.ccz.appinall.services.controller.address.AddressInference;
-import com.ccz.appinall.services.controller.address.AddressMongoDb;
 import com.ccz.appinall.services.model.elasticsearch.EntrcInfo;
 
-@RunWith(SpringRunner.class)
-@SpringBootTest
+//@RunWith(SpringRunner.class)
+//@SpringBootTest
 public class AddressMongoDbTests {
 	final int MAX_DOC_SIZE = 250;
 	final String collectionName = "korea";
 	
 	
 	public void findAddress() {
-		AddressMongoDb.getInst().init("localhost", 27017, "address", collectionName);
+/*		AddressMongoDb.getInst().init("localhost", 27017, "address", collectionName);
 		AddressInference ai = new AddressInference("고덕로131");
 		List<Document> list = AddressMongoDb.getInst().findAddr(ai);
 		list.forEach(item -> System.out.println(item.toJson()));
@@ -45,9 +44,10 @@ public class AddressMongoDbTests {
 		ai = new AddressInference("화원읍 구라리 1557");
 		list = AddressMongoDb.getInst().findAddr(ai);
 		list.forEach(item -> System.out.println(item.toJson()));
+		*/
 	}
 	
-	@Test
+	//@Test
 	public void insertAddressToMongoDB() throws IOException, InterruptedException, ExecutionException {
 		
 		System.out.println("start reading the address db");
@@ -96,9 +96,9 @@ public class AddressMongoDbTests {
 		System.out.println("finsih converting");
 		System.out.println("start saving to MongoDb");
 		{
-			AddressMongoDb.getInst().init("localhost", 27017, "address", collectionName);
-			AddressMongoDb.getInst().createUpsertIndex();
-			AddressMongoDb.getInst().createSearchIndex();
+			//AddressMongoDb.getInst().init("localhost", 27017, "address", collectionName);
+			//AddressMongoDb.getInst().createUpsertIndex();
+			//AddressMongoDb.getInst().createSearchIndex();
 			
 			List<Document> docList = new ArrayList<>();
 			InputStream is = getClass().getResourceAsStream("/static/seoul.txt");
@@ -122,13 +122,13 @@ public class AddressMongoDbTests {
 				  }
 				  docList.add(doc);
 				  if(docList.size() >= MAX_DOC_SIZE) {
-					  AddressMongoDb.getInst().bulkInsert(docList);
+					  //AddressMongoDb.getInst().bulkInsert(docList);
 					  docList.clear();
 				  }
 				  System.out.println(++count + "");
 				}
-				if(docList.size()>0)
-					AddressMongoDb.getInst().bulkInsert(docList);
+				//if(docList.size()>0)
+					//AddressMongoDb.getInst().bulkInsert(docList);
 				return true;
 			};
 			
