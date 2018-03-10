@@ -1,10 +1,13 @@
 package com.ccz.appinall.library.module.fcm;
 
 import com.ccz.appinall.library.util.KeyGen;
+import com.ccz.appinall.services.controller.auth.AuthCommandAction;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -28,6 +31,7 @@ import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 import org.jivesoftware.smack.util.StringUtils;
 
+@Slf4j
 public class FCMConnection {
 	private static Logger logger = Logger.getLogger(FCMConnection.class.getName());
 	
@@ -119,7 +123,7 @@ public class FCMConnection {
 			this.sendDownstreamMessage(jsonMsg);
 			failCount = 0;
 		} catch (NotConnectedException e) {		
-			System.out.printf("***** FCM Connection Failed *****");
+			log.error("***** FCM Connection Failed *****");
 			e.printStackTrace();
 			if(++failCount < 5)
 				onFCMResultListener.OnCloseConnectionOnSending(to, msgid, json);

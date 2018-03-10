@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -20,6 +21,7 @@ public class AddressTest {
 	private static final Pattern VALID_PATTERN = Pattern.compile("[0-9]+|[A-Z]+");
 
 	@Test
+	@Ignore
 	public void testAddressInference() {
 		AddressInference ai = new AddressInference("상인동 1149");
 		System.out.println(ai.toFormat());

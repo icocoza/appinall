@@ -12,6 +12,7 @@ import com.ccz.appinall.application.ws.AppInAllServiceAction;
 import com.ccz.appinall.application.ws.AppInAllWebsocketInitializer;
 import com.ccz.appinall.common.config.ServicesConfig;
 import com.ccz.appinall.common.rdb.DbAppManager;
+import com.ccz.appinall.services.controller.address.AddressCommandAction;
 import com.ccz.appinall.services.controller.address.AddressElasticSearch;
 
 import io.netty.bootstrap.ServerBootstrap;
@@ -20,7 +21,9 @@ import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Component
 public class AppInAllWsServer {
 
@@ -83,25 +86,27 @@ public class AppInAllWsServer {
 	}
 	
 	public boolean initDatabase() {
-        if(DbAppManager.getInst().createAdminDatabase(servicesConfig.getAdminMysqlUrl(), servicesConfig.getAdminMysqlDbName(), 
+        if(DbAppManager.getInst().createAdminDatabase(servicesConfig.getAdminMysqlUrl(), 
+        		servicesConfig.getAdminMysqlDbName(), servicesConfig.getAdminMysqlOption(),
         		servicesConfig.getAdminMysqlUser(), servicesConfig.getAdminMysqlPw()) == false) {
-        		System.out.println("Fail to Create the Database for Admin");
+        		log.error("Fail to Create the Database for Admin");
         		return false;
         }
-        if(DbAppManager.getInst().initAdmin(servicesConfig.getAdminMysqlPoolname(), servicesConfig.getAdminMysqlUrl(), 
-        		servicesConfig.getAdminMysqlDbName(), servicesConfig.getAdminMysqlUser(), servicesConfig.getAdminMysqlPw(), 4, 4) == false) {
-        		System.out.println("Fail to Init Admin DB Table");
+        if(DbAppManager.getInst().initAdmin(servicesConfig.getAdminMysqlPoolname(), 
+        		servicesConfig.getAdminMysqlUrl(), servicesConfig.getAdminMysqlDbName(), 
+        		servicesConfig.getAdminMysqlOption(), servicesConfig.getAdminMysqlUser(), servicesConfig.getAdminMysqlPw(), 4, 4) == false) {
+        		log.error("Fail to Init Admin DB Table");
         		return false;
         }
         if(DbAppManager.getInst().initAdminApp() == false) {
-        		System.out.println("Fail to Init App DB Table");
+        		log.error("Fail to Init App DB Table");
         		return false;
         }
         return true;
 	}
 	
 	public boolean initElasticSearch() throws UnknownHostException {
-		return AddressElasticSearch.getInst().init(servicesConfig.getElasticClusterName(), servicesConfig.getElasticClusterNode(), 
+		return AddressElasticSearch.getInst().init(servicesConfig.getElasticCluster(), servicesConfig.getElasticNode(), 
 				servicesConfig.getElasticUrl(), servicesConfig.getElasticPort(), 
 				servicesConfig.getElasticIndex(), servicesConfig.getElasticType(), null);
 	}

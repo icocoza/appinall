@@ -60,6 +60,9 @@ public class ServicesConfig {
     @Value("${admin.mysql.url}")
     private String adminMysqlUrl;
     
+    @Value("${admin.mysql.option}")
+    private String adminMysqlOption;
+    
     @Value("${admin.mysql.user}")
     private String adminMysqlUser;
     
@@ -180,4 +183,19 @@ public class ServicesConfig {
 //	    driverManagerDataSource.setPassword(env.getProperty("spring.datasource.password"));
 //	    return driverManagerDataSource;
 //	}
+    
+    public String getElasticCluster() {
+	    	if(System.getProperty("elastic.cluster") != null)
+	    		return System.getProperty("elastic.cluster");    		
+	    	else
+	    		return elasticClusterName;
+    }
+    
+    public String getElasticNode() {
+	    	if(System.getProperty("elastic.node") != null)
+	    		return System.getProperty("elastic.node");    		
+	    	else
+	    		return elasticClusterNode;
+    }
+
 }

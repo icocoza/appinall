@@ -89,7 +89,6 @@ public class StrUtil {
 					InetAddress ia = inetAddresses.nextElement();
 					if (ia.getHostAddress() != null && ia.getHostAddress().indexOf(".") != -1) {
 						ip = ia.getHostAddress();
-						System.out.println(ip);
 						isLoopBack = false;
 						break;
 					}

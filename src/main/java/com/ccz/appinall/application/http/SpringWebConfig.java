@@ -6,6 +6,7 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.support.ReloadableResourceBundleMessageSource;
 import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
@@ -78,6 +79,15 @@ public class SpringWebConfig extends WebMvcConfigurerAdapter implements Applicat
         ThymeleafViewResolver viewResolver = new ThymeleafViewResolver();
         viewResolver.setTemplateEngine(templateEngine());
         return viewResolver;
+    }
+    
+    @Bean(name = "messageSource")
+    public ResourceBundleMessageSource getMessageSource() {
+    		ResourceBundleMessageSource messageSource = new ResourceBundleMessageSource();
+        messageSource.setBasename("config/messages");
+        messageSource.setDefaultEncoding("UTF-8");
+        messageSource.setUseCodeAsDefaultMessage(true);
+        return messageSource;
     }
 
     /* ******************************************************************* */

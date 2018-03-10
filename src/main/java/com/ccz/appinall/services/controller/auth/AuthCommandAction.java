@@ -14,6 +14,7 @@ import com.ccz.appinall.library.util.Crypto;
 import com.ccz.appinall.library.util.KeyGen;
 import com.ccz.appinall.library.util.StrUtil;
 import com.ccz.appinall.services.controller.CommonAction;
+import com.ccz.appinall.services.controller.address.AddressCommandAction;
 import com.ccz.appinall.services.controller.auth.RecDataAuth.*;
 import com.ccz.appinall.services.enums.EAuthCmd;
 import com.ccz.appinall.services.enums.EAuthError;
@@ -22,8 +23,10 @@ import com.ccz.appinall.services.model.db.*;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import io.netty.channel.Channel;
+import lombok.extern.slf4j.Slf4j;
 
 //@Component
+@Slf4j
 public class AuthCommandAction extends CommonAction {
 
 	public AuthCommandAction(Object sessionKey) {

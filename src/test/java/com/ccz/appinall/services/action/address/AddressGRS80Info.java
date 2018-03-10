@@ -20,6 +20,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import org.bson.Document;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,7 +46,9 @@ public class AddressGRS80Info {
 	//final int MAX_DOC_SIZE = 5;
 	final String collectionName = "korea";
 	Map<String, EntrcInfo> entMap = new ConcurrentHashMap<>();
+	
 	@Test
+	@Ignore
 	public void loadGRS80Address() throws InterruptedException, ExecutionException, IOException {
 		String settings = resourceLoaderService.loadText("/static/addrsetting.cfg");	//셋팅은 index 생성과 함께 만들어져야 한다.
 		String mappings = resourceLoaderService.loadText("/static/addrkormapping.cfg");

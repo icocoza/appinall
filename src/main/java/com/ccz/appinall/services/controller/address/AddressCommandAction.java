@@ -39,7 +39,9 @@ import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.netty.channel.Channel;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 public class AddressCommandAction extends CommonAction {
 
@@ -155,9 +157,9 @@ public class AddressCommandAction extends CommonAction {
 	
 	private ResponseData<EAddrError> doOrderRequest(AuthSession session, ResponseData<EAddrError> res, DataOrderRequest data) {
 		RecAddress from, to;
-		if( (from = DbAppManager.getInst().getAddress(data.getTokenScode(), data.getFrom_addrid())) == null)
+		if( (from = DbAppManager.getInst().getAddress(data.getScode(), data.getFrom_addrid())) == null)
 			return res.setError(EAddrError.invalid_from_addressid);
-		if( (to = DbAppManager.getInst().getAddress(data.getTokenScode(), data.getTo_addrid()))==null)
+		if( (to = DbAppManager.getInst().getAddress(data.getScode(), data.getTo_addrid()))==null)
 			return res.setError(EAddrError.invalid_to_addressid);
 		if(checkOrderData(res, data).getError() != EAddrError.ok)
 			return res;
@@ -167,7 +169,6 @@ public class AddressCommandAction extends CommonAction {
 				data.getName(), data.getNotice(), data.getSize(), data.getWeight(), data.getType(), 
 				data.getPrice(), data.getBegintime(), data.getEndtime(), data.getPhotourl()) == false)
 			return res.setError(EAddrError.failed_to_saveorder);
-		
 		geoRepository.addLocation(orderid, from.lon, from.lat, to.lon, to.lat);
 		
 		//[TODO] 우선 지정 Deliver가 있을 경우, 들어온 배송을 우선적으로 배정할 수 있도록 함
@@ -253,9 +254,9 @@ public class AddressCommandAction extends CommonAction {
 	
 	private ResponseData<EAddrError> doOrderSearch(ResponseData<EAddrError> res, DataOrderSearch data) {
 		RecAddress from, to;
-		if( (from = DbAppManager.getInst().getAddress(data.getTokenScode(), data.getFrom_addrid())) == null)
+		if( (from = DbAppManager.getInst().getAddress(data.getScode(), data.getFrom_addrid())) == null)
 			return res.setError(EAddrError.invalid_from_addressid);
-		if( (to = DbAppManager.getInst().getAddress(data.getTokenScode(), data.getTo_addrid()))==null)
+		if( (to = DbAppManager.getInst().getAddress(data.getScode(), data.getTo_addrid()))==null)
 			return res.setError(EAddrError.invalid_to_addressid);
 		
 		List<Location> fromList = geoRepository.searchOrderStart(from.lon, from.lat, 2000, 10);

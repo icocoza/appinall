@@ -34,17 +34,17 @@ public abstract class ConnectionPool<C> {
     public synchronized C getConnection() throws Exception {
    	   	C connection = pools.poll();
         if(connection != null)
-        	nCheckoutCount++;
+        		nCheckoutCount++;
         else if (nCheckoutCount < nMaxCount) {
-        	nCheckoutCount++;
+        		nCheckoutCount++;
             return createConnection();
         }
         if (connection != null && isClosed(connection)) {
-        	removeConnection(connection);		//not available connection which is created once upon a time 
+        		removeConnection(connection);		//not available connection which is created once upon a time 
             connection = getConnection();
             if(connection != null && isClosed(connection)){	
-            	removeConnection(connection);	//not available connection if pool status
-            	connection = createConnection();
+            		removeConnection(connection);	//not available connection if pool status
+            		connection = createConnection();
             }
         }
         return connection;

@@ -69,7 +69,6 @@ public class AddressMongoDbAsync {
 		getCollection(collectionName).insertOne(doc, new SingleResultCallback<Void>() {
 		    @Override
 		    public void onResult(final Void result, final Throwable t) {
-		        System.out.println("Inserted!");
 		    }
 		});
 	}
@@ -82,7 +81,6 @@ public class AddressMongoDbAsync {
 		this.getCollection(collectionName).bulkWrite(bulkList, new SingleResultCallback<BulkWriteResult>() {
 		    @Override
 		    public void onResult(final BulkWriteResult result, final Throwable t) {
-		        System.out.println(result);
 		    }
 		});
 	}

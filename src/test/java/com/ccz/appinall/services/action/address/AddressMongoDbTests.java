@@ -17,6 +17,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import org.bson.Document;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -47,7 +48,8 @@ public class AddressMongoDbTests {
 		*/
 	}
 	
-	//@Test
+	@Test
+	@Ignore
 	public void insertAddressToMongoDB() throws IOException, InterruptedException, ExecutionException {
 		
 		System.out.println("start reading the address db");

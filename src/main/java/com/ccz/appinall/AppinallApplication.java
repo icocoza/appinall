@@ -8,10 +8,14 @@ import org.springframework.context.annotation.ComponentScan;
 
 import com.ccz.appinall.application.AppInAllWsServer;
 import com.ccz.appinall.library.util.HashUtil;
+import com.ccz.appinall.services.controller.auth.AuthCommandAction;
+
+import lombok.extern.slf4j.Slf4j;
 
 @SpringBootApplication
 @EnableAutoConfiguration
 @ComponentScan
+@Slf4j
 public class AppinallApplication {
 
 	public static void main(String[] args) {
@@ -19,7 +23,7 @@ public class AppinallApplication {
 			ConfigurableApplicationContext context = SpringApplication.run(AppinallApplication.class, args);
 			AppInAllWsServer tcs = context.getBean(AppInAllWsServer.class);
 			if(tcs.start() == false) {
-				System.out.println("System Shutdown as the Initialize failed");
+				log.error("System Shutdown as the Initialize failed");
 				System.exit(0);
 				return;
 			}

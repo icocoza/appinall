@@ -27,12 +27,13 @@ public abstract class DbRecord {
         DbReader rd = DbHelper.select(poolName, sql);
         try
         {
-            if (rd!=DbReader.Empty && rd.hasNext() )
-            	return onLoadOne(rd);
+            if (rd != DbReader.Empty && rd.hasNext() )
+            		return onLoadOne(rd);
             return DbRecord.Empty;
         }
         catch(Throwable e) {
-        	return DbRecord.Empty;
+        		e.printStackTrace();
+        		return DbRecord.Empty;
         }
         finally
         {
@@ -61,7 +62,9 @@ public abstract class DbRecord {
             while (rd!=DbReader.Empty && rd.hasNext()==true)
                 records.add(onLoadList(rd));
         }
-        catch(Exception e) {     }
+        catch(Exception e) {
+        		e.printStackTrace();
+        }
         finally {
             if(rd != DbReader.Empty)
                 rd.close();
@@ -89,7 +92,8 @@ public abstract class DbRecord {
             return emptyType;
         }
         catch(Throwable e) {
-        	return emptyType;
+        		e.printStackTrace();
+        		return emptyType;
         }
         finally
         {

@@ -2,6 +2,7 @@ package com.ccz.appinall.services.action.address;
 
 import java.net.UnknownHostException;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,7 +35,7 @@ public class AddressCommandActionTest {
 	@Autowired
 	ServicesConfig servicesConfig;
 	private void init()  throws UnknownHostException{
-		if(DbAppManager.getInst().createAdminDatabase(servicesConfig.getAdminMysqlUrl(), "owy", servicesConfig.getAdminMysqlUser(), servicesConfig.getAdminMysqlPw())==false)
+		if(DbAppManager.getInst().createAdminDatabase(servicesConfig.getAdminMysqlUrl(), "owy", servicesConfig.getAdminMysqlOption(), servicesConfig.getAdminMysqlUser(), servicesConfig.getAdminMysqlPw())==false)
 			return;
 		if(DbAppManager.getInst().initApp("owy", 2, 3)==false)
 			return;
@@ -44,7 +45,8 @@ public class AddressCommandActionTest {
 		//AddressMongoDb.getInst().init(servicesConfig.getMongoDbUrl(), servicesConfig.getMongoDbPort(), 
 		//		servicesConfig.getAddressMongoDatabase(), servicesConfig.getAddressMongocollection());
 	}
-	//@Test
+	@Test
+	@Ignore
 	public void testActions()  throws UnknownHostException{
 		init();
 		ObjectMapper mapper = new ObjectMapper();

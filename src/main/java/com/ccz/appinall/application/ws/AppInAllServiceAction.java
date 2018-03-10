@@ -34,7 +34,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 import io.netty.channel.Channel;
 import io.netty.util.AttributeKey;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Component
 public class AppInAllServiceAction  implements IServiceAction {
 	public final AttributeKey<AuthSession> aptSession = AttributeKey.valueOf("APT_SESSION");
@@ -136,6 +138,7 @@ public class AppInAllServiceAction  implements IServiceAction {
 	}
 	
 	private boolean processJsonData(Channel ch, JsonNode jdata) {
+		log.info(jdata.toString());
 		for(ICommandProcess process : cmdProcess)
 			if(process.processJsonData(ch, jdata)==true)
 				return true;

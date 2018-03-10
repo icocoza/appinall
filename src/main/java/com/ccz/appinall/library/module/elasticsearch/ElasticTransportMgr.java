@@ -93,7 +93,6 @@ public class ElasticTransportMgr {
 	
 	public boolean hasSettings(String index) {
 		GetSettingsResponse gsr = transportClient.admin().indices().prepareGetSettings(index).get();
-		System.out.println(gsr.getSetting(index, "analysis"));
 		return gsr.getSetting(index, "analysis") != null;
 	}
 	
@@ -118,7 +117,6 @@ public class ElasticTransportMgr {
             bulkRequestBuilder.add(indexRequestBuilder);
 		}
 		BulkResponse bulkResponse = bulkRequestBuilder.get();
-		System.out.println(bulkResponse.buildFailureMessage());
 		return bulkResponse.hasFailures();
 	}
 	

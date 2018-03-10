@@ -38,22 +38,23 @@ public class DbAppManager {
 	public static void freeInst() {		s_pThis = null; 	}
 	
 	//// DbManager methods
-	String dbUrl, dbUser, dbPw;
+	String dbUrl, dbUser, dbPw, dbOptions;
 	String poolName;
-	public boolean createAdminDatabase(String url, String dbName, String user, String pw) {
-		this.dbUrl = url;
+	public boolean createAdminDatabase(String url, String dbName, String options, String user, String pw) {
 		this.dbUser = user;
+		this.dbUrl = url;
 		this.dbPw = pw;
-		return new DatabaseMaker().createDatabase(url, dbName, user, pw);
+		return new DatabaseMaker().createDatabase(url, dbName, options, user, pw);
 	}
 	
-	public boolean initAdmin(String poolName, String url, String dbName, String user, String pw, int initPool, int maxPool) {
+	public boolean initAdmin(String poolName, String url, String dbName, String options, String user, String pw, int initPool, int maxPool) {
 		try {
 			this.poolName = poolName;
 			this.dbUrl = url;
 			this.dbUser = user;
+			this.dbOptions = options;
 			this.dbPw = pw;
-			DbConnMgr.getInst().createConnectionPool(poolName, "jdbc:mysql://"+url+"/"+dbName, user, pw, initPool, maxPool);
+			DbConnMgr.getInst().createConnectionPool(poolName, "jdbc:mysql://"+url+"/"+dbName+"?"+options, user, pw, initPool, maxPool);
 			new RecAdminUser(poolName).createTable();
 			new RecAdminToken(poolName).createTable();
 			new RecAdminApp(poolName).createTable();
@@ -67,7 +68,7 @@ public class DbAppManager {
 	public boolean initAdminApp() {
 		List<RecAdminApp> list = this.getAppList(EAdminAppStatus.all, 0, Integer.MAX_VALUE);
 		for(RecAdminApp item: list)
-			if(this.initApp(item.scode, 3, 6) == false)
+			if(this.initApp(item.scode, 2, 4) == false)
 				return false;
 		return true;
 	}
@@ -148,12 +149,12 @@ public class DbAppManager {
 	}
 
 	public boolean createAppDatabase(String scode) {
-		return new DatabaseMaker().createDatabase(dbUrl, scode, dbUser, dbPw);
+		return new DatabaseMaker().createDatabase(dbUrl, scode, dbOptions, dbUser, dbPw);
 	}
 	
 	public boolean initApp(String scode, int initPool, int maxPool) {
 		try {
-			DbConnMgr.getInst().createConnectionPool(scode, "jdbc:mysql://"+dbUrl+"/"+scode, dbUser, dbPw, initPool, maxPool);
+			DbConnMgr.getInst().createConnectionPool(scode, "jdbc:mysql://"+dbUrl+"/"+scode+"?"+dbOptions, dbUser, dbPw, initPool, maxPool);
 			new RecBoard(scode).createTable();
 			new RecBoardContent(scode).createTable();
 			new RecBoardCount(scode).createTable();

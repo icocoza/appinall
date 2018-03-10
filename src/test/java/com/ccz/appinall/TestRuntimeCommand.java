@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -17,6 +18,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 public class TestRuntimeCommand {
 
 	@Test
+	@Ignore
 	public void runtimeCommand() {
 		try {
 			//String[] command ={ "/Users/1100177/projects/land-registry/proj-4.9.3/bin/cs2cs"};/// +proj=tmerc +lat_0=38 +lon_0=127.5 +k=0.9996 +x_0=1000000 +y_0=2000000 +ellps=bessel +units=m +no_defs +towgs84=-145.907,505.034,685.756,-1.162,2.347,1.592,6.342", };

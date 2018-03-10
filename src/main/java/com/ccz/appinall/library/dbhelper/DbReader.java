@@ -38,6 +38,7 @@ public class DbReader {
 	    	try {
 			return rs.next();
 		} catch (Exception e) {
+			e.printStackTrace();
 			return false;
 		}
     }
@@ -51,6 +52,7 @@ public class DbReader {
 				rs.beforeFirst();
 			}
 		} catch (Exception e) {
+			e.printStackTrace();
 			return -1;
 		}
         return count;

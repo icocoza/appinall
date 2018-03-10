@@ -18,6 +18,7 @@ public class DbConnection {
 		try {
 			connection.setAutoCommit(autoCommit);
 		} catch (SQLException e) {
+			e.printStackTrace();
 		}
 		return connection;
 	}

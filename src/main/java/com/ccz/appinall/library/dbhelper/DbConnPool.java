@@ -22,18 +22,19 @@ public class DbConnPool extends ConnectionPool<DbConnection> {
 	@Override
 	protected DbConnection createConnection() throws SQLException{
         try {
-        	Properties info = new Properties();
-        	if(uid !=null && uid.length()>0 && pw !=null && pw.length()>0 ) {
-        		info.put("user", uid);
-        		info.put("password", pw);
-        	}
-        	Driver driver = null;
-        	if(url.contains("jdbc:phoenix:"))	
-        		driver = (Driver)Class.forName("org.apache.phoenix.jdbc.PhoenixDriver").newInstance();
-        	else 
-        		driver = (Driver) Class.forName("com.mysql.jdbc.Driver").newInstance();
-    		return new DbConnection(driver.connect(url, info));
+	        	Properties info = new Properties();
+	        	if(uid !=null && uid.length()>0 && pw !=null && pw.length()>0 ) {
+	        		info.put("user", uid);
+	        		info.put("password", pw);
+	        	}
+	        	Driver driver = null;
+	        	if(url.contains("jdbc:phoenix:"))	
+	        		driver = (Driver)Class.forName("org.apache.phoenix.jdbc.PhoenixDriver").newInstance();
+	        	else 
+	        		driver = (Driver) Class.forName("com.mysql.jdbc.Driver").newInstance();
+	    		return new DbConnection(driver.connect(url, info));
         } catch (Exception e) {
+        		e.printStackTrace();
             return null;
         }      
 	}
@@ -50,6 +51,7 @@ public class DbConnPool extends ConnectionPool<DbConnection> {
 		try{
 			return jconn.getConn().isClosed() || !jconn.getConn().isValid(3);
 		}catch(SQLException e) {
+			e.printStackTrace();
 			return false;
 		}
 	}

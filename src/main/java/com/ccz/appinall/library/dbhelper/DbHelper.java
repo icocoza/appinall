@@ -56,7 +56,7 @@ public class DbHelper {
         }
         catch (Exception e)
         {
-	        	System.out.println(e.getMessage());
+	        	e.printStackTrace();
 	        	if(conn!=null)
 	        		DbConnMgr.getInst().freeConnection(poolName, conn);
             return DbReader.Empty;
@@ -75,7 +75,7 @@ public class DbHelper {
 		    return new DbReader(poolName, conn, stmt, rs);
         }
         catch (Exception e) {
-	        	System.out.println(e.getMessage());
+	        	e.printStackTrace();
 	        	if(conn!=null)
 	        		DbConnMgr.getInst().freeConnection(poolName, conn);
 	        return DbReader.Empty;
@@ -92,11 +92,11 @@ public class DbHelper {
         }
         catch (Exception e)
         {
-        	System.out.println(e.getMessage());
-        	if(conn!=null)
-        		DbConnMgr.getInst().freeConnection(poolName, conn);
-            return DbReader.Empty;
-        }    	
+        		e.printStackTrace();
+	        	if(conn!=null)
+	        		DbConnMgr.getInst().freeConnection(poolName, conn);
+	            return DbReader.Empty;
+	        }    	
     }
     
     static public boolean nonSelect(String poolName, String sql)
@@ -112,8 +112,8 @@ public class DbHelper {
 	        	return bok;
         }
         catch (Exception e) {
-	        	System.out.println(e.getMessage());
-	            return false;
+        		e.printStackTrace();
+	        return false;
         }finally {
 	        	if(conn != null)
 	        		DbConnMgr.getInst().freeConnection(poolName, conn);
@@ -142,7 +142,7 @@ public class DbHelper {
         }
         catch (Exception e)
         {
-	        	System.out.println(e.getMessage());
+        		e.printStackTrace();
             return false;
         }finally {
 	        	if(conn != null)
@@ -152,25 +152,26 @@ public class DbHelper {
 
     static public int count(String poolName, String sql)
     {
-    	int count = 0;
-    	DbConnection conn = null;
+	    	int count = 0;
+	    	DbConnection conn = null;
         try
         {
-        	conn = DbConnMgr.getInst().getConnection(poolName);
-        	Statement stmt = conn.getConn(true).createStatement();
-        	ResultSet result = stmt.executeQuery(sql);
-        	if(result.next())
-        		count = result.getInt(1);
-        	result.close();
-        	stmt.close();
-        	return count;
+	        	conn = DbConnMgr.getInst().getConnection(poolName);
+	        	Statement stmt = conn.getConn(true).createStatement();
+	        	ResultSet result = stmt.executeQuery(sql);
+	        	if(result.next())
+	        		count = result.getInt(1);
+	        	result.close();
+	        	stmt.close();
+	        	return count;
         }
         catch (Exception e)
         {
+        		e.printStackTrace();
             return -1;
         }finally {
-        	if(conn!=null)
-        		DbConnMgr.getInst().freeConnection(poolName, conn);
+	        	if(conn!=null)
+	        		DbConnMgr.getInst().freeConnection(poolName, conn);
         }
     }
     
@@ -189,6 +190,7 @@ public class DbHelper {
         }
         catch (Exception e)
         {
+        		e.printStackTrace();
             return false;
         }finally {
 	        	if(conn!=null)
