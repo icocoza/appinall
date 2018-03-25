@@ -6,7 +6,7 @@ import com.ccz.appinall.services.model.db.RecUser;
 import io.netty.channel.Channel;
 
 public class AuthSession extends SessionItem<RecUser> {
-	public String serviceCode;
+	public String scode;
 	
 	public AuthSession(Channel ch, int methodType) {
 		super(ch, methodType);
@@ -18,9 +18,9 @@ public class AuthSession extends SessionItem<RecUser> {
 	}
 
 	@Override
-	public AuthSession putSession(RecUser rec, String serviceCode) {
+	public AuthSession putSession(RecUser rec, String scode) {
 		super.item = rec;
-		this.serviceCode = serviceCode;
+		this.scode = scode;
 		return this;
 	}
 	

@@ -92,8 +92,10 @@ public class AuthCommandAction extends CommonAction {
 		default:
 			return false;
 		}
-		if(res != null)
+		if(res != null) {
 			send(ch, res.toString());
+			log.info(res.toString());
+		}
 		return true;
 	}
 
@@ -276,7 +278,7 @@ public class AuthCommandAction extends CommonAction {
 		
 		AuthSession session = new AuthSession(ch, 1).putSession(user, data.getTokenScode());	//consider the sessionid to find instance when close
 		SessionManager.getInst().put(session);
-		ch.attr(sessionKey).set(session);
+		ch.attr(super.attrAuthSessionKey).set(session);
 		
 		return res.setError(EAuthError.ok).setParam(""+user.lasttime);
 	}

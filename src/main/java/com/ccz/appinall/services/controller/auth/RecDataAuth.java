@@ -76,8 +76,13 @@ public class RecDataAuth {
 			super(jnode);
 			if(jnode.has("regToken"))
 				this.regToken = jnode.get("regToken").asText();
+			if(jnode.has("regtoken"))
+				this.regToken = jnode.get("regtoken").asText();
 			if(jnode.has("tokenid"))
 				this.tokenid = jnode.get("tokenid").asText();
+			if(jnode.has("tid"))
+				this.tokenid = jnode.get("tid").asText();
+
 			if(jnode.has("uuid"))
 				this.uuid = jnode.get("uuid").asText();
 			

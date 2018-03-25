@@ -20,8 +20,10 @@ public class ServiceSelectionWebsocketDataHandler extends ServiceSelectionHandle
 	protected void channelRead0(ChannelHandlerContext ctx, IDataAccess da) throws Exception {
 		if(da.dataType() == EDataStoreType.wstext)
 			textData(ctx, da);
+		else if(da.dataType() == EDataStoreType.file)
+			fileData(ctx, da);
 	}
-
+	
 	private void textData(ChannelHandlerContext ctx, IDataAccess da) {	//JSON data or Custom
 		try {
 			IServiceAction action = ctx.channel().attr(propertyServiceAction).get();
@@ -35,6 +37,11 @@ public class ServiceSelectionWebsocketDataHandler extends ServiceSelectionHandle
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+	
+	private void fileData(ChannelHandlerContext ctx, IDataAccess da) {
+		IServiceAction action = findAction(da.getAction());
+		action.process(ctx.channel(), da);
 	}
 
 }

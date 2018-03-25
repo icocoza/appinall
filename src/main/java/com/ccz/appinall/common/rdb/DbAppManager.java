@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.data.geo.Point;
+
 import com.ccz.appinall.library.dbhelper.DbConnMgr;
 import com.ccz.appinall.library.dbhelper.DbRecord;
 import com.ccz.appinall.services.enums.EAdminAppStatus;
@@ -172,7 +174,7 @@ public class DbAppManager {
 			new RecFriend(scode).createTable();
 			new RecMessageDel(scode).createTable();
 			new RecPushToken(scode).createTable();
-			new RecImage(scode).createTable();
+			new RecFile(scode).createTable();
 			new RecWebScrab(scode).createTable();
 			new RecDeliveryApply(scode).createTable();
 			new RecDeliveryHistory(scode).createTable();
@@ -182,6 +184,7 @@ public class DbAppManager {
 			new RecUserToken(scode).createTable();
 			new RecAddress(scode).createTable();
 		} catch (SQLException e) {
+			e.printStackTrace();
 			return false;
 		}
 		return true;
@@ -598,14 +601,20 @@ public class DbAppManager {
 	}
 
 	//for images info
-	public DbRecord addImageInfo(String scode, String imgid, String imgname, String thumbname, int width, int height, int thumbwidth, int thumbheight) {
-		return new RecImage(scode).insert(imgid, imgname, thumbname, width, height, thumbwidth, thumbheight);
+	public boolean addFileInit(String scode, String fileid, String userid, String filename, String filetype, long size) {
+		return new RecFile(scode).insertFileInit(fileid, userid, filename, filetype, size) != DbRecord.Empty;
 	}
-	public boolean delImageInfo(String scode, String imgid) {
-		return new RecImage(scode).delete(imgid);
+	public boolean updateFileInfo(String scode, String fileid, int width, int height, long size, String fileserver) {
+		return new RecFile(scode).updateFileInfo(fileid, width, height, size, fileserver) != DbRecord.Empty;
 	}
-	public RecImage getImageInfo(String scode, String imgid) {
-		return new RecImage(scode).getImage(imgid);
+	public boolean updateThumbnail(String scode, String fileid, String thumbname, int thumbwidth, int thumbheight) {
+		return new RecFile(scode).updateThumbnail(fileid, thumbname, thumbwidth, thumbheight);
+	}
+	public boolean delFileInfo(String scode, String fileid) {
+		return new RecFile(scode).delete(fileid);
+	}
+	public RecFile getFileInfo(String scode, String fileid) {
+		return new RecFile(scode).getFile(fileid);
 	}
 	
 	//for webscrab
@@ -708,4 +717,31 @@ public class DbAppManager {
 	public List<RecAddress> getAddressList(String scode, List<String> buildids) {
 		return new RecAddress(scode).getAddressList(buildids);
 	}
+	
+	//for deliver voter
+	public boolean addUserVoter(String scode, String userid, String voterid, String voteitem, int point, boolean like, String comments) {
+		return new RecUserVoter(scode).insert(userid, voterid, voteitem, point, like, comments);
+	}
+	
+	public boolean delUserVoter(String scode, String userid, String voterid, String voteitem) {
+		return new RecUserVoter(scode).delete(userid, voterid, voteitem);
+	}
+	
+	public List<RecUserVoter> getUserVoterUsers(String scode, String userid, int offset, int count) {
+		return new RecUserVoter(scode).getVoterUsers(userid, offset, count);
+	}
+
+	public List<RecUserVoterView> getUserVoterUserList(String scode, String userid, int offset, int count) {
+		return new RecUserVoterView(scode).getVoterUserList(userid, offset, count);
+	}
+
+	public boolean addRouteHistory(String scode, String deliverid, List<Point> routeList, int ordercount) {
+		String routestr = routeList.stream().map(x -> x.getX()+","+x.getY()).collect(Collectors.joining("/"));
+		return new RecDeliveryRouteHistory(scode).insert(deliverid, routestr, ordercount);
+	}
+	
+	public List<RecDeliveryRouteHistory> getRouteList(String scode, String deliverid, int offset, int count) {
+		return new RecDeliveryRouteHistory(scode).getRouteList(deliverid, offset, count);
+	}
+	
 }

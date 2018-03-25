@@ -38,6 +38,21 @@ public class ImageResizeWorker {
     		};
     		executor.execute(runnable);
     }
-    
+
+    public void doResize(final String src, final String dest, final int width, final int height, final ImageResizerCallback cb) {
+		Runnable runnable = () -> {
+			try {
+				if(ImageUtil.resize(new File(src), new File(dest), width, height)==true) {
+					cb.onCompleted(null);
+					return;
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			cb.onFailed(null);
+		};
+		executor.execute(runnable);
+    }
+
 
 }

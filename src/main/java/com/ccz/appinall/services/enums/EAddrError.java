@@ -18,6 +18,7 @@ public enum EAddrError {
 	empty_goods_price,
 	empty_order_begintime,
 	empty_order_endtime,
+	empty_gpslist,
 	failed_to_saveorder,
 	
 	invalid_offset_count,

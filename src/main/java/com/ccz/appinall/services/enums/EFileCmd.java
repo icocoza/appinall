@@ -4,7 +4,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public enum EFileCmd {
-	none("none"), thumbnail("thumbnail"), upload("upload");
+	none("none"), fileinit("fileinit"), filesstart("filestart"), thumbnail("thumbnail"), upload("upload");
 	
 	public final String value;
 	

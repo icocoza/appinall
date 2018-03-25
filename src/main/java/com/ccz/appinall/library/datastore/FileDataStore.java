@@ -100,4 +100,10 @@ public class FileDataStore implements IDataAccess {
 		return null;
 	}
 
+	@Override
+	public byte[] getData() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

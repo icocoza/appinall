@@ -32,7 +32,7 @@ public class MessageCommandAction extends CommonAction {
 		else
 			res = new ResponseData<EMessageError>(jdata.get("scode").asText(), jdata.get("rcode").asText(), jdata.get("cmd").asText());
 		
-		AuthSession ss = (AuthSession) ch.attr(sessionKey).get();
+		AuthSession ss = (AuthSession) ch.attr(super.attrAuthSessionKey).get();
 		switch(EMessageCmd.getType(res.getCommand())) {
 		case msg: 
 			res = this.message(ss, res, data != null ? new RecDataMessage().new Msg(data[3]) : new RecDataMessage().new Msg(jdata)); //O
@@ -88,9 +88,9 @@ public class MessageCommandAction extends CommonAction {
 	 */
 	private ResponseData<EMessageError> message(AuthSession ss, ResponseData<EMessageError> res, Msg rec) {
 		String msgid = getMessageId();
-		if(DbAppManager.getInst().addMessage(ss.serviceCode, msgid, rec.chid, ss.getUserId(), rec.eMsgType, rec.msg)==false)
+		if(DbAppManager.getInst().addMessage(ss.scode, msgid, rec.chid, ss.getUserId(), rec.eMsgType, rec.msg)==false)
 			return res.setError(EMessageError.eFailToSaveMessage);
-		if(DbAppManager.getInst().updateLastMsgAndTime(ss.serviceCode, rec.chid, obtainShortcut(rec.msg))==false)
+		if(DbAppManager.getInst().updateLastMsgAndTime(ss.scode, rec.chid, obtainShortcut(rec.msg))==false)
 			return res.setError(EMessageError.eFailToUpdateChannel);
 		//[TODO] Send Message to Others in the same channel
 		return res.setError(EMessageError.eOK).setParam(msgid + ASS.UNIT + rec.msg);
@@ -116,17 +116,17 @@ public class MessageCommandAction extends CommonAction {
 	 * @return chid | { [message id][sender id][msg type][create time][read count][message] / ... }
 	 */
 	private ResponseData<EMessageError> syncMessage(AuthSession ss, ResponseData<EMessageError> res, SyncMsg rec) {
-		RecChMime ch = DbAppManager.getInst().getMyChannel(ss.serviceCode, ss.getUserId(), rec.chid);
+		RecChMime ch = DbAppManager.getInst().getMyChannel(ss.scode, ss.getUserId(), rec.chid);
 		if(ch==RecChMime.Empty)
 			return res.setError(EMessageError.eNoChannel);
 
-		List<RecDelId> delList = DbAppManager.getInst().getDelMessageIdList(ss.serviceCode, rec.chid, ss.getUserId(), ch.addtime);
+		List<RecDelId> delList = DbAppManager.getInst().getDelMessageIdList(ss.scode, rec.chid, ss.getUserId(), ch.addtime);
 		List<RecMessage> msgList = null;
 		if(delList.size()<1)
-			msgList = DbAppManager.getInst().getMessageList(ss.serviceCode, rec.chid, ch.addtime, rec.offset, rec.count);
+			msgList = DbAppManager.getInst().getMessageList(ss.scode, rec.chid, ch.addtime, rec.offset, rec.count);
 		else {
 			String delIds = delList.stream().map(e->"'"+e.msgid+"'").collect(Collectors.joining(","));
-			msgList = DbAppManager.getInst().getMessageListWithoutDeletion(ss.serviceCode, rec.chid, ch.addtime, delIds, rec.offset, rec.count);
+			msgList = DbAppManager.getInst().getMessageListWithoutDeletion(ss.scode, rec.chid, ch.addtime, delIds, rec.offset, rec.count);
 		}
 		String param = msgList.stream().map(e-> String.format("%s%s%s%s%d%s%d%s%d%s%s", e.msgid, ASS.UNIT, e.senderid, ASS.UNIT, e.msgtype.getValue(), 
 				ASS.UNIT, e.createtime.getTime(), ASS.UNIT, e.readcnt, ASS.UNIT, e.message)).collect(Collectors.joining(ASS.RECORD));
@@ -160,15 +160,15 @@ public class MessageCommandAction extends CommonAction {
 	 * @return [channel id][message id]
 	 */
 	private ResponseData<EMessageError> readMessage(AuthSession ss, ResponseData<EMessageError> res, ReadMsg rec) {
-		RecChannel ch = DbAppManager.getInst().getChannel(ss.serviceCode, rec.chid);
+		RecChannel ch = DbAppManager.getInst().getChannel(ss.scode, rec.chid);
 		if(ch==RecChannel.Empty)
 			return res.setError(EMessageError.eNoChannel);
-		RecMessage msg = DbAppManager.getInst().getMessage(ss.serviceCode, rec.chid, rec.msgid);
+		RecMessage msg = DbAppManager.getInst().getMessage(ss.scode, rec.chid, rec.msgid);
 		if(msg==RecMessage.Empty)
 			return res.setError(EMessageError.eNoMessage);
-		if(DbAppManager.getInst().addReadMsg(ss.serviceCode, rec.chid, ss.getUserId(), rec.msgid)==false)
+		if(DbAppManager.getInst().addReadMsg(ss.scode, rec.chid, ss.getUserId(), rec.msgid)==false)
 			return res.setError(EMessageError.eAlreadyReadMessage);
-		DbAppManager.getInst().incReadCount(ss.serviceCode, rec.msgid);
+		DbAppManager.getInst().incReadCount(ss.scode, rec.msgid);
 		return res.setError(EMessageError.eOK).setParam(rec.chid+ASS.UNIT+rec.msgid);
 	}
 	/** 
@@ -181,7 +181,7 @@ public class MessageCommandAction extends CommonAction {
 	private ResponseData<EMessageError> delMessage(AuthSession ss, ResponseData<EMessageError> res, DelMsg rec) {
 		List<String> delmsglist = new ArrayList<>();
 		for(String msgid : rec.msgids) {
-			if(DbAppManager.getInst().delMessage(ss.serviceCode, rec.chid, ss.getUserId(), msgid)==true)
+			if(DbAppManager.getInst().delMessage(ss.scode, rec.chid, ss.getUserId(), msgid)==true)
 				delmsglist.add(msgid);
 		}
 		if(delmsglist.size()<1)

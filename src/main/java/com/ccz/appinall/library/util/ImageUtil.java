@@ -14,9 +14,9 @@ public class ImageUtil {
     public static final int SAME = -1;
 
     public class ImageSize {
-    		public long width,  height;
+    		public int width,  height;
     		
-    		public ImageSize(long width, long height) {
+    		public ImageSize(int width, int height) {
     			this.width = width;
     			this.height = height;
     		}

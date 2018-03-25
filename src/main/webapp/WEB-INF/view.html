@@ -67,6 +67,11 @@
           <option value="stop">Stop</option>
           <option value="delete">Delete</option>
         </select>
+        <fieldset>
+        		<label for="appid">App ID:</label>
+        		<input type="text" id="appid" name="appid" size=64 maxlength=64 th:value="${app} ? ${app.appid}:''" th:disabled="false">
+        		<input type="text" id="apptoken" name="apptoken" size=64 maxlength=64 th:value="${app} ? ${app.token}:''" th:disabled="false">
+        </fieldset>
         <div th:if="${is_newapp}"> <button type="submit">Save New App</button> </div>
         <div th:unless="${is_newapp}"> <button type="submit">Update App</button> </div>
       </form>

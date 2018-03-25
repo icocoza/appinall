@@ -74,24 +74,3 @@ public class RecVoteUser extends DbRecord {
 		return (RecVoteUser) super.getOne(sql);
 	}
 }
-/* implements Serializable{
-	private static final long serialVersionUID = 8933480768244542941L;
-
-	@EmbeddedId
-	PKVoteUser id;
-	
-	@Column(length = 64, nullable = false)
-	public String vitemid;	//selected vote id
-	
-	@CreationTimestamp
-	@Temporal(TemporalType.TIMESTAMP)
-	public Date selecttime;
-	
-	public RecVoteUser() {	}
-	
-	public RecVoteUser(String userid, String boardid, String vitemid) {	
-		id = new PKVoteUser(boardid, userid);
-		this.vitemid = vitemid;
-	}
-}
-*/

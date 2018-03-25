@@ -12,6 +12,7 @@ public class RecUser extends DbRecord {
 	public String inappcode; //optional
 	public Boolean enabledtoken;
 	public long   jointime, leavetime, lasttime;
+	public int likes, dislikes;
 
 	public RecUser(String poolName) {
 		super(poolName);
@@ -21,7 +22,7 @@ public class RecUser extends DbRecord {
 	public boolean createTable() {
 		String sql = String.format("CREATE TABLE IF NOT EXISTS %s (userid VARCHAR(64) NOT NULL PRIMARY KEY, "
 				+ "username VARCHAR(64) NOT NULL, usertype VARCHAR(4) DEFAULT 'u', ostype VARCHAR(16), osversion VARCHAR(8), appversion VARCHAR(8), "
-				+ "inappcode VARCHAR(8), jointime LONG, leavetime LONG, lasttime LONG) ", RecUser.TBL_NAME);
+				+ "inappcode VARCHAR(8), jointime LONG, leavetime LONG, lasttime LONG, likes INTEGER DEFAULT 0, dislikes INTEGER DEFAULT 0) ", RecUser.TBL_NAME);
 		
 		return super.createTable(sql);
 	}
@@ -39,6 +40,8 @@ public class RecUser extends DbRecord {
 		rec.jointime = rd.getLong("jointime");
 		rec.leavetime = rd.getLong("leavetime");
 		rec.lasttime = rd.getLong("lasttime");
+		rec.likes = rd.getInt("likes");
+		rec.dislikes = rd.getInt("dislikes");
 		return rec;
 	}
 
@@ -100,4 +103,14 @@ public class RecUser extends DbRecord {
 		return this.inappcode!=null && inappcode.equals(inappcode);
 	}
 	
+	public boolean updateUserLike(String userid, boolean likes, boolean cancel) {
+		return super.update(qUpdateUserLike(userid, likes, cancel));
+	}
+	
+	static public String qUpdateUserLike(String userid, boolean likes, boolean cancel) {
+		int value = cancel == false ? 1 : -1;
+		return likes ? 
+				String.format("UPDATE %s SET likes=likes+%d WHERE userid='%s'", RecUser.TBL_NAME, value, userid) :
+				String.format("UPDATE %s SET dislikes=dislikes+%d WHERE userid='%s'", RecUser.TBL_NAME, value, userid);
+	}
 }

@@ -1,25 +1,20 @@
 package com.ccz.appinall.services.controller;
 
-import com.ccz.appinall.library.server.session.SessionItem;
+import com.ccz.appinall.library.type.WebsocketPacketData;
 import com.ccz.appinall.library.type.inf.ICommandProcess;
+import com.ccz.appinall.services.controller.auth.AuthSession;
+import com.ccz.appinall.services.controller.file.FileSession;
 
 import io.netty.util.AttributeKey;
 import lombok.Setter;
 
 public abstract class CommonAction implements ICommandProcess {
 	
-	@SuppressWarnings("rawtypes")
-	protected AttributeKey<SessionItem> sessionKey;
+	@Setter protected AttributeKey<AuthSession> 			attrAuthSessionKey;
+	@Setter protected AttributeKey<FileSession> 			attrFileSessionKey;
 	
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public CommonAction(Object sessionKey) {
-		if(sessionKey == null)
-			return;
-		this.sessionKey = (AttributeKey<SessionItem>) sessionKey;
-	}
-
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public void setSessionKey(Object sessionKey) {
-		this.sessionKey = (AttributeKey<SessionItem>) sessionKey;
+	@SuppressWarnings("unchecked")
+	public CommonAction(Object attrAuthSessionKey) {
+		this.attrAuthSessionKey = (AttributeKey<AuthSession>) attrAuthSessionKey;
 	}
 }

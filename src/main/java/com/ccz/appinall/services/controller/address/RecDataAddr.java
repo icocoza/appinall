@@ -1,6 +1,7 @@
 package com.ccz.appinall.services.controller.address;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.data.geo.Point;
@@ -11,7 +12,9 @@ import com.ccz.appinall.services.enums.EDeliveryType;
 import com.ccz.appinall.services.enums.EGoodsSize;
 import com.ccz.appinall.services.enums.EGoodsType;
 import com.ccz.appinall.services.enums.EGoodsWeight;
+import com.ccz.appinall.services.model.address.RecGeo;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 
 import lombok.Getter;
 
@@ -246,4 +249,23 @@ public class RecDataAddr {
 		}
 	}
 
+	@Getter
+	public class DataOrderByRoute extends RecDataCommon {
+		private List<Point> routeList = new ArrayList<>();
+		public DataOrderByRoute(JsonNode jnode) {
+			super(jnode);
+			ArrayNode jarr = (ArrayNode) jnode.get("gps");
+			for(int i=0; i<jarr.size(); i++) {
+				String[] sp = jarr.get(i).asText().split(",",-1);
+				if(sp.length>1)
+					routeList.add(new Point(Double.parseDouble(sp[0]), Double.parseDouble(sp[1])));
+			}
+		}
+		
+		public Point[] getRouteArray() {
+			if(routeList == null || routeList.size() < 1)
+				return null;
+			return routeList.toArray(new Point[routeList.size()]);
+		}
+	}
 }

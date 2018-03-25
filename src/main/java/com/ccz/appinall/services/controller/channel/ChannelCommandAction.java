@@ -32,7 +32,7 @@ public class ChannelCommandAction extends CommonAction{
 		else
 			res = new ResponseData<EChannelError>(jdata.get("scode").asText(), jdata.get("rcode").asText(), jdata.get("cmd").asText());
 		
-		AuthSession ss = (AuthSession) ch.attr(sessionKey).get();
+		AuthSession ss = (AuthSession) ch.attr(super.attrAuthSessionKey).get();
 		switch(EChannelCmd.getType(res.getCommand())) {
 		case chcreate:
 			res = this.channelCreate(ss, res, data != null? new RecDataChannel().new ChCreate(data[3]) : new RecDataChannel().new ChCreate(jdata)); //O
@@ -86,16 +86,16 @@ public class ChannelCommandAction extends CommonAction{
 		if(rec.attendees.size()>1)		
 			rec.attendees.add(ss.getUserId());
 		else {
-			RecChannel ch = DbAppManager.getInst().findChannel(ss.serviceCode, ss.getUserId(), rec.attendees.get(0));
+			RecChannel ch = DbAppManager.getInst().findChannel(ss.scode, ss.getUserId(), rec.attendees.get(0));
 			if(ch!=RecChannel.Empty) {
-				DbAppManager.getInst().addMyChannel(ss.serviceCode, ss.getUserId(), ch.chid);
+				DbAppManager.getInst().addMyChannel(ss.scode, ss.getUserId(), ch.chid);
 				return res.setError(EChannelError.eOK).setParam(ch.chid);
 			}
 		}
 		String chid = StrUtil.getSha1Uuid("ch");
 		String strattendees = rec.attendees.stream().collect(Collectors.joining(ASS.RECORD));
-		DbAppManager.getInst().addChannel(ss.serviceCode, chid, ss.getUserId(), strattendees, rec.attendees.size()+1);	//attendee
-		DbAppManager.getInst().addMyChannel(ss.serviceCode, ss.getUserId(), chid);
+		DbAppManager.getInst().addChannel(ss.scode, chid, ss.getUserId(), strattendees, rec.attendees.size()+1);	//attendee
+		DbAppManager.getInst().addMyChannel(ss.scode, ss.getUserId(), chid);
 		return res.setError(EChannelError.eOK).setParam(chid);
 	}
 	
@@ -108,10 +108,10 @@ public class ChannelCommandAction extends CommonAction{
 	 * [TODO] broadcast exit message to others
 	 */
 	private ResponseData<EChannelError> channelExit(AuthSession ss, ResponseData<EChannelError> res, ChExit rec) {
-		RecChannel ch = DbAppManager.getInst().getChannel(ss.serviceCode, rec.chid);
+		RecChannel ch = DbAppManager.getInst().getChannel(ss.scode, rec.chid);
 		if(ch==RecChannel.Empty)
 			return res.setError(EChannelError.eNoChannel);
-		DbAppManager.getInst().delMyChannel(ss.serviceCode, ss.getUserId(), rec.chid);
+		DbAppManager.getInst().delMyChannel(ss.scode, ss.getUserId(), rec.chid);
 		if(ch.type > 2){	//type is original attendee count. this value is not changed.
 			if(ch.attendees.contains(ss.getUserId())) {
 				ch.attendees = ch.attendees.replace(ss.getUserId()+ASS.RECORD, ""); //try to delete id with delimiter
@@ -119,9 +119,9 @@ public class ChannelCommandAction extends CommonAction{
 				//[TODO] broadcast exit message to others
 			}
 			if(ch.attendees.length()==0)
-				DbAppManager.getInst().delChannel(ss.serviceCode, rec.chid);
+				DbAppManager.getInst().delChannel(ss.scode, rec.chid);
 			else
-				DbAppManager.getInst().updateChannelAttendees(ss.serviceCode, rec.chid, ch.attendees, --ch.attendeecnt);
+				DbAppManager.getInst().updateChannelAttendees(ss.scode, rec.chid, ch.attendees, --ch.attendeecnt);
 		}
 		String param = String.format("%s%s%s", rec.chid, ASS.GROUP, ch.attendees);
 		return res.setError(EChannelError.eOK).setParam(param);
@@ -135,11 +135,11 @@ public class ChannelCommandAction extends CommonAction{
 	 * @return
 	 */
 	private ResponseData<EChannelError> channelEnter(AuthSession ss, ResponseData<EChannelError> res, ChEnter rec) {
-		RecChannel ch = DbAppManager.getInst().getChannel(ss.serviceCode, rec.chid);
+		RecChannel ch = DbAppManager.getInst().getChannel(ss.scode, rec.chid);
 		if(ch==RecChannel.Empty)
 			return res.setError(EChannelError.eNoChannel);
 		
-		DbAppManager.getInst().addMyChannel(ss.serviceCode, ss.getUserId(), rec.chid);
+		DbAppManager.getInst().addMyChannel(ss.scode, ss.getUserId(), rec.chid);
 		return res.setError(EChannelError.eOK).setParam(rec.chid);
 	}
 	
@@ -151,7 +151,7 @@ public class ChannelCommandAction extends CommonAction{
 	 * @return
 	 */
 	private ResponseData<EChannelError> channelInvite(AuthSession ss, ResponseData<EChannelError> res, ChInvite rec) {
-		RecChannel ch = DbAppManager.getInst().getChannel(ss.serviceCode, rec.chid);
+		RecChannel ch = DbAppManager.getInst().getChannel(ss.scode, rec.chid);
 		if(ch==RecChannel.Empty)
 			return res.setError(EChannelError.eNoChannel);
 		
@@ -164,7 +164,7 @@ public class ChannelCommandAction extends CommonAction{
 		}
 		if(ch.type>2 && ch.attendees.contains(ss.getUserId())==false)
 			ch.attendees = ch.attendees + ASS.RECORD + ss.getUserId();
-		if(DbAppManager.getInst().updateChannelAttendees(ss.serviceCode, rec.chid, ch.attendees, ch.attendeecnt, ch.type)==false)
+		if(DbAppManager.getInst().updateChannelAttendees(ss.scode, rec.chid, ch.attendees, ch.attendeecnt, ch.type)==false)
 			return res.setError(EChannelError.eFailToUpdate);
 		String param = String.format("%s%s%s", rec.chid, ASS.GROUP, ch.attendees);
 		return res.setError(EChannelError.eOK).setParam(param);
@@ -178,7 +178,7 @@ public class ChannelCommandAction extends CommonAction{
 	 * @return
 	 */
 	private ResponseData<EChannelError> channelMime(AuthSession ss, ResponseData<EChannelError> res, ChMime rec) {
-		List<RecChMime> chList = DbAppManager.getInst().getMyChannelList(ss.serviceCode, ss.getUserId(), rec.offset, rec.count);
+		List<RecChMime> chList = DbAppManager.getInst().getMyChannelList(ss.scode, ss.getUserId(), rec.offset, rec.count);
 		if(chList.size() < 1)
 			return res.setError(EChannelError.eNoListData);
 		String param = chList.stream().map(e->e.chid).collect(Collectors.joining(ASS.RECORD));
@@ -193,7 +193,7 @@ public class ChannelCommandAction extends CommonAction{
 	 * @return
 	 */
 	private ResponseData<EChannelError> channelCount(AuthSession ss, ResponseData<EChannelError> res, String userData) {
-		int count = DbAppManager.getInst().getMyChannelCount(ss.serviceCode, ss.getUserId());
+		int count = DbAppManager.getInst().getMyChannelCount(ss.scode, ss.getUserId());
 		return res.setError(EChannelError.eOK).setParam(count+"");
 	}
 	
@@ -205,7 +205,7 @@ public class ChannelCommandAction extends CommonAction{
 	 * @return { [channel id][last message][last time] / ... }
 	 */
 	private ResponseData<EChannelError> channelLastMessage(AuthSession ss, ResponseData<EChannelError> res, ChLastMsg rec) {
-		List<RecChLastMsg> chList = DbAppManager.getInst().getChannelLastMsg(ss.serviceCode, rec.chids);
+		List<RecChLastMsg> chList = DbAppManager.getInst().getChannelLastMsg(ss.scode, rec.chids);
 		String param = chList.stream().map(e->String.format("%s%s%s%s%d", e.chid, ASS.UNIT, e.lastmsg, ASS.UNIT, e.lasttime.getTime())).collect(Collectors.joining(ASS.RECORD));
 		return res.setError(EChannelError.eOK).setParam(param);
 	}
@@ -219,7 +219,7 @@ public class ChannelCommandAction extends CommonAction{
 	 * [TODO] Consider the divider
 	 */
 	private ResponseData<EChannelError> channelInfos(AuthSession ss, ResponseData<EChannelError> res, ChInfo rec) {
-		List<RecChMimeExt> chList = DbAppManager.getInst().getMyChannelInfoList(ss.serviceCode, ss.getUserId(), rec.offset, rec.count);
+		List<RecChMimeExt> chList = DbAppManager.getInst().getMyChannelInfoList(ss.scode, ss.getUserId(), rec.offset, rec.count);
 		String param = chList.stream().map(e->String.format("%s%s%s%s%s%s%d", e.chid, ASS.GROUP, e.userid2, ASS.GROUP, e.lastmsg, ASS.GROUP, e.lasttime.getTime())).collect(Collectors.joining(ASS.FILE));
 		return res.setError(EChannelError.eOK).setParam(param);
 	}

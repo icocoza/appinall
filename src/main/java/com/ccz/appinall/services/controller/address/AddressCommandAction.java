@@ -1,17 +1,20 @@
 package com.ccz.appinall.services.controller.address;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.bson.Document;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.geo.Point;
 import org.springframework.stereotype.Service;
 
+import com.ccz.appinall.common.config.ServicesConfig;
 import com.ccz.appinall.common.rdb.DbAppManager;
 import com.ccz.appinall.library.dbhelper.DbRecord;
 import com.ccz.appinall.library.type.ResponseData;
@@ -30,8 +33,6 @@ import com.ccz.appinall.services.model.db.RecDeliveryApply;
 import com.ccz.appinall.services.model.db.RecDeliveryOrder;
 import com.ccz.appinall.services.model.db.RecDeliveryStatus;
 import com.ccz.appinall.services.repository.redis.OrderGeoRepository;
-import com.ccz.appinall.services.repository.redis.OrderGeoRepository.Location;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -39,24 +40,23 @@ import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.netty.channel.Channel;
+import io.netty.util.AttributeKey;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@Service
 public class AddressCommandAction extends CommonAction {
 
 	final int MAX_LIST_COUNT = 20;
 	
 	public ResponseData<EAddrError> result;
 	
-	@Autowired
 	OrderGeoRepository geoRepository;
+	ServicesConfig servicesConfig; 
 	
-	public AddressCommandAction() {
-		super(null);
-	}
-	public AddressCommandAction(Object sessionKey) {
-		super(sessionKey);
+	public AddressCommandAction(AttributeKey<AuthSession> authSessionKey, OrderGeoRepository geoRepository, ServicesConfig servicesConfig) {
+		super(authSessionKey);
+		this.geoRepository = geoRepository;
+		this.servicesConfig = servicesConfig; 
 	}
 
 	@Override
@@ -67,58 +67,61 @@ public class AddressCommandAction extends CommonAction {
 	@Override
 	public boolean processJsonData(Channel ch, JsonNode jdata) {
 		ResponseData<EAddrError> res = new ResponseData<EAddrError>(jdata.get("scode").asText(), jdata.get("rcode").asText(), jdata.get("cmd").asText());
-		AuthSession session = (AuthSession) ch.attr(sessionKey).get();
+		AuthSession session = (AuthSession) ch.attr(super.attrAuthSessionKey).get();
 		switch(EAddrCmd.getType(res.getCommand())) {
-		case search: //()
+		case addr_search: //()
 			res = this.doSearch(res, new RecDataAddr().new DataSearchAddr(jdata));
 			break;
-		case orderrequest: //()
+		case order_add: //()
 			res = this.doOrderRequest(session, res, new RecDataAddr().new DataOrderRequest(jdata));
 			break;
-		case orderlist: //()
+		case order_list: //()
 			res = this.doOrderList(session, res, new RecDataAddr().new DataOrderList(jdata));
 			break;
-		case orderdetail: //()
+		case order_detail: //()
 			res = this.doOrderDetail(res, new RecDataAddr().new DataOrderDetail(jdata));
 			break;
-		case orderselectdeliver: //()
+		case select_deliver: //()
 			res = this.doDeliverSelectBySender(session, res, new RecDataAddr().new DataSelectDeliverBySender(jdata));
 			break;
-		case ordercanceldeliver: //()
+		case cancel_deliver: //()
 			res = this.doDeliverCancelBySender(session, res, new RecDataAddr().new DataCancelDeliverBySender(jdata));
 			break;
-		case deliversearchorder: //()
+		case order_search: //()
 			res = this.doOrderSearch(res, new RecDataAddr().new DataOrderSearch(jdata));
 			break;
-		case deliverselectorder:  //()
+		case select_order:  //()
 			res = this.doOrderSelectByDeliver(session, res, new RecDataAddr().new DataOrderSelectByDelivers(jdata));
 			break;
-		case delivercheckinorder: //()
+		case checkin_order: //()
 			res = this.doOrderCheckInByDeliver(session, res, new RecDataAddr().new DataOrderCheckInByDelivers(jdata));
 			break;
-		case delivermoving:	//()
+		case moving_order:	//()
 			res = this.doDeliverMoving(session, res, new RecDataAddr().new DataDeliverMoving(jdata));
 			break;
-		case delivergotcha: //()
+		case gotcha_order: //()
 			res = this.doDeliverGotchaOrder(session, res, new RecDataAddr().new DataDeliverGotcha(jdata));
 			break;
-		case deliverdelivering: //()
+		case delivering_order: //()
 			res = doDeliverDeliveringOrder(session, res, new RecDataAddr().new DataDeliverDelivering(jdata));
 			break;
-		case deliverdeliverycomplete: //()
+		case complete_delivery: //()
 			res = doDeliverDeliveryComplete(session, res, new RecDataAddr().new DataDeliveryCompleteByDelivers(jdata));
 			break;
-		case senderdeliveryconfirm:
+		case confirm_complete_delivery:
 			res = doSenderDeliveryConfirm(session, res, new RecDataAddr().new DataDeliveryConfirmBySender(jdata));
 			break;
-		case watchorder:
+		case watch_order:
 			res = this.doWatchOrderByDeliver(res, new RecDataAddr().new DataOrderDetailByDelivers(jdata));
 			break;
-		case ordercancel:
+		case order_cancel:
 			res = this.doOrderCancelByDeliver(res, new RecDataAddr().new DataOrderCancelByDelivers(jdata));
 			break;
-		case deliverplan:
+		case deliver_plan:
 			res = this.doDeliverPlan(res, new RecDataAddr().new DataDeliverPlan(jdata));
+			break;
+		case order_search_byroute:
+			res = this.doGetOrderByRoute(session, res, new RecDataAddr().new DataOrderByRoute(jdata));
 			break;
 		default:
 			return false;
@@ -126,6 +129,7 @@ public class AddressCommandAction extends CommonAction {
 		result = res;
 		if(res != null && ch != null) 
 			send(ch, res.toString());
+		log.info(res.toString());
 		return true;
 	}
 
@@ -253,25 +257,30 @@ public class AddressCommandAction extends CommonAction {
 	}
 	
 	private ResponseData<EAddrError> doOrderSearch(ResponseData<EAddrError> res, DataOrderSearch data) {
-		RecAddress from, to;
-		if( (from = DbAppManager.getInst().getAddress(data.getScode(), data.getFrom_addrid())) == null)
+		RecAddress fromAddr, toAddr;
+		if( (fromAddr = DbAppManager.getInst().getAddress(data.getScode(), data.getFrom_addrid())) == null)
 			return res.setError(EAddrError.invalid_from_addressid);
-		if( (to = DbAppManager.getInst().getAddress(data.getScode(), data.getTo_addrid()))==null)
+		if( (toAddr = DbAppManager.getInst().getAddress(data.getScode(), data.getTo_addrid()))==null)
 			return res.setError(EAddrError.invalid_to_addressid);
 		
-		List<Location> fromList = geoRepository.searchOrderStart(from.lon, from.lat, 2000, 10);
-		List<Location> toList = geoRepository.searchOrderEnd(to.lon, to.lat, 2000, 10);
+		Map<String, Location> fromMap = geoRepository.searchOrderFrom(fromAddr.lon, fromAddr.lat, 2000, 10, 0);
+		Map<String, Location> toMap = geoRepository.searchOrderTo(toAddr.lon, toAddr.lat, 2000, 10, 1);
+		List<String> removeKeys = new ArrayList<>();
 		
-		Set<String> toOrderIds = toList.stream().map(item->item.getOrderid()).collect(Collectors.toSet());		//to compare orderid contained
-		List<String> matchOrderIdList = fromList.stream().filter(fromItem -> toOrderIds.contains(fromItem.getOrderid())).map(x->x.getOrderid()).collect(Collectors.toList());
+		for(Entry<String, Location> from : fromMap.entrySet()) {
+			Location toLoc = toMap.get(from.getKey());
+			if(toLoc == null || toLoc.getRouteIndex() < from.getValue().getRouteIndex())
+				removeKeys.add(from.getKey());
+		}
+		removeKeys.stream().forEach(x -> fromMap.remove(x));
 		
-		if(matchOrderIdList.size()<1)
+		if(fromMap.size()<1)
 			return res.setError(EAddrError.no_search_result);
-		String[] orderids = matchOrderIdList.toArray(new String[matchOrderIdList.size()]);
+		
+		String[] orderids = fromMap.keySet().toArray(new String[fromMap.size()]);
 		List<RecDeliveryOrder> orderList = DbAppManager.getInst().getOrderListByIds(data.getScode(), orderids);
 
-		List<String> addrids = orderList.stream().map(x -> x.getBuildIds()).flatMap(Collection::stream).collect(Collectors.toList()); //insertsect between from and to
-		//List<Document> addrList = AddressMongoDb.getInst().getAddrs(buildids); //주소 데이터
+		List<String> addrids = orderList.stream().map(x -> x.getBuildIds()).flatMap(Collection::stream).collect(Collectors.toList()); 
 		List<RecAddress> addrList = DbAppManager.getInst().getAddressList(data.getScode(), addrids);
 		
 		return res.setData(this.getOrderSearchData(orderList, addrList)).setError(EAddrError.ok);
@@ -435,11 +444,57 @@ public class AddressCommandAction extends CommonAction {
 		
 		//[TODO] 진행중인 상태의 Delivery를 배송자가 취소할 시나리오 필요 
 		
-		return null;
+		return res;
 	}
 
 	private ResponseData<EAddrError> doDeliverPlan(ResponseData<EAddrError> res, DataDeliverPlan data) {
-		return null;
+		return res;
+	}
+
+	private ResponseData<EAddrError> doGetOrderByRoute(AuthSession session, ResponseData<EAddrError> res, DataOrderByRoute data) {
+		if(data.getRouteList()==null || data.getRouteList().size()<1) 
+			return res.setError(EAddrError.empty_gpslist);
+		Point[] routeArray = data.getRouteArray();
+		List<Point> orderSearchPinList = new ArrayList<>();
+		Point checkPoint = routeArray[0];
+		double distance = servicesConfig.getGeoSearchNext() * 0.0075;	//re-calculate distance
+		
+		for(int i=1; i<routeArray.length; i++) {
+			if(Math.hypot(routeArray[i].getX() - checkPoint.getX(), routeArray[i].getY() - checkPoint.getY()) >= distance) {
+				checkPoint = routeArray[i];
+				orderSearchPinList.add(routeArray[i]);
+			}
+		}
+		
+		//1st filtering by orderid(duplicated for multiple georadius)
+		int radius = 0;
+		Map<String, Location> fromMap = new HashMap<>(), toMap = new HashMap<>();
+		for(int i=0; i<orderSearchPinList.size(); i++) {
+			Point pin = orderSearchPinList.get(i);
+			radius = (i==0 || i==orderSearchPinList.size()-1) ? servicesConfig.getGeoSearchFirst()*1000 : servicesConfig.getGeoSearchNext()*1000;	//처음과 마지막은 반경 2km, 그외엔 1km 
+			fromMap.putAll(geoRepository.searchOrderFrom(pin.getX(), pin.getY(), radius, 100, i));	
+			toMap.putAll(geoRepository.searchOrderTo(pin.getX(), pin.getY(), radius, 100, i));
+		}
+		
+		//2nd filtering by direction using Location::getRouteIndex. the index of to must bigger than the index of from
+		for(Entry<String, Location> from : fromMap.entrySet()) {
+			Location toLoc = toMap.get(from.getKey());
+			if(toLoc == null || toLoc.getRouteIndex() < from.getValue().getRouteIndex())
+				fromMap.remove(from.getKey());
+		}
+		
+		if(fromMap.size()<1)
+			return res.setError(EAddrError.no_search_result);
+		
+		String[] orderids = fromMap.keySet().toArray(new String[fromMap.size()]);
+		List<RecDeliveryOrder> orderList = DbAppManager.getInst().getOrderListByIds(data.getScode(), orderids);
+
+		List<String> addrids = orderList.stream().map(x -> x.getBuildIds()).flatMap(Collection::stream).collect(Collectors.toList()); 
+		List<RecAddress> addrList = DbAppManager.getInst().getAddressList(data.getScode(), addrids);
+		
+		DbAppManager.getInst().addRouteHistory(data.getScode(), session.getUserId(), data.getRouteList(), orderList.size());
+		
+		return res.setData(this.getOrderSearchData(orderList, addrList)).setError(EAddrError.ok);
 	}
 	
 	private ArrayNode copySearshResultToResponse(ArrayNode arrNode) {

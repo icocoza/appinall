@@ -11,4 +11,6 @@ public interface IDataAccess extends IDataStore {
 	public String[] getSplitData();			//if EDataStoreType.eString
 	public String getStringData();
 	public JsonNode getJsonData();
+	
+	public byte[] getData();
 }

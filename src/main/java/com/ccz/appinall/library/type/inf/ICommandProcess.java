@@ -19,6 +19,7 @@ public interface ICommandProcess {
 	default public void send(Channel ch, String data) {
 		IWriteProtocol wp = ch.attr(DefaultPropertyKey.writePropertyKey).get();
 		wp.write(ch, data);
+		
 	}
 	
 }

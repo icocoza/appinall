@@ -14,6 +14,7 @@ import com.ccz.appinall.library.module.redisqueue.RedisQueueKeyController;
 import com.ccz.appinall.library.module.redisqueue.RedisQueueManager;
 import com.ccz.appinall.library.module.redisqueue.RedisQueueRepository;
 import com.ccz.appinall.library.server.session.SessionManager;
+import com.ccz.appinall.library.type.WebsocketPacketData;
 import com.ccz.appinall.library.type.inf.ICommandProcess;
 import com.ccz.appinall.library.type.inf.IDataAccess;
 import com.ccz.appinall.library.type.inf.IServiceAction;
@@ -25,10 +26,13 @@ import com.ccz.appinall.services.controller.auth.AuthCommandAction;
 import com.ccz.appinall.services.controller.auth.AuthSession;
 import com.ccz.appinall.services.controller.board.BoardCommandAction;
 import com.ccz.appinall.services.controller.channel.ChannelCommandAction;
+import com.ccz.appinall.services.controller.file.FileCommandAction;
+import com.ccz.appinall.services.controller.file.FileSession;
 import com.ccz.appinall.services.controller.friend.FriendCommandAction;
 import com.ccz.appinall.services.controller.location.LocationCommandAction;
 import com.ccz.appinall.services.controller.message.MessageCommandAction;
 import com.ccz.appinall.services.enums.ERedisQueueCmd;
+import com.ccz.appinall.services.repository.redis.OrderGeoRepository;
 import com.ccz.appinall.services.repository.redisqueue.RedisOnStatusQueueWorker;
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -39,11 +43,12 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 public class AppInAllServiceAction  implements IServiceAction {
-	public final AttributeKey<AuthSession> aptSession = AttributeKey.valueOf("APT_SESSION");
+	public final AttributeKey<AuthSession> attrAuthSessionKey = AttributeKey.valueOf(AuthSession.class.getSimpleName());
+	public final AttributeKey<FileSession> attrFileSessionKey = AttributeKey.valueOf(FileSession.class.getSimpleName());
 	
 	private final String serviceCode = "appserver";
 	private List<ICommandProcess> cmdProcess = new ArrayList<>();
-	//private CommonAction fileCmd = new CommonAction(aptSession);
+	//private CommonAction fileCmd = new CommonAction(attrAuthSessionKey);
 	
 	@Autowired
 	ServicesConfig servicesConfig;
@@ -51,19 +56,19 @@ public class AppInAllServiceAction  implements IServiceAction {
 	RedisQueueManager<ERedisQueueCmd> redisQueueManager;
 	
 	@Autowired
-	public AppInAllServiceAction(ServicesConfig servicesConfig, RedisQueueManager<ERedisQueueCmd> redisQueueManager, AddressCommandAction addressCommandAction) {
-		addressCommandAction.setSessionKey(aptSession);
+	public AppInAllServiceAction(ServicesConfig servicesConfig, OrderGeoRepository geoRepository, RedisQueueManager<ERedisQueueCmd> redisQueueManager) {
 		
 		this.servicesConfig = servicesConfig;
 		this.redisQueueManager = redisQueueManager; 
-		cmdProcess.add(new AdminCommandAction(aptSession));
-		cmdProcess.add(new AuthCommandAction(aptSession));
-		cmdProcess.add(new BoardCommandAction(aptSession));
-		cmdProcess.add(new ChannelCommandAction(aptSession));
-		cmdProcess.add(new FriendCommandAction(aptSession));
-		cmdProcess.add(new MessageCommandAction(aptSession));
-		cmdProcess.add(addressCommandAction);// AddressCommandAction(aptSession));
-		cmdProcess.add(new LocationCommandAction(aptSession));
+		cmdProcess.add(new AdminCommandAction(attrAuthSessionKey));
+		cmdProcess.add(new AuthCommandAction(attrAuthSessionKey));
+		cmdProcess.add(new BoardCommandAction(attrAuthSessionKey));
+		cmdProcess.add(new ChannelCommandAction(attrAuthSessionKey));
+		cmdProcess.add(new FriendCommandAction(attrAuthSessionKey));
+		cmdProcess.add(new MessageCommandAction(attrAuthSessionKey));
+		cmdProcess.add(new AddressCommandAction(attrAuthSessionKey, geoRepository, servicesConfig));// AddressCommandAction(attrAuthSessionKey));
+		cmdProcess.add(new LocationCommandAction(attrAuthSessionKey));
+		cmdProcess.add(new FileCommandAction(attrAuthSessionKey, attrFileSessionKey, servicesConfig));
 		
 		RedisQueueKeyController<ERedisQueueCmd> interServerQueueKeyController = new RedisQueueKeyController<ERedisQueueCmd>(RedisQueueRepository.INTER_SERVER_KEY + StrUtil.getHostIp(), servicesConfig.getRedisQueueCount());
 		interServerQueueKeyController.addWorker(new RedisOnStatusQueueWorker());
@@ -108,11 +113,11 @@ public class AppInAllServiceAction  implements IServiceAction {
 
 	@Override
 	public void onClose(Channel ch) {
-		AuthSession as = ch.attr(aptSession).get();
+		AuthSession as = ch.attr(attrAuthSessionKey).get();
 		if(as==null)
 			return;
 		SessionManager.getInst().del(as.getKey());
-		ch.attr(aptSession).set(null);
+		ch.attr(attrAuthSessionKey).set(null);
 	}
 	/** 
 	 * @param ch channel handle from netty
@@ -138,7 +143,7 @@ public class AppInAllServiceAction  implements IServiceAction {
 	}
 	
 	private boolean processJsonData(Channel ch, JsonNode jdata) {
-		log.info(jdata.toString());
+		log.info("[Req]" + jdata.toString());
 		for(ICommandProcess process : cmdProcess)
 			if(process.processJsonData(ch, jdata)==true)
 				return true;

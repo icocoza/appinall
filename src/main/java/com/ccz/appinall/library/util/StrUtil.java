@@ -27,6 +27,10 @@ public class StrUtil {
 	static public boolean isAlphaNumeric(String name) {
 	    return name.matches("^[a-zA-Z0-9]+$");
 	}
+	
+	static public boolean isFileName(String name) {
+		return name.matches("^[A-Za-z0-9-_,\\s]+[.]{1}[A-Za-z]{3}$");
+	}
 
 	static String ALPHA_NUMERIC_PATTERN = "((?<=[a-zA-Z])(?=[0-9]))|((?<=[0-9])(?=[a-zA-Z]))";
 	static public List<String> splitAlphaNumeric(String str) {
@@ -41,8 +45,12 @@ public class StrUtil {
 		return str.matches(NUMERIC_DASH_PATTERN);
 	}
 	
+	private static final String IMAGE_PATTERN = "([^\\s]+(\\.(?i)(jpg|png|gif|bmp))$)";
+	static public boolean isImageFile(String s) {
+		return s.matches(IMAGE_PATTERN);
+	}
 	static public String getUuid(String prefix) {
-		return prefix + UUID.randomUUID().toString();
+		return prefix + UUID.randomUUID().toString().replaceAll("-", "");
 	}
 	
 	static public String getSha1(String data) {

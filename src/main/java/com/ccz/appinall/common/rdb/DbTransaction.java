@@ -8,6 +8,7 @@ import com.ccz.appinall.services.model.db.RecAddress;
 import com.ccz.appinall.services.model.db.RecUser;
 import com.ccz.appinall.services.model.db.RecUserAuth;
 import com.ccz.appinall.services.model.db.RecUserToken;
+import com.ccz.appinall.services.model.db.RecUserVoter;
 
 public class DbTransaction {
 	public static DbTransaction s_pThis;
@@ -64,4 +65,15 @@ public class DbTransaction {
 		return RecAddress.qInsertAddress(buildid, zip, sido, sigu, eub, roadname, delivery, buildname, dongname, liname, hjdongname, buildno, buildsubno, jino, jisubno, lon, lat);
 	}
 	
+	public String queryUpdateUserLike(String userid, boolean like, boolean cancel) {
+		return RecUser.qUpdateUserLike(userid, like, cancel);
+	}
+	
+	public String queryInsertVoterUser(String deliverid, String orderid, String senderid, int point, boolean like, String comments) {
+		return RecUserVoter.qInsert(deliverid, orderid, senderid, point, like, comments);
+	}
+	
+	public String queryDeleteVoterUser(String deliverid, String orderid, String senderid) {
+		return RecUserVoter.qDelete(deliverid, orderid, senderid);
+	}
 }

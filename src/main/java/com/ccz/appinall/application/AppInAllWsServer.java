@@ -8,6 +8,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.ccz.appinall.application.ws.AppInAllFileAction;
 import com.ccz.appinall.application.ws.AppInAllServiceAction;
 import com.ccz.appinall.application.ws.AppInAllWebsocketInitializer;
 import com.ccz.appinall.common.config.ServicesConfig;
@@ -35,6 +36,8 @@ public class AppInAllWsServer {
 	AppInAllWebsocketInitializer appInAllWebsocketInitializer;
 	@Autowired
 	AppInAllServiceAction appInAllServiceAction;
+	@Autowired
+	AppInAllFileAction appInAllFileAction;
 	
 	private ServerBootstrap bootstrap;
 	private EventLoopGroup bossGroup;
@@ -53,6 +56,7 @@ public class AppInAllWsServer {
 	    workerGroup = new NioEventLoopGroup();
 		
 	    appInAllWebsocketInitializer.AddAction(appInAllServiceAction);
+	    appInAllWebsocketInitializer.AddAction(appInAllFileAction);
 	    
 		bootstrap.group(bossGroup, workerGroup);
 		bootstrap.channel(NioServerSocketChannel.class);

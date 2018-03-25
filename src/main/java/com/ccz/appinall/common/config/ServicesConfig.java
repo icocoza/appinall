@@ -128,10 +128,25 @@ public class ServicesConfig {
     @Value("${so.linger}")
     private int linger;
 
+    @Value("${fileupload.dir}")
+    private String fileUploadDir;
+    @Value("${fileupload.maxsize}")
+    private int fileUploadMax;
+    @Value("${fileupload.ip}")
+    private String fileUploadIp;
+    @Value("${fileupload.port}")
+    private int fileUploadPort;
+    
     @Bean(name = "webSocketPort")
     public InetSocketAddress wsPort() {
         return new InetSocketAddress(websocketPort);
     }
+    
+    @Value("${geo.search.first}")
+    private int geoSearchFirst;
+    
+    @Value("${geo.search.next}")
+    private int geoSearchNext;
     
     @Bean(name = "webSocketPath") 
     public String getWebSocketPath() {

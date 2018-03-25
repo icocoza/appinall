@@ -34,6 +34,8 @@ public class QueuedBuffer {
 	}
 	
     public byte[] getBytes(int offset, int length) {
+		if(compositeBuf.writerIndex()<1)
+			return null;
 	    	if(length > compositeBuf.writerIndex() - offset)
 	    		length = compositeBuf.writerIndex() - offset;
 	    	if(length < 1)
@@ -45,11 +47,13 @@ public class QueuedBuffer {
     }
     
     public ByteBuffer getByteBuffer(int offset, int length) {
-    	byte[] buf = getBytes(offset, length);
+    		byte[] buf = getBytes(offset, length);
     		return ByteBuffer.wrap(buf);
     }
     
     public ByteBuffer readByteBuffer(int length) {
+		if(compositeBuf.writerIndex()<1)
+			return null;
 	    	if(length > compositeBuf.writerIndex())
 	    		length = compositeBuf.writerIndex();
 	    	byte[] buf = read(length);
@@ -57,6 +61,8 @@ public class QueuedBuffer {
     }
     
     public byte[] read(int length) {
+    		if(compositeBuf.writerIndex()<1)
+    			return null;
 	    	if(length > compositeBuf.writerIndex())
 	    		length = compositeBuf.writerIndex();
 	    	byte[] data = new byte[length];   		
