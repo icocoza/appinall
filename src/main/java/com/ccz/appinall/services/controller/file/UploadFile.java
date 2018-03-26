@@ -23,7 +23,7 @@ public class UploadFile {
 	private String scode;
 	private String uploadPath, filepath;
 	
-	final int THUMB_SIZE=240;
+	final float THUMB_SIZE=240;
 	static int seq=0;
 	public UploadFile(RecFile file) {
 		this.file = file;
@@ -51,16 +51,16 @@ public class UploadFile {
 		new File(filepath).delete();
 	}
 	
-	public void commit(ImageResizeWorker imageResizeWorker) throws IOException {
+	public boolean commit(String scode, ImageResizeWorker imageResizeWorker) throws IOException {
+		this.scode = scode;
 		fos.close();
-		int width = 0, height = 0;
-//		if(StrUtil.isImageFile(file.filename) == true) {
-//			ImageSize imageSize = ImageUtil.getImageSize(new File(filepath));
-//			file.width = imageSize.width;
-//			file.height = imageSize.height;
-//			makeThumb(imageResizeWorker);
-//		}
-		DbAppManager.getInst().updateFileInfo(scode, file.fileid, file.width, file.height, downsize, StrUtil.getHostIp());
+		if(StrUtil.isImageFile(file.filename) == true) {
+			ImageSize imageSize = ImageUtil.getImageSize(new File(filepath));
+			file.width = imageSize.width;
+			file.height = imageSize.height;
+			makeThumb(imageResizeWorker);
+		}
+		return DbAppManager.getInst().updateFileInfo(scode, file.fileid, file.width, file.height, downsize, StrUtil.getHostIp());
 	}
 	
 	public RecFile getFile() {	return file;		}
@@ -70,18 +70,21 @@ public class UploadFile {
 	public int getSeq() {	return ++seq % 1000; }
 	
 	public void makeThumb(ImageResizeWorker imageResizeWorker) {
-		float rate = file.width > file.height ? THUMB_SIZE / file.width : THUMB_SIZE / file.height;
+		float rate = file.width > file.height ? THUMB_SIZE / (float)file.width : THUMB_SIZE / (float)file.height;
 		String thumbname = String.format("thumb%d_%03d", System.currentTimeMillis(), seq);
 		String dir = uploadPath +"/"+ scode +"/thumb/";
+		(new File(dir)).mkdirs();
 		int thumbwidth = (int)(file.width * rate);
 		int thumbheight = (int)(file.height * rate);
 		imageResizeWorker.doResize(filepath, dir + thumbname, thumbwidth, thumbheight, new ImageResizerCallback() {
 			@Override
-			public void onCompleted(ImageFileInfo imgPath) {
+			public void onCompleted(Object dest) {
+				System.out.println(dest);
 			}
 
 			@Override
-			public void onFailed(ImageFileInfo imgPath) {
+			public void onFailed(Object src) {
+				System.out.println(src);
 			}
 		});
 		DbAppManager.getInst().updateThumbnail(scode, file.fileid, thumbname, thumbwidth, thumbheight);

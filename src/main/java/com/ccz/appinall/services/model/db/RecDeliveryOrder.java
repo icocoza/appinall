@@ -158,5 +158,13 @@ public class RecDeliveryOrder extends DbRecord {
 		String sql = String.format("SELECT * FROM %s WHERE orderid in (%s)", RecDeliveryOrder.TBL_NAME, qOrderids);
 		return super.getList(sql).stream().map(e->(RecDeliveryOrder)e).collect(Collectors.toList());
 	}
+	
+	public boolean updatePhotoUrl(String orderid, String photourl) {
+		return super.update(qUpdatePhotoUrl(orderid, photourl));
+	}
+	
+	static public String qUpdatePhotoUrl(String orderid, String photourl) {
+		return String.format("UPDATE %s SET photourl='%s' WHERE orderid='%s'", RecDeliveryOrder.TBL_NAME, photourl, orderid);
+	}
 
 }

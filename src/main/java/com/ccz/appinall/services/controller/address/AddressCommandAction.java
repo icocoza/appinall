@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import com.ccz.appinall.common.config.ServicesConfig;
 import com.ccz.appinall.common.rdb.DbAppManager;
+import com.ccz.appinall.common.rdb.DbTransaction;
 import com.ccz.appinall.library.dbhelper.DbRecord;
 import com.ccz.appinall.library.type.ResponseData;
 import com.ccz.appinall.library.util.KeyGen;
@@ -28,10 +29,13 @@ import com.ccz.appinall.services.enums.EDeliveryStatus;
 import com.ccz.appinall.services.enums.EGoodsSize;
 import com.ccz.appinall.services.enums.EGoodsType;
 import com.ccz.appinall.services.enums.EGoodsWeight;
+import com.ccz.appinall.services.enums.EUserType;
 import com.ccz.appinall.services.model.db.RecAddress;
 import com.ccz.appinall.services.model.db.RecDeliveryApply;
 import com.ccz.appinall.services.model.db.RecDeliveryOrder;
+import com.ccz.appinall.services.model.db.RecDeliveryPhoto;
 import com.ccz.appinall.services.model.db.RecDeliveryStatus;
+import com.ccz.appinall.services.model.db.RecFile;
 import com.ccz.appinall.services.repository.redis.OrderGeoRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -175,6 +179,17 @@ public class AddressCommandAction extends CommonAction {
 			return res.setError(EAddrError.failed_to_saveorder);
 		geoRepository.addLocation(orderid, from.lon, from.lat, to.lon, to.lat);
 		
+		DbAppManager.getInst().updateFilesEnabled(data.getScode(), data.getFileids(), true);	//업로딩된 파일을 enabled 시킴. enabled=false은 주기적으로 삭제 필요
+		List<String> queries = new ArrayList<>();
+		for(String fileid : data.getFileids())
+			queries.add(DbTransaction.getInst().queryInsertOrderFile(fileid, orderid, session.getUserId(), EUserType.sender));
+		if(queries.size()>0) {
+			RecFile recFile = DbAppManager.getInst().getFileInfo(data.getScode(), data.getFileids().get(0));
+			String thumbUrl = String.format("http://%s:%d/thumb?fileid=%s&scode=%s", recFile.fileserver, servicesConfig.getFileDownPort(), recFile.fileid, data.getScode());
+			queries.add(DbTransaction.getInst().queryUpdatePhotoUrl(orderid, thumbUrl));
+			DbTransaction.getInst().transactionQuery(data.getScode(), queries);				//orderid 별 업로딩된 fileid 등록. usertype에 따라 구분 가능함
+		}
+		
 		//[TODO] 우선 지정 Deliver가 있을 경우, 들어온 배송을 우선적으로 배정할 수 있도록 함
 		
 		return res.setParam("orderid", orderid).setError(EAddrError.ok);		//param : orderid
@@ -217,6 +232,12 @@ public class AddressCommandAction extends CommonAction {
 		List<RecDeliveryApply> delivers = DbAppManager.getInst().getDeliverList(data.getScode(), order.orderid);	//the deliver list whose apply the order
 		ArrayNode deliversNode = mapper.valueToTree(delivers);
 		jnode.putArray("delivers").addAll(deliversNode);
+		
+		List<RecDeliveryPhoto> photoList = DbAppManager.getInst().getDeliveryPhotoList(data.getScode(), data.getOrderid());
+		ArrayNode senderPhotos = mapper.valueToTree(photoList.stream().filter(x-> x.usertype == EUserType.sender).map(y->y.fileid).collect(Collectors.toList()));
+		ArrayNode deliverPhotos = mapper.valueToTree(photoList.stream().filter(x-> x.usertype == EUserType.deliver).map(y->y.fileid).collect(Collectors.toList()));
+		jnode.putArray("senderphotos").addAll(senderPhotos);
+		jnode.putArray("deliverphotos").addAll(deliverPhotos);
 		return res.setData(jnode).setError(EAddrError.ok);
 	}
 	

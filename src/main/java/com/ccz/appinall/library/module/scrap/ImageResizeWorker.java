@@ -15,8 +15,8 @@ public class ImageResizeWorker {
     ImageResizerCallback imgCallback;
 
     public interface ImageResizerCallback {
-    		void onCompleted(ImageFileInfo imgPath);
-    		void onFailed(ImageFileInfo imgPath);
+    		void onCompleted(Object dest);
+    		void onFailed(Object src);
     }
     
     public ImageResizeWorker() {
@@ -43,13 +43,13 @@ public class ImageResizeWorker {
 		Runnable runnable = () -> {
 			try {
 				if(ImageUtil.resize(new File(src), new File(dest), width, height)==true) {
-					cb.onCompleted(null);
+					cb.onCompleted(dest);
 					return;
 				}
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			cb.onFailed(null);
+			cb.onFailed(src);
 		};
 		executor.execute(runnable);
     }

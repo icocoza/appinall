@@ -75,7 +75,7 @@ public class FileCommandAction extends CommonAction {
 		if(DbAppManager.getInst().addFileInit(data.getScode(), fileid, session.getUserId(), data.getFilename(), data.getFiletype(), data.getFilesize()) == false)
 			return res.setError(EFileError.fail_to_uploadfile);
 		
-		return res.setError(EFileError.ok).setParam("fileid", fileid).setParam("ip", servicesConfig.getFileUploadIp()).setParam("port", servicesConfig.getFileUploadPort());
+		return res.setError(EFileError.ok).setParam("fileid", fileid).setParam("ip", servicesConfig.getFileUploadIp()).setParam("port", servicesConfig.getFileUploadPort()+"");
 	}
 	
 	private final AttributeKey<WebsocketPacketData> attrWebsocketData = AttributeKey.valueOf(WebsocketPacketData.class.getSimpleName());

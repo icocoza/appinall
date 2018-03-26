@@ -24,6 +24,7 @@ import com.ccz.appinall.services.enums.EGoodsWeight;
 import com.ccz.appinall.services.enums.EMessageType;
 import com.ccz.appinall.services.enums.EUserAuthType;
 import com.ccz.appinall.services.enums.EUserRole;
+import com.ccz.appinall.services.enums.EUserType;
 import com.ccz.appinall.services.model.db.*;
 import com.ccz.appinall.services.model.db.RecChMime.RecChMimeExt;
 import com.ccz.appinall.services.model.db.RecChannel.RecChLastMsg;
@@ -616,6 +617,12 @@ public class DbAppManager {
 	public RecFile getFileInfo(String scode, String fileid) {
 		return new RecFile(scode).getFile(fileid);
 	}
+	public boolean updateFileEnabled(String scode, String fileid, boolean enabled) {
+		return new RecFile(scode).updateFileEnabled(fileid, enabled);
+	}
+	public boolean updateFilesEnabled(String scode, List<String> fileids, boolean enabled) {
+		return new RecFile(scode).updateFilesEnabled(fileids, enabled);
+	}
 	
 	//for webscrab
 	public DbRecord addWebScrab(String scode, String webid, String url, String title, String scrabpath, int width, int height) {
@@ -743,5 +750,23 @@ public class DbAppManager {
 	public List<RecDeliveryRouteHistory> getRouteList(String scode, String deliverid, int offset, int count) {
 		return new RecDeliveryRouteHistory(scode).getRouteList(deliverid, offset, count);
 	}
+
+	public boolean insertOrderPhoto(String scode, String fileid, String orderid, String userid, EUserType usertype) {
+		return new RecDeliveryPhoto(scode).insert(fileid, orderid, userid, usertype);
+	}
 	
+	public boolean deleteOrderFilesByOrderId(String scode, String orderid) {
+		return new RecDeliveryPhoto(scode).deleteOrder(orderid);
+	}
+
+	public boolean deleteOrderFiles(String scode, String orderid, List<String> fileids) {
+		return new RecDeliveryPhoto(scode).deleteOrderFile(orderid, fileids);
+	}
+	
+	public List<RecDeliveryPhoto> getDeliveryPhotoList(String scode, String orderid) {
+		return new RecDeliveryPhoto(scode).getDeliveryPhotoList(orderid);
+	}
+	public List<RecDeliveryPhoto> getDeliveryPhotoList(String scode, String orderid, EUserType usertype) {
+		return new RecDeliveryPhoto(scode).getDeliveryPhotoList(orderid, usertype);
+	}
 }

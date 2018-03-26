@@ -4,7 +4,10 @@ import java.util.List;
 
 import com.ccz.appinall.library.dbhelper.DbHelper;
 import com.ccz.appinall.library.util.StrUtil;
+import com.ccz.appinall.services.enums.EUserType;
 import com.ccz.appinall.services.model.db.RecAddress;
+import com.ccz.appinall.services.model.db.RecDeliveryOrder;
+import com.ccz.appinall.services.model.db.RecDeliveryPhoto;
 import com.ccz.appinall.services.model.db.RecUser;
 import com.ccz.appinall.services.model.db.RecUserAuth;
 import com.ccz.appinall.services.model.db.RecUserToken;
@@ -75,5 +78,13 @@ public class DbTransaction {
 	
 	public String queryDeleteVoterUser(String deliverid, String orderid, String senderid) {
 		return RecUserVoter.qDelete(deliverid, orderid, senderid);
+	}
+	
+	public String queryInsertOrderFile(String fileid, String orderid, String userid, EUserType usertype) {
+		return RecDeliveryPhoto.qInsert(fileid, orderid, userid, usertype);
+	}
+	
+	public String queryUpdatePhotoUrl(String orderid, String photourl) {
+		return RecDeliveryOrder.qUpdatePhotoUrl(orderid, photourl);
 	}
 }

@@ -34,8 +34,8 @@ public class FileSession extends SessionItem<UploadFile> {
 	
 	public boolean isOverSize() { return item.isOverSize(); }
 	
-	public void commit(ImageResizeWorker imageResizeWorker) throws IOException {
-		super.item.commit(imageResizeWorker);
+	public boolean commit(ImageResizeWorker imageResizeWorker) throws IOException {
+		return super.item.commit(scode, imageResizeWorker);
 	}
 	
 	public void discard() throws IOException {

@@ -2,6 +2,9 @@ package com.ccz.appinall.services.model.db;
 
 import java.sql.Timestamp;
 import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import com.ccz.appinall.library.dbhelper.DbReader;
 import com.ccz.appinall.library.dbhelper.DbRecord;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -18,7 +21,7 @@ public class RecFile extends DbRecord{
 	public String filetype, fileserver; //file server ip
 	public int width, height, thumbwidth, thumbheight;
 	public long filesize;
-	public boolean enabled;
+	public boolean uploaded, enabled;
 	public Timestamp regtime;
 	
 	public RecFile(String poolName) {
@@ -30,7 +33,7 @@ public class RecFile extends DbRecord{
 		String sql = String.format("CREATE TABLE IF NOT EXISTS %s (fileid VARCHAR(64) NOT NULL PRIMARY KEY, userid VARCHAR(64) NOT NULL, "
 				+ "filename VARCHAR(64) NOT NULL, thumbname VARCHAR(64), filetype VARCHAR(16), fileserver VARCHAR(64), "
 				+ "width INTEGER DEFAULT 0, height INTEGER DEFAULT 0, thumbwidth INTEGER DEFAULT 0, thumbheight INTEGER DEFAULT 0, "
-				+ "filesize LONG, enabled BOOLEAN DEFAULT false, "
+				+ "filesize LONG, uploaded BOOLEAN DEFAULT false, enabled BOOLEAN DEFAULT false, "
 				+ "regtime DATETIME DEFAULT now())", RecFile.TBL_NAME);
 		return super.createTable(sql);
 	}
@@ -49,6 +52,7 @@ public class RecFile extends DbRecord{
 		rec.thumbwidth = rd.getInt("thumbwidth");
 		rec.thumbheight = rd.getInt("thumbheight");
 		rec.filesize = rd.getLong("filesize");
+		rec.uploaded = rd.getBoolean("uploaded");
 		rec.enabled = rd.getBoolean("enabled");
 		rec.regtime = rd.getDate("regtime");
 		return rec;
@@ -81,18 +85,23 @@ public class RecFile extends DbRecord{
 		this.height = height;
 		this.filesize = filesize;
 		this.fileserver = fileserver;
-		String sql = String.format("UPDATE %s SET width=%d, height=%d, filesize=%d, fileserver='%s', enabled=true WHERE fileid='%s')",
+		String sql = String.format("UPDATE %s SET width=%d, height=%d, filesize=%d, fileserver='%s', uploaded=true WHERE fileid='%s'",
 								RecFile.TBL_NAME, width, height, filesize, fileserver, fileid);
 		return super.insert(sql) ? this : DbRecord.Empty;
 	}
 	
 	public boolean updateFileEnabled(String fileid, boolean enabled) {
-		String sql = String.format("UPDATE %s SET enabled=%b WHERE fileid='%s'", RecFile.TBL_NAME, enabled, fileid);
+		String sql = String.format("UPDATE %s SET enabled=%b WHERE fileid='%s' AND uploaded=true", RecFile.TBL_NAME, enabled, fileid);
+		return super.update(sql);
+	}
+	public boolean updateFilesEnabled(List<String> fileids, boolean enabled) {
+		String filestr = fileids.stream().map(x -> "'"+x+"'").collect(Collectors.joining(","));
+		String sql = String.format("UPDATE %s SET enabled=%b WHERE fileid IN(%s) AND uploaded=true", RecFile.TBL_NAME, enabled, filestr);
 		return super.update(sql);
 	}
 
 	public boolean updateThumbnail(String fileid, String thumbname, int thumbwidth, int thumbheight) {
-		String sql = String.format("UPDATE %s SET thumbname='%s, thumbwidth=%d, thumbheight=%d WHERE fileid='%s'", 
+		String sql = String.format("UPDATE %s SET thumbname='%s', thumbwidth=%d, thumbheight=%d WHERE fileid='%s'", 
 					RecFile.TBL_NAME, thumbname, thumbwidth, thumbheight, fileid);
 		return super.update(sql);
 	}

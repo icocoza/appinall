@@ -42,7 +42,8 @@ public class RecDataAddr {
 		private int price;	/*not null*/
 		private long begintime, endtime;	/*not null*/
 		private String photourl;
-		
+		private List<String> fileids;
+		 
 		public DataOrderRequest(JsonNode jnode) {
 			super(jnode);
 			//this.senderid = jnode.get("senderid").asText();
@@ -58,6 +59,12 @@ public class RecDataAddr {
 			this.endtime = jnode.get("endtime").asLong();
 			if(jnode.has("photourl"))
 				this.photourl = jnode.get("photourl").asText();
+			if(jnode.has("fileids")) {
+				fileids = new ArrayList<String>();
+				ArrayNode arrNode = (ArrayNode) jnode.get("fileids");
+				for(int i=0; i<arrNode.size(); i++)
+					fileids.add(arrNode.get(i).asText());
+			}
 		}
 	}
 	

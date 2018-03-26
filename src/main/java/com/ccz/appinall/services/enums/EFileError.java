@@ -4,6 +4,7 @@ public enum EFileError {
 	ok,
 	complete,
 	exception,
+	commit_error,
 	invalid_file_session,
 	invalid_file_size,
 	invalid_file_name,

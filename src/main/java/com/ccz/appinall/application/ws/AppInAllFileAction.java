@@ -1,15 +1,23 @@
 package com.ccz.appinall.application.ws;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.ccz.appinall.common.config.ServicesConfig;
 import com.ccz.appinall.library.datastore.WebsocketBinaryData;
 import com.ccz.appinall.library.module.scrap.ImageResizeWorker;
 import com.ccz.appinall.library.type.ResponseData;
+import com.ccz.appinall.library.type.WebsocketPacketData;
 import com.ccz.appinall.library.type.inf.IDataAccess;
 import com.ccz.appinall.library.type.inf.IServiceAction;
 import com.ccz.appinall.library.util.ProtocolWriter;
+import com.ccz.appinall.library.util.StrUtil;
 import com.ccz.appinall.library.util.ProtocolWriter.WriteWebsocket;
 import com.ccz.appinall.services.controller.file.FileSession;
 import com.ccz.appinall.services.enums.EFileError;
@@ -22,7 +30,10 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class AppInAllFileAction implements IServiceAction {
 	public final AttributeKey<FileSession> attrFileSessionKey = AttributeKey.valueOf(FileSession.class.getSimpleName());
-
+	private final AttributeKey<WebsocketPacketData> attrWebsocketData = AttributeKey.valueOf(WebsocketPacketData.class.getSimpleName());
+	
+	@Autowired
+	ServicesConfig servicesConfig;
 	private final String serviceCode = WebsocketBinaryData.BINARY_DATA;
 
 	private ImageResizeWorker imageResizeWorker = new ImageResizeWorker();
@@ -49,9 +60,20 @@ public class AppInAllFileAction implements IServiceAction {
 		try {
 			fileSession.write(da.getData());
 			if(fileSession.isOverSize()) {
-				fileSession.commit(imageResizeWorker);
+				if(fileSession.commit(imageResizeWorker) == false) {
+					response(ch, fileSession, EFileError.commit_error);
+					return false;
+				}
 				ch.attr(attrFileSessionKey).set(null);
-				response(ch, fileSession, EFileError.complete);
+				ch.attr(attrWebsocketData).get().setFilemode(false);
+				//NAS가 없는 환경에서는 Upload된 서버가 파일 호스트가 될 것임. 상용시에는 아래와 같이 FULL URL 생성을 최대한 지양해야 함.
+				String downUrl = String.format("http://%s:8080/download?fileid=%s&scode=%s", StrUtil.getHostIp(), fileSession.getKey(), fileSession.getScode());
+				Map<String, String> objectMap = new HashMap<>();
+				objectMap.put("hostip", StrUtil.getHostIp());
+				objectMap.put("hostport", servicesConfig.getFileDownPort()+"");
+				objectMap.put("fileid", fileSession.getKey());
+				objectMap.put("scode", fileSession.getScode());
+				response(ch, fileSession, EFileError.complete, objectMap);
 			}
 			return true;
 		} catch (IOException e) {
@@ -80,4 +102,13 @@ public class AppInAllFileAction implements IServiceAction {
 		res.setError(error);
 		this.send(ch, res.toString());
 	}
+	
+	private void response(Channel ch, FileSession fileSession, EFileError error, Map<String, String> objectMap) {
+		ResponseData<EFileError> res = new ResponseData<EFileError>(fileSession.getScode(), "0000", "uploadfile");
+		for(Entry<String, String> entry : objectMap.entrySet())
+			res.setParam(entry.getKey(), entry.getValue());
+		res.setError(error);
+		this.send(ch, res.toString());
+	}
+
 }
