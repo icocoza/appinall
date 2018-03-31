@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
 import com.ccz.appinall.common.rdb.DbAppManager;
 import com.ccz.appinall.common.rdb.DbTransaction;
 import com.ccz.appinall.library.dbhelper.DbRecord;
@@ -14,21 +17,25 @@ import com.ccz.appinall.library.util.Crypto;
 import com.ccz.appinall.library.util.KeyGen;
 import com.ccz.appinall.library.util.StrUtil;
 import com.ccz.appinall.services.controller.CommonAction;
-import com.ccz.appinall.services.controller.address.AddressCommandAction;
 import com.ccz.appinall.services.controller.auth.RecDataAuth.*;
 import com.ccz.appinall.services.enums.EAuthCmd;
 import com.ccz.appinall.services.enums.EAuthError;
 import com.ccz.appinall.services.enums.EUserAuthType;
 import com.ccz.appinall.services.model.db.*;
+import com.ccz.appinall.services.service.SessionService;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import io.netty.channel.Channel;
 import lombok.extern.slf4j.Slf4j;
 
-//@Component
+
 @Slf4j
+//@Component
 public class AuthCommandAction extends CommonAction {
 
+	@Autowired
+	SessionService sessionService;
+	
 	public AuthCommandAction(Object sessionKey) {
 		super(sessionKey);
 	}
@@ -36,23 +43,7 @@ public class AuthCommandAction extends CommonAction {
 	@SuppressWarnings("unused")
 	@Override
 	public boolean processPacketData(Channel ch, String[] data) {
-		
-		ResponseData<EAuthError> res = new ResponseData<EAuthError>(data[0], data[1], data[2]);
-		
-		String userData = data[3];
-		switch(EAuthCmd.getType(res.getCommand())) {
-		case reg_idpw:
-		case reg_email:
-		case reg_phone:
-		case login:
-		case signin:
-			return false;
-		default:
-			break;
-		}
-		if(res != null)
-			send(ch, res.toString());
-		return true;
+		return false;
 	}
 
 	@Override
@@ -274,11 +265,14 @@ public class AuthCommandAction extends CommonAction {
 			return res.setError(EAuthError.not_exist_userinfo);
 		if(user.isSameApt(data.getTokenScode()) == false)
 			DbAppManager.getInst().updateAppCode(data.getTokenScode(), token.userid, data.getTokenScode());	//update apt code
+		DbAppManager.getInst().addEpid(data.getScode(), token.userid, data.getUuid(), data.getEpid());	//register epid
 		user.inappcode = data.getTokenAppId();
 		
 		AuthSession session = new AuthSession(ch, 1).putSession(user, data.getTokenScode());	//consider the sessionid to find instance when close
 		SessionManager.getInst().put(session);
 		ch.attr(super.attrAuthSessionKey).set(session);
+		
+		sessionService.addUserSession(token.userid, StrUtil.getHostIp());	//save to redis
 		
 		return res.setError(EAuthError.ok).setParam(""+user.lasttime);
 	}

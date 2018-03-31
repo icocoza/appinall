@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 import com.ccz.appinall.library.dbhelper.DbReader;
 import com.ccz.appinall.library.dbhelper.DbRecord;
 import com.ccz.appinall.services.enums.EDeliverType;
-import com.ccz.appinall.services.enums.EDeliveryType;
+import com.ccz.appinall.services.enums.EDeliverMethod;
 import com.ccz.appinall.services.enums.EGoodsSize;
 import com.ccz.appinall.services.enums.EGoodsType;
 import com.ccz.appinall.services.enums.EGoodsWeight;
@@ -25,7 +25,7 @@ public class RecDeliveryApply extends DbRecord {
 	public Timestamp begintime, endtime, choosetime;
 	public int price;
 	public EDeliverType delivertype;
-	public EDeliveryType deliverytype;
+	public EDeliverMethod deliverytype;
 	public boolean enabled;
 	
 	public RecDeliveryApply(String poolName) {
@@ -52,7 +52,7 @@ public class RecDeliveryApply extends DbRecord {
 		rec.choosetime = rd.getDate("choosetime");
 		rec.price = rd.getInt("price");
 		rec.delivertype = EDeliverType.getType(rd.getString("delivertype"));
-		rec.deliverytype = EDeliveryType.getType(rd.getString("deliverytype"));
+		rec.deliverytype = EDeliverMethod.getType(rd.getString("deliverytype"));
 		rec.enabled = rd.getBoolean("enabled");
 		return rec;
 	}
@@ -67,7 +67,7 @@ public class RecDeliveryApply extends DbRecord {
 		return doLoad(rd, new RecDeliveryApply(poolName));
 	}
 
-	public boolean insert(String orderid, String deliverid, String username, long begintime, long endtime, int price, EDeliverType delivertype, EDeliveryType deliverytype) {
+	public boolean insert(String orderid, String deliverid, String username, long begintime, long endtime, int price, EDeliverType delivertype, EDeliverMethod deliverytype) {
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		Date begindt =  new Date(begintime);
 		Date enddt = new Date(endtime);

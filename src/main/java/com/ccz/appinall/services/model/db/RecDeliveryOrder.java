@@ -34,6 +34,7 @@ public class RecDeliveryOrder extends DbRecord {
 	public int price;
 	public Timestamp begintime, endtime, createtime;
 	public String photourl;
+	public boolean enabled;
 	
 	public int deliverCount = 0;	//from count(*)
 	public RecDeliveryOrder() {
@@ -50,7 +51,7 @@ public class RecDeliveryOrder extends DbRecord {
 				+ "senderid VARCHAR(64) NOT NULL, fromid VARCHAR(32) NOT NULL, toid VARCHAR(32) NOT NULL, name VARCHAR(32) NOT NULL, "
 				+ "notice VARCHAR(128), size VARCHAR(16) NOT NULL, weight VARCHAR(16) NOT NULL, goodstype VARCHAR(16) NOT NULL, "
 				+ "price INTEGER NOT NULL, begintime DATETIME NOT NULL, endtime DATETIME NOT NULL, photourl VARCHAR(128), "
-				+ "createtime DATETIME DEFAULT now(), "
+				+ "createtime DATETIME DEFAULT now(), enabled BOOLEAN DEFAULT true, "
 				+ "INDEX idx_userid(senderid), INDEX idx_size(size), INDEX idx_weight(weight), "
 				+ "INDEX idx_begintime(begintime), INDEX idx_endtime(endtime))",  RecDeliveryOrder.TBL_NAME);
 		return super.createTable(sql); 
@@ -73,6 +74,7 @@ public class RecDeliveryOrder extends DbRecord {
 		rec.endtime = rd.getDate("endtime");
 		rec.createtime = rd.getDate("createtime");
 		rec.photourl = rd.getString("photourl");
+		rec.enabled = rd.getBoolean("enabled");
 		return rec;
 	}
 
@@ -165,6 +167,11 @@ public class RecDeliveryOrder extends DbRecord {
 	
 	static public String qUpdatePhotoUrl(String orderid, String photourl) {
 		return String.format("UPDATE %s SET photourl='%s' WHERE orderid='%s'", RecDeliveryOrder.TBL_NAME, photourl, orderid);
+	}
+	
+	public boolean updateDisabled(String orderid) {
+		String sql = String.format("UPDATE %s SET enabled=false WHERE orderid='%s'", RecDeliveryOrder.TBL_NAME, orderid);
+		return super.update(sql);
 	}
 
 }

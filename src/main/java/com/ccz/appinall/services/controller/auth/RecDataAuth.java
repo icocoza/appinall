@@ -70,6 +70,8 @@ public class RecDataAuth {
 		@Getter
 		private String tokenUserid, tokenUuid;//by regToken
 		@Getter
+		private String epid;
+		@Getter
 		private  EUserAuthType tokenAuthType = EUserAuthType.none;//by regToken
 		
 		public DataSignIn(JsonNode jnode) {
@@ -82,6 +84,8 @@ public class RecDataAuth {
 				this.tokenid = jnode.get("tokenid").asText();
 			if(jnode.has("tid"))
 				this.tokenid = jnode.get("tid").asText();
+			if(jnode.has("epid"))
+				this.epid = jnode.get("epid").asText();
 
 			if(jnode.has("uuid"))
 				this.uuid = jnode.get("uuid").asText();

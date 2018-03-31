@@ -4,29 +4,30 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
 
-import com.ccz.appinall.services.model.redis.SessionInfo;
+import com.ccz.appinall.services.model.redis.SessionData;
 
 @Repository
 public class SessionRepository {
 	
 	@Autowired
-    private RedisTemplate<String, SessionInfo> redisSessionTemplate;
+    private RedisTemplate<String, SessionData> redisSessionTemplate;
 	
-	private final String KEY = "chsvc:user:";
+	private final String KEY = "server:user:";
 	
-	public void save(String userId, SessionInfo sessionInfo) {
-		redisSessionTemplate.opsForValue().set(KEY + userId, sessionInfo);
+	public void save(String userId, SessionData sd) {
+		redisSessionTemplate.opsForValue().set(KEY + userId, sd);
 	}
-
+	
 	public void save(String userId, String ip) {
-		redisSessionTemplate.opsForValue().set(KEY + userId, new SessionInfo(userId, ip));
+		redisSessionTemplate.opsForValue().set(KEY + userId, new SessionData(userId, ip));
 	}
 
-	public SessionInfo get(String userId) {
+	public SessionData get(String userId) {
 		return redisSessionTemplate.opsForValue().get(KEY + userId);
 	}
+	
 	public String getIp(String userId) {
-		SessionInfo userIp = redisSessionTemplate.opsForValue().get(KEY + userId);
+		SessionData userIp = redisSessionTemplate.opsForValue().get(KEY + userId);
 		if(null != userIp) {
 			return userIp.getIp();
 		}
@@ -37,9 +38,9 @@ public class SessionRepository {
 		return redisSessionTemplate.hasKey(KEY+userId);
 	}
 	
-	//[TODO] 네트웍 연결이 끊어졌다가 바로 재접속 하는 사용자의 경우, 첫번째 CLOSE 메시지가 두번째 CONN 보다 늦게 들어올 수 있음. 예외 처리 필요 (중요)
-	public boolean delete(String userId, SessionInfo userSession) {
-		SessionInfo savedUserSession = this.get(userId);
+	//[TODO] 네트웍 연결이 불안한 사용자의 경, 첫번째 CLOSE가 두번째 CONNECTION 보다 늦을 수 있음.
+	public boolean delete(String userId, SessionData userSession) {
+		SessionData savedUserSession = this.get(userId);
 		if(savedUserSession!=null && savedUserSession.equals(userSession)) {
 			redisSessionTemplate.delete(KEY + userId);
 			return true;

@@ -8,7 +8,7 @@ import org.springframework.data.geo.Point;
 
 import com.ccz.appinall.services.controller.RecDataCommon;
 import com.ccz.appinall.services.enums.EDeliverType;
-import com.ccz.appinall.services.enums.EDeliveryType;
+import com.ccz.appinall.services.enums.EDeliverMethod;
 import com.ccz.appinall.services.enums.EGoodsSize;
 import com.ccz.appinall.services.enums.EGoodsType;
 import com.ccz.appinall.services.enums.EGoodsWeight;
@@ -130,38 +130,45 @@ public class RecDataAddr {
 	}
 	
 	@Getter
-	public class DataOrderSelectByDelivers extends RecDataCommon {
-		private String orderid, deliverid;
+	public class DataOrderSelectByDeliver extends RecDataCommon {
+		private String orderid;
 		private long begintime, endtime;	//deliver가 제안하는 시작시간, 끝시간
+		private int duration;	//minutes
 		private int price;
 		private EDeliverType delivertype;
-		private EDeliveryType deliverytype;
+		private EDeliverMethod deliverytype;
 
-		public DataOrderSelectByDelivers(JsonNode jnode) {
+		public DataOrderSelectByDeliver(JsonNode jnode) {
 			super(jnode);
 			this.orderid = jnode.get("orderid").asText();
-			this.deliverid = jnode.get("userid").asText();
 			this.begintime = jnode.get("begintime").asLong();
 			this.endtime = jnode.get("endtime").asLong();
-			this.price = jnode.get("price").asInt();
+			this.duration = jnode.get("duration").asInt();
+			this.price = jnode.get("price").asInt();	//Not used yet
 			this.delivertype = EDeliverType.valueOf(jnode.get("delivertype").asText());
-			this.deliverytype = EDeliveryType.valueOf(jnode.get("deliverytype").asText());
+			this.deliverytype = EDeliverMethod.valueOf(jnode.get("deliverytype").asText());
 		}
 	}
 
 	@Getter
-	public class DataOrderCheckInByDelivers extends RecDataCommon {
-		private String orderid;
+	public class DataOrderCheckInByDelivers extends DataOrderDetail {
 
 		public DataOrderCheckInByDelivers(JsonNode jnode) {
 			super(jnode);
-			this.orderid = jnode.get("orderid").asText();
 		}
 	}
 	
 	public class DataDeliverMoving extends DataOrderDetail {
 
 		public DataDeliverMoving(JsonNode jnode) {
+			super(jnode);
+		}
+	}
+
+	@Getter
+	public class DataDeliverBeforeGotcha extends DataOrderDetail {
+		
+		public DataDeliverBeforeGotcha(JsonNode jnode) {
 			super(jnode);
 		}
 	}
@@ -183,13 +190,27 @@ public class RecDataAddr {
 			super(jnode);
 		}
 	}
+	
+	@Getter
+	public class DataDeliveryBeforeComplete extends DataOrderDetail {
+		public DataDeliveryBeforeComplete(JsonNode jnode) {
+			super(jnode);
+		}
+	}
+
+	@Getter
+	public class DataArrivalInOrder extends DataOrderDetail {
+		public DataArrivalInOrder(JsonNode jnode) {
+			super(jnode);
+		}
+	}
 
 	@Getter
 	public class DataDeliveryCompleteByDelivers extends RecDataCommon {
 		private String orderid;
-		private List<String> photourl;
 		private String endcode;
 		private String message;
+		private List<String> fileids;
 		
 		public DataDeliveryCompleteByDelivers(JsonNode jnode) {
 			super(jnode);
@@ -199,6 +220,12 @@ public class RecDataAddr {
 			//this.photourl = jnode.get("photourl").asText();
 			if(jnode.has("message"))
 				this.message = jnode.get("message").asText();
+			if(jnode.has("fileids")) {
+				fileids = new ArrayList<String>();
+				ArrayNode arrNode = (ArrayNode) jnode.get("fileids");
+				for(int i=0; i<arrNode.size(); i++)
+					fileids.add(arrNode.get(i).asText());
+			}
 		}
 	}
 
@@ -226,13 +253,18 @@ public class RecDataAddr {
 	}
 	
 	@Getter
-	public class DataOrderCancelByDelivers extends RecDataCommon {
-		private String orderid, delivererid;
+	public class DataOrderCancelBySender extends DataOrderDetail {
+		
+		public DataOrderCancelBySender(JsonNode jnode) {
+			super(jnode);
+		}
+	}
+	
+	@Getter
+	public class DataOrderCancelByDelivers extends DataOrderDetail {
 		
 		public DataOrderCancelByDelivers(JsonNode jnode) {
 			super(jnode);
-			this.delivererid = jnode.get("delivererid").asText();
-			this.orderid = jnode.get("orderid").asText();
 		}
 	}
 

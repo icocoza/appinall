@@ -8,16 +8,22 @@ import lombok.Setter;
 
 public class QueueDeliveryStatus extends QueueCmd {
 	@Getter QueueData data;
-	@Getter @Setter String title, body;
+	Notification notification = new Notification();
 	
 	public QueueDeliveryStatus() {}	//need for serialize
 	
 	public QueueDeliveryStatus(String scode, String from, String to, String orderid, EDeliveryStatus status, String msg) {
+		super.cmd = ERedisQueueCmd.delivery_status;
 		super.scode = scode;
-		super.cmd = ERedisQueueCmd.oyw_status;
 		super.from = from;
 		super.to = to;
 		this.data = new QueueData(orderid, status, msg);
+	}
+	
+	public QueueDeliveryStatus setNotification(String title, String body) {
+		notification.setTitle(title);
+		notification.setBody(body);
+		return this;
 	}
 	
 	public class QueueData {
@@ -35,4 +41,8 @@ public class QueueDeliveryStatus extends QueueCmd {
 	    }
 	}
 	
+	public class Notification {
+		@Getter @Setter String title, body;
+		public Notification() {}
+	}
 }

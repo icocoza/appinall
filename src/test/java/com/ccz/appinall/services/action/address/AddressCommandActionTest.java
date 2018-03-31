@@ -15,7 +15,7 @@ import com.ccz.appinall.common.rdb.DbAppManager;
 import com.ccz.appinall.services.controller.address.AddressCommandAction;
 import com.ccz.appinall.services.controller.address.AddressElasticSearch;
 import com.ccz.appinall.services.enums.EDeliverType;
-import com.ccz.appinall.services.enums.EDeliveryType;
+import com.ccz.appinall.services.enums.EDeliverMethod;
 import com.ccz.appinall.services.enums.EGoodsSize;
 import com.ccz.appinall.services.enums.EGoodsType;
 import com.ccz.appinall.services.enums.EGoodsWeight;
@@ -92,7 +92,7 @@ public class AddressCommandActionTest {
 		long endTime = System.currentTimeMillis() + 7200000;
 		node.removeAll();
 		node.put("scode", "owy").put("rcode", "r001").put("cmd", "deliverselectorder").put("userid", "deliver001").put("orderid", orderid).put("begintime", startTime).put("endtime", endTime)
-		.put("price", 5000).put("delivertype", EDeliverType.personal.getValue()).put("deliverytype", EDeliveryType.car.getValue());
+		.put("price", 5000).put("delivertype", EDeliverType.personal.getValue()).put("deliverytype", EDeliverMethod.car.getValue());
 		addressCommandAction.processJsonData(null, node);
 		System.out.println(addressCommandAction.result.toString());
 		

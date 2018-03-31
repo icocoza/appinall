@@ -5,11 +5,11 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public enum EDeliveryStatus {
 	none("none"), apply("apply"), ready("ready"), 
-	assign("assign"), start("start"), 
+	assign("assign"), start("start"), gotcha5min("gotcha5min"), 
 	gotcha("gotcha"), delivering("delivering"), 
-	delivered("delivered"), 
+	before_delivered("before_delivered"), deliver_arrived("deliver_arrived"), delivered("delivered"), 
 	confirm("confirm"), finish("finish"), 
-	cancel("cancel"), sendback("sendback");
+	cancel_bysender("cancel_bysender"), cancel_bydeliver("cancel_bydeliver"),sendback("sendback");
 	
 	public final String value;
 	

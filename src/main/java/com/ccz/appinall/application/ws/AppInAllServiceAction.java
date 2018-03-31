@@ -33,7 +33,9 @@ import com.ccz.appinall.services.controller.location.LocationCommandAction;
 import com.ccz.appinall.services.controller.message.MessageCommandAction;
 import com.ccz.appinall.services.enums.ERedisQueueCmd;
 import com.ccz.appinall.services.repository.redis.OrderGeoRepository;
+import com.ccz.appinall.services.repository.redisqueue.RedisOnPushQueueWorker;
 import com.ccz.appinall.services.repository.redisqueue.RedisOnStatusQueueWorker;
+import com.ccz.appinall.services.service.SendMessageManager;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import io.netty.channel.Channel;
@@ -54,6 +56,8 @@ public class AppInAllServiceAction  implements IServiceAction {
 	ServicesConfig servicesConfig;
 	@Autowired
 	RedisQueueManager<ERedisQueueCmd> redisQueueManager;
+	@Autowired
+	SendMessageManager sendMessageManager;
 	
 	@Autowired
 	public AppInAllServiceAction(ServicesConfig servicesConfig, OrderGeoRepository geoRepository, RedisQueueManager<ERedisQueueCmd> redisQueueManager) {
@@ -66,16 +70,18 @@ public class AppInAllServiceAction  implements IServiceAction {
 		cmdProcess.add(new ChannelCommandAction(attrAuthSessionKey));
 		cmdProcess.add(new FriendCommandAction(attrAuthSessionKey));
 		cmdProcess.add(new MessageCommandAction(attrAuthSessionKey));
-		cmdProcess.add(new AddressCommandAction(attrAuthSessionKey, geoRepository, servicesConfig));// AddressCommandAction(attrAuthSessionKey));
+		cmdProcess.add(new AddressCommandAction(attrAuthSessionKey, geoRepository, servicesConfig, sendMessageManager));// AddressCommandAction(attrAuthSessionKey));
 		cmdProcess.add(new LocationCommandAction(attrAuthSessionKey));
 		cmdProcess.add(new FileCommandAction(attrAuthSessionKey, attrFileSessionKey, servicesConfig));
 		
+		//between server
 		RedisQueueKeyController<ERedisQueueCmd> interServerQueueKeyController = new RedisQueueKeyController<ERedisQueueCmd>(RedisQueueRepository.INTER_SERVER_KEY + StrUtil.getHostIp(), servicesConfig.getRedisQueueCount());
 		interServerQueueKeyController.addWorker(new RedisOnStatusQueueWorker());
 		redisQueueManager.addController(interServerQueueKeyController);
 		
+		//global
 		RedisQueueKeyController<ERedisQueueCmd> globalQueueKeyController = new RedisQueueKeyController<ERedisQueueCmd>(RedisQueueRepository.REDIS_QUEUE_KEY, servicesConfig.getRedisQueueCount());
-		globalQueueKeyController.addWorker(new RedisOnStatusQueueWorker());
+		globalQueueKeyController.addWorker(new RedisOnPushQueueWorker());
 		redisQueueManager.addController(globalQueueKeyController);
 
 		redisQueueManager.startRedisQueue();

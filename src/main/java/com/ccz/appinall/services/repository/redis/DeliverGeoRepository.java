@@ -10,7 +10,7 @@ public class DeliverGeoRepository {
 	@Autowired
 	private RedisTemplate<String, String> geoOperations;	//저장 규격 TYPE1
 
-	private final String DELIVER_LOC = "deliverloc";
+	private final String DELIVER_LOC = "aia:gps:order";
 
 	public long addStartLocation(String orderid, double longitude, double latitude) {
 		return geoOperations.opsForGeo().geoAdd(DELIVER_LOC, new Point(longitude, latitude), orderid);

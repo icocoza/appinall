@@ -12,7 +12,7 @@ public class RecUserVoter extends DbRecord {
 	
 	public String userid, voterid, voteitem;
 	public int point;
-	public boolean like;
+	public boolean likes;
 	public String comments;
 	public Timestamp votetime;
 	
@@ -25,7 +25,7 @@ public class RecUserVoter extends DbRecord {
 	public boolean createTable() {
 		String sql = String.format("CREATE TABLE IF NOT EXISTS %s ("
 				+ "userid VARCHAR(64) NOT NULL, voterid VARCHAR(64) NOT NULL, voteitem VARCHAR(64) NOT NULL, "
-				+ "point INTEGER DEFAULT 0, comments VARCHAR(256), like BOOLEAN DEFAULT true,"
+				+ "point INTEGER DEFAULT 0, comments VARCHAR(256), likes BOOLEAN DEFAULT true,"
 				+ "votetime DATETIME DEFAULT NOW(), PRIMARY KEY (userid, voterid, voteitem), "
 				+ "INDEX idx_voteitem(voteitem), INDEX idx_userid(userid))", RecUserVoter.TBL_NAME);
 		
@@ -40,7 +40,7 @@ public class RecUserVoter extends DbRecord {
 		rec.voterid = rd.getString("voterid");
 		rec.voteitem = rd.getString("voteitem");
 		rec.point = rd.getInt("point");
-		rec.like = rd.getBoolean("like");
+		rec.likes = rd.getBoolean("likes");
 		rec.comments = rd.getString("comments");
 		rec.votetime = rd.getDate("votetime");
 		return rec;
@@ -56,14 +56,14 @@ public class RecUserVoter extends DbRecord {
 		return doLoad(rd, new RecUserVoter(poolName));
 	}
 	
-	public boolean insert(String userid, String voterid, String voteitem, int point, boolean like, String comments) {
-		return super.insert(qInsert(userid, voterid, voteitem, point, like, comments));
+	public boolean insert(String userid, String voterid, String voteitem, int point, boolean likes, String comments) {
+		return super.insert(qInsert(userid, voterid, voteitem, point, likes, comments));
 	}
 	
-	static public String qInsert(String userid, String voterid, String voteitem, int point, boolean like, String comments) {
-		return String.format("INSERT INTO %s (userid, voterid, voteitem, point, like, comments) "
+	static public String qInsert(String userid, String voterid, String voteitem, int point, boolean likes, String comments) {
+		return String.format("INSERT INTO %s (userid, voterid, voteitem, point, likes, comments) "
 				+ "VALUES('%s','%s','%s',%d,%b,'%s')", RecUserVoter.TBL_NAME,  
-				userid, voterid, voteitem, point, like, comments);
+				userid, voterid, voteitem, point, likes, comments);
 	}
 	
 	public boolean delete(String userid, String voterid, String voteitem) {

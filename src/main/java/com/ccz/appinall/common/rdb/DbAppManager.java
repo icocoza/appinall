@@ -16,7 +16,7 @@ import com.ccz.appinall.services.enums.EAdminAppStatus;
 import com.ccz.appinall.services.enums.EAdminStatus;
 import com.ccz.appinall.services.enums.EDeliverType;
 import com.ccz.appinall.services.enums.EDeliveryStatus;
-import com.ccz.appinall.services.enums.EDeliveryType;
+import com.ccz.appinall.services.enums.EDeliverMethod;
 import com.ccz.appinall.services.enums.EFriendStatus;
 import com.ccz.appinall.services.enums.EGoodsSize;
 import com.ccz.appinall.services.enums.EGoodsType;
@@ -169,6 +169,8 @@ public class DbAppManager {
 			new RecRead(scode).createTable();
 			new RecUser(scode).createTable();
 			new RecUserAuth(scode).createTable();
+			new RecUserToken(scode).createTable();
+			new RecUserVoter(scode).createTable();
 			new RecVote(scode).createTable();
 			new RecVoteInfo(scode).createTable();
 			new RecVoteUser(scode).createTable();
@@ -182,7 +184,6 @@ public class DbAppManager {
 			new RecDeliveryOrder(scode).createTable();
 			new RecDeliveryPhoto(scode).createTable();
 			new RecDeliveryStatus(scode).createTable();
-			new RecUserToken(scode).createTable();
 			new RecAddress(scode).createTable();
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -664,12 +665,16 @@ public class DbAppManager {
 	public List<RecDeliveryOrder> getOrderListByIds(String scode, String[] orderids) {
 		return new RecDeliveryOrder(scode).getListByIds(orderids);
 	}
+	
+	public boolean updateOrderDisabled(String scode, String orderid) {
+		return new RecDeliveryOrder(scode).updateDisabled(orderid);
+	}
 
 	public Map<String, Integer> getDeliverCountByOrderId(String scode, String[] orderids) {
 		return new RecDeliverCount(scode).getDeliverCount(orderids);
 	}
 	//for delivery apply
-	public boolean addDeliveryApply(String scode, String orderid, String deliverid, String username, long begintime, long endtime, int price, EDeliverType delivertype, EDeliveryType deliverytype) {
+	public boolean addDeliveryApply(String scode, String orderid, String deliverid, String username, long begintime, long endtime, int price, EDeliverType delivertype, EDeliverMethod deliverytype) {
 		return new RecDeliveryApply(scode).insert(orderid, deliverid, username, begintime, endtime, price, delivertype, deliverytype);
 	}
 	public List<RecDeliveryApply> getDeliverList(String scode, String orderid) {

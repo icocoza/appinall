@@ -111,15 +111,16 @@ public class FCMConnection {
 		JsonNode jnode = objectMapper.readTree(json);
 		String dataPayload = jnode.get("data").asText();
 		
-		String alarmTitle = "";
-		String alarmBody = "";
-		if(jnode.has("alarmTitle"))
-			alarmTitle = jnode.get("alarmTitle").asText();
-		if(jnode.has("alarmBody"))
-			alarmBody = jnode.get("alarmBody").asText();
+		String notiTitle = "";
+		String notiBody  = "";
+		if(jnode.has("notification")) {
+			JsonNode notiNode = jnode.get("notification");
+			notiTitle = notiNode.get("alarmTitle").asText();
+			notiBody = notiNode.get("alarmBody").asText();
+		}
 		
 		try	{
-			String jsonMsg = this.createJsonMessage(to, msgid, dataPayload, alarmTitle, alarmBody, badgeCount, PUSH_SOUND);
+			String jsonMsg = this.createJsonMessage(to, msgid, dataPayload, notiTitle, notiBody, badgeCount, PUSH_SOUND);
 			this.sendDownstreamMessage(jsonMsg);
 			failCount = 0;
 		} catch (NotConnectedException e) {		

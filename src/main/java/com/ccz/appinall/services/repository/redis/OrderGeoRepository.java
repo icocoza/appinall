@@ -1,15 +1,12 @@
 package com.ccz.appinall.services.repository.redis;
 
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Distance;
-import org.springframework.data.geo.GeoResult;
 import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Point;
 import org.springframework.data.redis.connection.RedisConnection;
@@ -28,8 +25,8 @@ public class OrderGeoRepository {
 	@Autowired
 	private RedisTemplate<String, String> geoOperations;	//저장 규격 TYPE1
 
-	private final String ORDER_FROM = "order_start";
-	private final String ORDER_TO = "order_end";
+	private final String ORDER_FROM = "aia:gps:order:start";
+	private final String ORDER_TO = "aia:gps:order:end";
 	
 	public long addStartLocation(String orderid, double longitude, double latitude) {
 		return geoOperations.opsForGeo().geoAdd(ORDER_FROM, new Point(longitude, latitude), orderid);

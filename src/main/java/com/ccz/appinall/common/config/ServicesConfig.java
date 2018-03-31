@@ -20,7 +20,7 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import com.ccz.appinall.library.module.redisqueue.RedisQueueManager;
 import com.ccz.appinall.services.enums.ERedisQueueCmd;
-import com.ccz.appinall.services.model.redis.SessionInfo;
+import com.ccz.appinall.services.model.redis.SessionData;
 
 import lombok.Getter;
 
@@ -161,12 +161,12 @@ public class ServicesConfig {
     }
     
     @Bean
-    public RedisTemplate<String, SessionInfo> redisSessionIpTemplate() {
-		final RedisTemplate< String, SessionInfo> template =  new RedisTemplate< String, SessionInfo>();
+    public RedisTemplate<String, SessionData> redisSessionIpTemplate() {
+		final RedisTemplate< String, SessionData> template =  new RedisTemplate< String, SessionData>();
 		template.setConnectionFactory( jedisConnectionFactory() );
 		template.setKeySerializer( new StringRedisSerializer() );
-		template.setHashValueSerializer( new GenericToStringSerializer< SessionInfo >( SessionInfo.class ) );
-		template.setValueSerializer( new Jackson2JsonRedisSerializer< SessionInfo >( SessionInfo.class ) );
+		template.setHashValueSerializer( new GenericToStringSerializer< SessionData >( SessionData.class ) );
+		template.setValueSerializer( new Jackson2JsonRedisSerializer< SessionData >( SessionData.class ) );
 		return template;
     }
     

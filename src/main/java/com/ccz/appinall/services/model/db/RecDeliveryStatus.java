@@ -8,7 +8,7 @@ import com.ccz.appinall.library.dbhelper.DbReader;
 import com.ccz.appinall.library.dbhelper.DbRecord;
 import com.ccz.appinall.services.enums.EDeliverType;
 import com.ccz.appinall.services.enums.EDeliveryStatus;
-import com.ccz.appinall.services.enums.EDeliveryType;
+import com.ccz.appinall.services.enums.EDeliverMethod;
 
 public class RecDeliveryStatus extends DbRecord{
 	static final String TBL_NAME = "deliverystatus";

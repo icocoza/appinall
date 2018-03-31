@@ -10,9 +10,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.geo.Point;
-import org.springframework.stereotype.Service;
 
 import com.ccz.appinall.common.config.ServicesConfig;
 import com.ccz.appinall.common.rdb.DbAppManager;
@@ -36,7 +34,11 @@ import com.ccz.appinall.services.model.db.RecDeliveryOrder;
 import com.ccz.appinall.services.model.db.RecDeliveryPhoto;
 import com.ccz.appinall.services.model.db.RecDeliveryStatus;
 import com.ccz.appinall.services.model.db.RecFile;
+import com.ccz.appinall.services.model.db.RecUser;
+import com.ccz.appinall.services.model.redis.QueueDeliveryStatus;
 import com.ccz.appinall.services.repository.redis.OrderGeoRepository;
+import com.ccz.appinall.services.service.SendMessageManager;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -55,12 +57,14 @@ public class AddressCommandAction extends CommonAction {
 	public ResponseData<EAddrError> result;
 	
 	OrderGeoRepository geoRepository;
-	ServicesConfig servicesConfig; 
+	ServicesConfig servicesConfig;
+	SendMessageManager sendMessageManager;
 	
-	public AddressCommandAction(AttributeKey<AuthSession> authSessionKey, OrderGeoRepository geoRepository, ServicesConfig servicesConfig) {
+	public AddressCommandAction(AttributeKey<AuthSession> authSessionKey, OrderGeoRepository geoRepository, ServicesConfig servicesConfig, SendMessageManager sendMessageManager) {
 		super(authSessionKey);
 		this.geoRepository = geoRepository;
 		this.servicesConfig = servicesConfig; 
+		this.sendMessageManager = sendMessageManager;
 	}
 
 	@Override
@@ -85,23 +89,26 @@ public class AddressCommandAction extends CommonAction {
 		case order_detail: //()
 			res = this.doOrderDetail(res, new RecDataAddr().new DataOrderDetail(jdata));
 			break;
-		case select_deliver: //()
-			res = this.doDeliverSelectBySender(session, res, new RecDataAddr().new DataSelectDeliverBySender(jdata));
-			break;
-		case cancel_deliver: //()
-			res = this.doDeliverCancelBySender(session, res, new RecDataAddr().new DataCancelDeliverBySender(jdata));
-			break;
+//		case select_deliver: //()
+//			res = this.doDeliverSelectBySender(session, res, new RecDataAddr().new DataSelectDeliverBySender(jdata));
+//			break;
+//		case cancel_deliver: //()
+//			res = this.doDeliverCancelBySender(session, res, new RecDataAddr().new DataCancelDeliverBySender(jdata));
+//			break;
 		case order_search: //()
 			res = this.doOrderSearch(res, new RecDataAddr().new DataOrderSearch(jdata));
 			break;
 		case select_order:  //()
-			res = this.doOrderSelectByDeliver(session, res, new RecDataAddr().new DataOrderSelectByDelivers(jdata));
+			res = this.doOrderSelectByDeliver(session, res, new RecDataAddr().new DataOrderSelectByDeliver(jdata));
 			break;
-		case checkin_order: //()
-			res = this.doOrderCheckInByDeliver(session, res, new RecDataAddr().new DataOrderCheckInByDelivers(jdata));
-			break;
+//		case checkin_order: //()
+//			res = this.doOrderCheckInByDeliver(session, res, new RecDataAddr().new DataOrderCheckInByDelivers(jdata));
+//			break;
 		case moving_order:	//()
 			res = this.doDeliverMoving(session, res, new RecDataAddr().new DataDeliverMoving(jdata));
+			break;
+		case before_gotcha:
+			res = this.doDeliverBeforeGotcha(session, res, new RecDataAddr().new DataDeliverBeforeGotcha(jdata));
 			break;
 		case gotcha_order: //()
 			res = this.doDeliverGotchaOrder(session, res, new RecDataAddr().new DataDeliverGotcha(jdata));
@@ -109,16 +116,25 @@ public class AddressCommandAction extends CommonAction {
 		case delivering_order: //()
 			res = doDeliverDeliveringOrder(session, res, new RecDataAddr().new DataDeliverDelivering(jdata));
 			break;
+		case before_arrival:
+			res = doDeliveryBeforeComplete(session, res, new RecDataAddr().new DataDeliveryBeforeComplete(jdata));
+			break;
+		case arrival_in_order:
+			res = doDeliverArriveInOrder(session, res, new RecDataAddr().new DataArrivalInOrder(jdata));
+			break;
 		case complete_delivery: //()
-			res = doDeliverDeliveryComplete(session, res, new RecDataAddr().new DataDeliveryCompleteByDelivers(jdata));
+			res = doDeliveryComplete(session, res, new RecDataAddr().new DataDeliveryCompleteByDelivers(jdata));
 			break;
 		case confirm_complete_delivery:
 			res = doSenderDeliveryConfirm(session, res, new RecDataAddr().new DataDeliveryConfirmBySender(jdata));
 			break;
-		case watch_order:
-			res = this.doWatchOrderByDeliver(res, new RecDataAddr().new DataOrderDetailByDelivers(jdata));
+//		case watch_order:
+//			res = this.doWatchOrderByDeliver(res, new RecDataAddr().new DataOrderDetailByDelivers(jdata));
+//			break;
+		case sender_cancel_order:
+			res = this.doOrderCancelBySender(res, new RecDataAddr().new DataOrderCancelBySender(jdata));
 			break;
-		case order_cancel:
+		case deliver_cancel_order:
 			res = this.doOrderCancelByDeliver(res, new RecDataAddr().new DataOrderCancelByDelivers(jdata));
 			break;
 		case deliver_plan:
@@ -135,6 +151,16 @@ public class AddressCommandAction extends CommonAction {
 			send(ch, res.toString());
 		log.info(res.toString());
 		return true;
+	}
+	
+	private void sendDeliveryStatus(String scode, String from, String to, String orderid, EDeliveryStatus status, String msg) {
+		QueueDeliveryStatus qds = new DeliveryStatusMsg().makeStatusObject(scode, from, to, orderid, status, msg);
+		if(qds != null)
+			try {
+				sendMessageManager.sendDeliveryStatus(qds);
+			} catch (JsonProcessingException e) {
+				e.printStackTrace();
+			}
 	}
 
 	/*
@@ -241,7 +267,7 @@ public class AddressCommandAction extends CommonAction {
 		return res.setData(jnode).setError(EAddrError.ok);
 	}
 	
-	private ResponseData<EAddrError> doDeliverSelectBySender(AuthSession session, ResponseData<EAddrError> res, DataSelectDeliverBySender data) {
+/*	private ResponseData<EAddrError> doDeliverSelectBySender(AuthSession session, ResponseData<EAddrError> res, DataSelectDeliverBySender data) {
 		RecDeliveryOrder order = (RecDeliveryOrder) DbAppManager.getInst().getOrder(data.getScode(), data.getOrderid());
 		if(order == DbRecord.Empty)
 			return res.setError(EAddrError.not_exist_order);
@@ -276,7 +302,7 @@ public class AddressCommandAction extends CommonAction {
 		DeliveryPushGenerator.sendDeliveryStatus(data.getScode(), session.getUserId(), data.getDeliverid(), order.orderid, EDeliveryStatus.cancel, "no msg");
 		return res.setError(EAddrError.ok);
 	}
-	
+*/
 	private ResponseData<EAddrError> doOrderSearch(ResponseData<EAddrError> res, DataOrderSearch data) {
 		RecAddress fromAddr, toAddr;
 		if( (fromAddr = DbAppManager.getInst().getAddress(data.getScode(), data.getFrom_addrid())) == null)
@@ -307,7 +333,8 @@ public class AddressCommandAction extends CommonAction {
 		return res.setData(this.getOrderSearchData(orderList, addrList)).setError(EAddrError.ok);
 	}
 	
-	private ResponseData<EAddrError> doOrderSelectByDeliver(AuthSession session, ResponseData<EAddrError> res, DataOrderSelectByDelivers data) {
+	//Deliver가 Order 선택 
+	private ResponseData<EAddrError> doOrderSelectByDeliver(AuthSession session, ResponseData<EAddrError> res, DataOrderSelectByDeliver data) {
 		RecDeliveryOrder order = (RecDeliveryOrder) DbAppManager.getInst().getOrder(data.getScode(), data.getOrderid());
 		if(order == DbRecord.Empty)
 			return res.setError(EAddrError.not_exist_order);
@@ -317,19 +344,22 @@ public class AddressCommandAction extends CommonAction {
 		if(status != DbRecord.Empty)
 			return res.setError(EAddrError.already_occupied_order);
 		
-		/*RecUser user = DbAppManager.getInst().getUser(data.getScode(), session.getUserId()); //[TODO] commented for test
+		RecUser user = DbAppManager.getInst().getUser(data.getScode(), session.getUserId()); //[TODO] commented for test
 		if(user == DbRecord.Empty)
-			return res.setError(EAddrError.not_exist_deliver);*/
+			return res.setError(EAddrError.not_exist_deliver);
 		
-		if(DbAppManager.getInst().addDeliveryApply(data.getScode(), data.getOrderid(), data.getDeliverid(), "delivername", 
+		if(DbAppManager.getInst().addDeliveryApply(data.getScode(), data.getOrderid(), session.getUserId(), user.username, 
 				data.getBegintime(), data.getEndtime(), data.getPrice(), data.getDelivertype(), data.getDeliverytype()) == false)
 			return res.setError(EAddrError.failed_apply_order);
 		
-		//[TODO] order 에게 푸시나 온라인 메시지 보내야 함
-		DeliveryPushGenerator.sendDeliveryStatus(data.getScode(), session.getUserId(), order.senderid, order.orderid, EDeliveryStatus.apply, "no msg");
+		if(DbAppManager.getInst().addDeliveryStatus(data.getScode(), data.getOrderid(), session.getUserId(), EDeliveryStatus.assign) == false)
+			return res.setError(EAddrError.failed_assign_deliver);
+		
+		sendDeliveryStatus(data.getScode(), session.getUserId(), order.senderid, order.orderid, EDeliveryStatus.assign, "Selected");
 		return res.setError(EAddrError.ok);
 	}
-	private ResponseData<EAddrError> doOrderCheckInByDeliver(AuthSession session, ResponseData<EAddrError> res, DataOrderCheckInByDelivers data) {
+
+/*	private ResponseData<EAddrError> doOrderCheckInByDeliver(AuthSession session, ResponseData<EAddrError> res, DataOrderCheckInByDelivers data) {
 		RecDeliveryOrder order = (RecDeliveryOrder) DbAppManager.getInst().getOrder(data.getScode(), data.getOrderid());
 		if(order == DbRecord.Empty)
 			return res.setError(EAddrError.not_exist_order);
@@ -338,13 +368,14 @@ public class AddressCommandAction extends CommonAction {
 			return res.setError(EAddrError.not_allowed_order);
 		if(status.status == EDeliveryStatus.assign)
 			return res.setError(EAddrError.already_assigned_order);
-		if(DbAppManager.getInst().updateDeliveryStatus(data.getScode(), data.getOrderid(), session.getUserId(), EDeliveryStatus.assign) == false)
-			return res.setError(EAddrError.failed_to_saveassign);
+		//Deliver 선택과 동시에 할당되도록 정책 변경 
+//		if(DbAppManager.getInst().updateDeliveryStatus(data.getScode(), data.getOrderid(), session.getUserId(), EDeliveryStatus.assign) == false)
+//			return res.setError(EAddrError.failed_to_saveassign);
 		
 		//[TODO] Seder 에게 푸시나 메시지 전송해야 함 
 		DeliveryPushGenerator.sendDeliveryStatus(data.getScode(), session.getUserId(), order.senderid, order.orderid, EDeliveryStatus.assign, "no msg");
 		return res.setError(EAddrError.ok);
-	}
+	}*/
 
 	private ResponseData<EAddrError> doDeliverMoving(AuthSession session, ResponseData<EAddrError> res, DataDeliverMoving data) {
 		RecDeliveryOrder order = (RecDeliveryOrder) DbAppManager.getInst().getOrder(data.getScode(), data.getOrderid());
@@ -355,12 +386,29 @@ public class AddressCommandAction extends CommonAction {
 			return res.setError(EAddrError.not_allowed_order);
 		if(status.status != EDeliveryStatus.assign)
 			return res.setError(EAddrError.not_assigned_order);
-		String randomcode = "" + (new Random().nextInt(99999-10000)+10000);
-		if(DbAppManager.getInst().updateDeliveryStartCode(data.getScode(), data.getOrderid(), session.getUserId(), EDeliveryStatus.start, randomcode) == false)
+		
+		String randomCode = "" + (new Random().nextInt(99999-10000)+10000);
+		if(DbAppManager.getInst().updateDeliveryStartCode(data.getScode(), data.getOrderid(), session.getUserId(), EDeliveryStatus.start, randomCode) == false)
 			return res.setError(EAddrError.failed_to_savestartmoving);
 		
-		//[TODO] Seder 에게 푸시나 메시지 전송해야 함, randomcode도 같이 전달
-		DeliveryPushGenerator.sendDeliveryStatus(data.getScode(), session.getUserId(), order.senderid, order.orderid, EDeliveryStatus.start, "no msg");
+		sendDeliveryStatus(data.getScode(), session.getUserId(), order.senderid, order.orderid, EDeliveryStatus.start, "Moving! Gotcha Code: " + randomCode);
+		return res.setError(EAddrError.ok);
+	}
+
+	private ResponseData<EAddrError> doDeliverBeforeGotcha(AuthSession session, ResponseData<EAddrError> res, DataDeliverBeforeGotcha data) {
+		RecDeliveryOrder order = (RecDeliveryOrder) DbAppManager.getInst().getOrder(data.getScode(), data.getOrderid());
+		if(order == DbRecord.Empty)
+			return res.setError(EAddrError.not_exist_order);
+		RecDeliveryStatus status =  DbAppManager.getInst().getDeliveryStatus(data.getScode(), data.getOrderid(), session.getUserId());
+		if(status == DbRecord.Empty)
+			return res.setError(EAddrError.not_allowed_order);
+		if(status.status != EDeliveryStatus.start)
+			return res.setError(EAddrError.not_start_order);
+		
+		if(DbAppManager.getInst().updateDeliveryStatus(data.getScode(), data.getOrderid(), session.getUserId(), EDeliveryStatus.gotcha5min)==false)
+			return res.setError(EAddrError.failed_to_savebeforegotcha);
+		
+		sendDeliveryStatus(data.getScode(), session.getUserId(), order.senderid, order.orderid, EDeliveryStatus.gotcha5min, "Before Gotcha");
 		
 		return res.setError(EAddrError.ok);
 	}
@@ -372,50 +420,111 @@ public class AddressCommandAction extends CommonAction {
 		RecDeliveryStatus status =  DbAppManager.getInst().getDeliveryStatus(data.getScode(), data.getOrderid(), session.getUserId());
 		if(status == DbRecord.Empty)
 			return res.setError(EAddrError.not_allowed_order);
-		if(status.status != EDeliveryStatus.start)
+		if(status.status != EDeliveryStatus.start || status.status != EDeliveryStatus.gotcha5min)
 			return res.setError(EAddrError.not_started_order);
-		if(status.startcode.equals(data.getStartcode())==false)
+		
+		if(status.startcode!=null && status.startcode.equals(data.getStartcode())==false)	//[TODO] start code가 있을 경우에만 체크. check what start code is mandatory or not
 			return res.setError(EAddrError.invalid_start_passcode);
+		
 		if(DbAppManager.getInst().updateDeliveryStatus(data.getScode(), data.getOrderid(), session.getUserId(), EDeliveryStatus.gotcha)==false)
 			return res.setError(EAddrError.failed_to_savegotcha);
 		
-		//[TODO] Seder 에게 푸시나 메시지 전송해야 함 
-		DeliveryPushGenerator.sendDeliveryStatus(data.getScode(), session.getUserId(), order.senderid, order.orderid, EDeliveryStatus.gotcha, "no msg");
+		sendDeliveryStatus(data.getScode(), session.getUserId(), order.senderid, order.orderid, EDeliveryStatus.gotcha, "Gotcha Order");
 		return res.setError(EAddrError.ok);
 	}
 	
 	private ResponseData<EAddrError> doDeliverDeliveringOrder(AuthSession session, ResponseData<EAddrError> res, DataDeliverDelivering data) {
+		RecDeliveryOrder order = (RecDeliveryOrder) DbAppManager.getInst().getOrder(data.getScode(), data.getOrderid());
+		if(order == DbRecord.Empty)
+			return res.setError(EAddrError.not_exist_order);
 		RecDeliveryStatus status =  DbAppManager.getInst().getDeliveryStatus(data.getScode(), data.getOrderid(), session.getUserId());
 		if(status == DbRecord.Empty)
 			return res.setError(EAddrError.not_allowed_order);
 		if(status.status != EDeliveryStatus.gotcha)
 			return res.setError(EAddrError.not_receipt_order);
-		String randomcode = "" + (new Random().nextInt(99999-10000)+10000);
-		if(DbAppManager.getInst().updateDeliveryEndCode(data.getScode(), data.getOrderid(), session.getUserId(), EDeliveryStatus.delivering, randomcode)==false)
+		
+		String randomCode = "" + (new Random().nextInt(99999-10000)+10000);
+		if(DbAppManager.getInst().updateDeliveryEndCode(data.getScode(), data.getOrderid(), session.getUserId(), EDeliveryStatus.delivering, randomCode)==false)
 			return res.setError(EAddrError.failed_to_savedelivering);
-		//SMS to Receiver
+		
+		sendDeliveryStatus(data.getScode(), session.getUserId(), order.senderid, order.orderid, EDeliveryStatus.delivering, "Delivering Order! Take Code: " + randomCode);
+		
+		//[TODO] Send Message to Receiver
+		//sendDeliveryStatus()
+		
 		return res.setError(EAddrError.ok);
 	}
 
-	private ResponseData<EAddrError> doDeliverDeliveryComplete(AuthSession session, ResponseData<EAddrError> res, DataDeliveryCompleteByDelivers data) {
+	private ResponseData<EAddrError> doDeliveryBeforeComplete(AuthSession session, ResponseData<EAddrError> res, DataDeliveryBeforeComplete data) {
+		RecDeliveryOrder order = (RecDeliveryOrder) DbAppManager.getInst().getOrder(data.getScode(), data.getOrderid());
+		if(order == DbRecord.Empty)
+			return res.setError(EAddrError.not_exist_order);
 		RecDeliveryStatus status =  DbAppManager.getInst().getDeliveryStatus(data.getScode(), data.getOrderid(), session.getUserId());
 		if(status == DbRecord.Empty)
 			return res.setError(EAddrError.not_allowed_order);
-		if(status.status != EDeliveryStatus.delivering && status.status != EDeliveryStatus.delivered)	//delivered 상태에서 passcode를 올바르게 입력하여 confirm 상태로 변경할 수 있어야 함.
+		if(status.status != EDeliveryStatus.delivering)
 			return res.setError(EAddrError.not_delivering_order);
 		
-		//[TODO] Upload phto url
+		if(DbAppManager.getInst().updateDeliveryStatus(data.getScode(), data.getOrderid(), session.getUserId(), EDeliveryStatus.before_delivered)==false)
+			return res.setError(EAddrError.failed_to_savebeforedelivered);
+		
+		sendDeliveryStatus(data.getScode(), session.getUserId(), order.senderid, order.orderid, EDeliveryStatus.before_delivered, "Almost arrived the deliver.");
+		
+		//[TODO] Send Message to Receiver
+		//sendDeliveryStatus()
+		
+		return res.setError(EAddrError.ok);
+	}
+	
+	private ResponseData<EAddrError> doDeliverArriveInOrder(AuthSession session, ResponseData<EAddrError> res, DataArrivalInOrder data) {
+		RecDeliveryOrder order = (RecDeliveryOrder) DbAppManager.getInst().getOrder(data.getScode(), data.getOrderid());
+		if(order == DbRecord.Empty)
+			return res.setError(EAddrError.not_exist_order);
+		RecDeliveryStatus status =  DbAppManager.getInst().getDeliveryStatus(data.getScode(), data.getOrderid(), session.getUserId());
+		if(status == DbRecord.Empty)
+			return res.setError(EAddrError.not_allowed_order);
+		if(status.status != EDeliveryStatus.delivering || status.status != EDeliveryStatus.before_delivered)
+			return res.setError(EAddrError.not_delivering_order);
+		
+		if(DbAppManager.getInst().updateDeliveryStatus(data.getScode(), data.getOrderid(), session.getUserId(), EDeliveryStatus.deliver_arrived)==false)
+			return res.setError(EAddrError.failed_to_savebeforedelivered);
+		
+		sendDeliveryStatus(data.getScode(), session.getUserId(), order.senderid, order.orderid, EDeliveryStatus.deliver_arrived, "Arrived In Receiver.");
+		
+		//[TODO] Send Message to Receiver
+		//sendDeliveryStatus()
+		
+		return res.setError(EAddrError.ok);
+	}
+	
+	private ResponseData<EAddrError> doDeliveryComplete(AuthSession session, ResponseData<EAddrError> res, DataDeliveryCompleteByDelivers data) {
+		RecDeliveryOrder order = (RecDeliveryOrder) DbAppManager.getInst().getOrder(data.getScode(), data.getOrderid());
+		if(order == DbRecord.Empty)
+			return res.setError(EAddrError.not_exist_order);
+		RecDeliveryStatus status =  DbAppManager.getInst().getDeliveryStatus(data.getScode(), data.getOrderid(), session.getUserId());
+		if(status == DbRecord.Empty)
+			return res.setError(EAddrError.not_allowed_order);
+		if(status.status != EDeliveryStatus.deliver_arrived)	//delivered 상태에서 passcode를 올바르게 입력하여 confirm 상태로 변경할 수 있어야 함.
+			return res.setError(EAddrError.not_arrived_order);
+		
+		DbAppManager.getInst().updateFilesEnabled(data.getScode(), data.getFileids(), true);	//업로딩된 파일을 enabled 시킴. enabled=false은 주기적으로 삭제 필요
+		List<String> queries = new ArrayList<>();
+		for(String fileid : data.getFileids())
+			queries.add(DbTransaction.getInst().queryInsertOrderFile(fileid, data.getOrderid(), session.getUserId(), EUserType.deliver));
+		if(queries.size()>0)
+			DbTransaction.getInst().transactionQuery(data.getScode(), queries);				//orderid 별 업로딩된 fileid 등록. usertype에 따라 구분 가능함
 		
 		if(status.endcode.equals(data.getEndcode())==false) {
 			if(DbAppManager.getInst().updateDeliveryStatus(data.getScode(), data.getOrderid(), session.getUserId(), EDeliveryStatus.delivered)==false)
 				return res.setError(EAddrError.failed_to_savedelivered);
+			else
+				sendDeliveryStatus(data.getScode(), session.getUserId(), order.senderid, order.orderid, EDeliveryStatus.delivered, "Delivery Finished.");
 		}else {
 			if(DbAppManager.getInst().updateDeliveryStatus(data.getScode(), data.getOrderid(), session.getUserId(), EDeliveryStatus.confirm)==false)
 				return res.setError(EAddrError.failed_to_saveconfirm);
+			else
+				sendDeliveryStatus(data.getScode(), session.getUserId(), order.senderid, order.orderid, EDeliveryStatus.confirm, "Delivery Completed.");
 		}
-			
-		//[TODO] Save to db message for history
-		
 		return res.setError(EAddrError.ok);
 	}
 
@@ -435,22 +544,47 @@ public class AddressCommandAction extends CommonAction {
 			return res.setError(EAddrError.failed_to_saveconfirm);
 			
 		//[TODO] PUSH MESSAGE TO DELIVER
+		sendDeliveryStatus(data.getScode(), session.getUserId(), data.getDeliverid(), order.orderid, EDeliveryStatus.confirm, "Confirm delivery.");
 		//[TODO] Save to db message for history
+		
 		return res.setError(EAddrError.ok);
 	}
 
-	private ResponseData<EAddrError> doWatchOrderByDeliver(ResponseData<EAddrError> res, DataOrderDetailByDelivers data) {
+//	private ResponseData<EAddrError> doWatchOrderByDeliver(ResponseData<EAddrError> res, DataOrderDetailByDelivers data) {
+//		RecDeliveryOrder order = (RecDeliveryOrder) DbAppManager.getInst().getOrder(data.getScode(), data.getOrderid());
+//		if(order == null)
+//			return res.setError(EAddrError.no_order_data);
+//		ObjectMapper mapper = new ObjectMapper();
+//		ObjectNode node = mapper.valueToTree(order);
+//		RecDeliveryStatus status =  DbAppManager.getInst().getDeliveryStatus(data.getScode(), data.getOrderid());
+//		if(status == DbRecord.Empty)
+//			node.put("status", EDeliveryStatus.none.getValue());
+//		else
+//			node.put("status", status.status.getValue());
+//		return res.setData(node).setError(EAddrError.ok);
+//	}
+	
+	private ResponseData<EAddrError> doOrderCancelBySender(ResponseData<EAddrError> res, DataOrderCancelBySender data) {
 		RecDeliveryOrder order = (RecDeliveryOrder) DbAppManager.getInst().getOrder(data.getScode(), data.getOrderid());
 		if(order == null)
 			return res.setError(EAddrError.no_order_data);
-		ObjectMapper mapper = new ObjectMapper();
-		ObjectNode node = mapper.valueToTree(order);
 		RecDeliveryStatus status =  DbAppManager.getInst().getDeliveryStatus(data.getScode(), data.getOrderid());
-		if(status == DbRecord.Empty)
-			node.put("status", EDeliveryStatus.none.getValue());
-		else
-			node.put("status", status.status.getValue());
-		return res.setData(node).setError(EAddrError.ok);
+		if(status == DbRecord.Empty) {
+			if(DbAppManager.getInst().updateOrderDisabled(data.getScode(), data.getOrderid()) == false)
+				return res.setError(EAddrError.failed_to_updateordercancel);
+			return res.setError(EAddrError.ok);
+		}
+		if(status.status != EDeliveryStatus.assign)
+			return res.setError(EAddrError.impossible_cancel_delivery);
+		
+//		if(DbAppManager.getInst().delDeliveryStatus(data.getScode(), data.getOrderid()) == false)
+//			return res.setError(EAddrError.failed_cancel_delivery_ready);	
+		if(DbAppManager.getInst().updateDeliveryStatus(data.getScode(), data.getOrderid(), status.deliverid, EDeliveryStatus.cancel_bysender)==false)
+			return res.setError(EAddrError.failed_to_cancelbysender);
+		if(DbAppManager.getInst().updateOrderDisabled(data.getScode(), data.getOrderid()) == false)
+			return res.setError(EAddrError.failed_to_updateordercancel);
+		sendDeliveryStatus(data.getScode(), order.senderid, status.deliverid, order.orderid, EDeliveryStatus.cancel_bysender, "Order Cancel by Sender.");
+		return res.setError(EAddrError.ok);
 	}
 	
 	private ResponseData<EAddrError> doOrderCancelByDeliver(ResponseData<EAddrError> res, DataOrderCancelByDelivers data) {
@@ -458,14 +592,18 @@ public class AddressCommandAction extends CommonAction {
 		if(order == null)
 			return res.setError(EAddrError.no_order_data);
 		RecDeliveryStatus status =  DbAppManager.getInst().getDeliveryStatus(data.getScode(), data.getOrderid());
-		if(status == DbRecord.Empty || status.status == EDeliveryStatus.ready)
+		if(status == DbRecord.Empty)
 			return res.setError(EAddrError.not_assigned_order);
 		if(status.status != EDeliveryStatus.assign)
 			return res.setError(EAddrError.impossible_cancel_delivery);
 		
 		//[TODO] 진행중인 상태의 Delivery를 배송자가 취소할 시나리오 필요 
-		
-		return res;
+		if(DbAppManager.getInst().updateDeliveryStatus(data.getScode(), data.getOrderid(), status.deliverid, EDeliveryStatus.cancel_bydeliver)==false)
+			return res.setError(EAddrError.failed_to_cancelbysender);
+		if(DbAppManager.getInst().updateOrderDisabled(data.getScode(), data.getOrderid()) == false)
+			return res.setError(EAddrError.failed_to_updateordercancel);
+		sendDeliveryStatus(data.getScode(), status.deliverid, order.senderid, order.orderid, EDeliveryStatus.cancel_bysender, "Order Cancel by Deliver.");
+		return res.setError(EAddrError.ok);
 	}
 
 	private ResponseData<EAddrError> doDeliverPlan(ResponseData<EAddrError> res, DataDeliverPlan data) {
