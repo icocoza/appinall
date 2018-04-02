@@ -4,12 +4,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import com.ccz.appinall.common.config.ChAttributeKey;
 import com.ccz.appinall.common.rdb.DbAppManager;
 import com.ccz.appinall.library.type.ResponseData;
 import com.ccz.appinall.library.util.AsciiSplitter.ASS;
 import com.ccz.appinall.library.util.StrUtil;
 import com.ccz.appinall.services.controller.CommonAction;
 import com.ccz.appinall.services.controller.auth.AuthSession;
+import com.ccz.appinall.services.controller.file.FileCommandAction;
 import com.ccz.appinall.services.controller.message.RecDataMessage.*;
 import com.ccz.appinall.services.enums.EMessageCmd;
 import com.ccz.appinall.services.enums.EMessageError;
@@ -19,10 +24,15 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.netty.channel.Channel;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
+@Component
 public class MessageCommandAction extends CommonAction {
-	public MessageCommandAction(Object sessionKey) {
-		super(sessionKey);
+	@Autowired
+	ChAttributeKey chAttributeKey;
+	
+	public MessageCommandAction() {
 	}
 
 	private boolean processBoardData(Channel ch, String[] data, JsonNode jdata) {
@@ -32,7 +42,7 @@ public class MessageCommandAction extends CommonAction {
 		else
 			res = new ResponseData<EMessageError>(jdata.get("scode").asText(), jdata.get("rcode").asText(), jdata.get("cmd").asText());
 		
-		AuthSession ss = (AuthSession) ch.attr(super.attrAuthSessionKey).get();
+		AuthSession ss = (AuthSession) ch.attr(chAttributeKey.getAuthSessionKey()).get();
 		switch(EMessageCmd.getType(res.getCommand())) {
 		case msg: 
 			res = this.message(ss, res, data != null ? new RecDataMessage().new Msg(data[3]) : new RecDataMessage().new Msg(jdata)); //O

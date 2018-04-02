@@ -25,7 +25,7 @@ public class RecDeliveryStatus extends DbRecord{
 	@Override
 	public boolean createTable() {
 		String sql = String.format("CREATE TABLE IF NOT EXISTS %s (orderid VARCHAR(64) NOT NULL, deliverid VARCHAR(64) NOT NULL, "
-				+ "status VARCHAR(12) NOT NULL, updatetime DATETIME DEFAULT now(), "
+				+ "status VARCHAR(16) NOT NULL, updatetime DATETIME DEFAULT now(), "
 				+ "startcode VARCHAR(8) DEFAULT '', endcode VARCHAR(8) DEFAULT '', PRIMARY KEY(orderid, deliverid))",  RecDeliveryStatus.TBL_NAME);
 		return super.createTable(sql); 
 	}

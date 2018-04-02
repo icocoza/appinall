@@ -1,5 +1,7 @@
 package com.ccz.appinall.library.server.handler;
 
+import org.springframework.stereotype.Component;
+
 import com.ccz.appinall.library.datastore.WebsocketBinaryData;
 import com.ccz.appinall.library.datastore.WebsocketTextData;
 import com.ccz.appinall.library.type.WebsocketPacketData;
@@ -10,6 +12,7 @@ import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.WebSocketFrame;
 import io.netty.util.AttributeKey;
 
+@Component
 public class WebsocketPacketDataHandler extends SimpleChannelInboundHandler<WebSocketFrame> {
 	
 	private final AttributeKey<WebsocketPacketData> attrWebsocketData = AttributeKey.valueOf(WebsocketPacketData.class.getSimpleName());

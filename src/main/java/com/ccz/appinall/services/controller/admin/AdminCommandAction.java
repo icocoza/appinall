@@ -4,6 +4,10 @@ import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Configuration;
+
+import com.ccz.appinall.common.config.ChAttributeKey;
 import com.ccz.appinall.common.rdb.DbAppManager;
 import com.ccz.appinall.library.dbhelper.DbRecord;
 import com.ccz.appinall.library.type.ResponseData;
@@ -21,10 +25,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 import io.netty.channel.Channel;
 
+@Configuration
 public class AdminCommandAction extends CommonAction {
-
-	public AdminCommandAction(Object sessionKey) {
-		super(sessionKey);
+	@Autowired
+	ChAttributeKey chAttributeKey;
+	
+	public AdminCommandAction() {
 	}
 
 	private boolean processBoardData(Channel ch, String[] data, JsonNode jdata) {

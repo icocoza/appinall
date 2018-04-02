@@ -3,11 +3,16 @@ package com.ccz.appinall.services.controller.channel;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import com.ccz.appinall.common.config.ChAttributeKey;
 import com.ccz.appinall.common.rdb.DbAppManager;
 import com.ccz.appinall.library.type.ResponseData;
 import com.ccz.appinall.library.util.AsciiSplitter.ASS;
 import com.ccz.appinall.library.util.StrUtil;
 import com.ccz.appinall.services.controller.CommonAction;
+import com.ccz.appinall.services.controller.auth.AuthCommandAction;
 import com.ccz.appinall.services.controller.auth.AuthSession;
 import com.ccz.appinall.services.controller.channel.RecDataChannel.*;
 import com.ccz.appinall.services.enums.EChannelCmd;
@@ -19,10 +24,16 @@ import com.ccz.appinall.services.model.db.RecChannel.RecChLastMsg;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import io.netty.channel.Channel;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Component
 
 public class ChannelCommandAction extends CommonAction{
-	public ChannelCommandAction(Object sessionKey) {
-		super(sessionKey);
+	@Autowired
+	ChAttributeKey chAttributeKey;
+	
+	public ChannelCommandAction() {
 	}
 
 	private boolean processBoardData(Channel ch, String[] data, JsonNode jdata) {
@@ -32,7 +43,7 @@ public class ChannelCommandAction extends CommonAction{
 		else
 			res = new ResponseData<EChannelError>(jdata.get("scode").asText(), jdata.get("rcode").asText(), jdata.get("cmd").asText());
 		
-		AuthSession ss = (AuthSession) ch.attr(super.attrAuthSessionKey).get();
+		AuthSession ss = (AuthSession) ch.attr(chAttributeKey.getAuthSessionKey()).get();
 		switch(EChannelCmd.getType(res.getCommand())) {
 		case chcreate:
 			res = this.channelCreate(ss, res, data != null? new RecDataChannel().new ChCreate(data[3]) : new RecDataChannel().new ChCreate(jdata)); //O

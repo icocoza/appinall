@@ -10,8 +10,11 @@ import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.geo.Point;
+import org.springframework.stereotype.Component;
 
+import com.ccz.appinall.common.config.ChAttributeKey;
 import com.ccz.appinall.common.config.ServicesConfig;
 import com.ccz.appinall.common.rdb.DbAppManager;
 import com.ccz.appinall.common.rdb.DbTransaction;
@@ -50,21 +53,24 @@ import io.netty.util.AttributeKey;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@Component
 public class AddressCommandAction extends CommonAction {
-
+	
+	@Autowired
+	ChAttributeKey chAttributeKey;
+	
 	final int MAX_LIST_COUNT = 20;
 	
 	public ResponseData<EAddrError> result;
 	
+	@Autowired
 	OrderGeoRepository geoRepository;
+	@Autowired
 	ServicesConfig servicesConfig;
+	@Autowired
 	SendMessageManager sendMessageManager;
 	
-	public AddressCommandAction(AttributeKey<AuthSession> authSessionKey, OrderGeoRepository geoRepository, ServicesConfig servicesConfig, SendMessageManager sendMessageManager) {
-		super(authSessionKey);
-		this.geoRepository = geoRepository;
-		this.servicesConfig = servicesConfig; 
-		this.sendMessageManager = sendMessageManager;
+	public AddressCommandAction() {
 	}
 
 	@Override
@@ -75,7 +81,7 @@ public class AddressCommandAction extends CommonAction {
 	@Override
 	public boolean processJsonData(Channel ch, JsonNode jdata) {
 		ResponseData<EAddrError> res = new ResponseData<EAddrError>(jdata.get("scode").asText(), jdata.get("rcode").asText(), jdata.get("cmd").asText());
-		AuthSession session = (AuthSession) ch.attr(super.attrAuthSessionKey).get();
+		AuthSession session = (AuthSession) ch.attr(chAttributeKey.getAuthSessionKey()).get();
 		switch(EAddrCmd.getType(res.getCommand())) {
 		case addr_search: //()
 			res = this.doSearch(res, new RecDataAddr().new DataSearchAddr(jdata));
@@ -211,8 +217,10 @@ public class AddressCommandAction extends CommonAction {
 			queries.add(DbTransaction.getInst().queryInsertOrderFile(fileid, orderid, session.getUserId(), EUserType.sender));
 		if(queries.size()>0) {
 			RecFile recFile = DbAppManager.getInst().getFileInfo(data.getScode(), data.getFileids().get(0));
-			String thumbUrl = String.format("http://%s:%d/thumb?fileid=%s&scode=%s", recFile.fileserver, servicesConfig.getFileDownPort(), recFile.fileid, data.getScode());
-			queries.add(DbTransaction.getInst().queryUpdatePhotoUrl(orderid, thumbUrl));
+			if(recFile!=null) {
+				String thumbUrl = String.format("http://%s:%d/thumb?fileid=%s&scode=%s", recFile.fileserver, servicesConfig.getFileDownPort(), recFile.fileid, data.getScode());
+				queries.add(DbTransaction.getInst().queryUpdatePhotoUrl(orderid, thumbUrl));
+			}
 			DbTransaction.getInst().transactionQuery(data.getScode(), queries);				//orderid 별 업로딩된 fileid 등록. usertype에 따라 구분 가능함
 		}
 		
@@ -348,8 +356,10 @@ public class AddressCommandAction extends CommonAction {
 		if(user == DbRecord.Empty)
 			return res.setError(EAddrError.not_exist_deliver);
 		
-		if(DbAppManager.getInst().addDeliveryApply(data.getScode(), data.getOrderid(), session.getUserId(), user.username, 
+		/*if(DbAppManager.getInst().addDeliveryApply(data.getScode(), data.getOrderid(), session.getUserId(), user.username, 
 				data.getBegintime(), data.getEndtime(), data.getPrice(), data.getDelivertype(), data.getDeliverytype()) == false)
+			return res.setError(EAddrError.failed_apply_order); */
+		if(DbAppManager.getInst().addDeliveryApply(data.getScode(), data.getOrderid(), session.getUserId(), user.username) == false)
 			return res.setError(EAddrError.failed_apply_order);
 		
 		if(DbAppManager.getInst().addDeliveryStatus(data.getScode(), data.getOrderid(), session.getUserId(), EDeliveryStatus.assign) == false)
@@ -420,17 +430,20 @@ public class AddressCommandAction extends CommonAction {
 		RecDeliveryStatus status =  DbAppManager.getInst().getDeliveryStatus(data.getScode(), data.getOrderid(), session.getUserId());
 		if(status == DbRecord.Empty)
 			return res.setError(EAddrError.not_allowed_order);
-		if(status.status != EDeliveryStatus.start || status.status != EDeliveryStatus.gotcha5min)
-			return res.setError(EAddrError.not_started_order);
 		
-		if(status.startcode!=null && status.startcode.equals(data.getStartcode())==false)	//[TODO] start code가 있을 경우에만 체크. check what start code is mandatory or not
-			return res.setError(EAddrError.invalid_start_passcode);
+		if(status.status == EDeliveryStatus.start || status.status == EDeliveryStatus.gotcha5min) {
+			/*
+			if(status.startcode!=null && status.startcode.equals(data.getStartcode())==false)	//[TODO] start code가 있을 경우에만 체크. check what start code is mandatory or not
+				return res.setError(EAddrError.invalid_start_passcode);
+			*/
+			if(DbAppManager.getInst().updateDeliveryStatus(data.getScode(), data.getOrderid(), session.getUserId(), EDeliveryStatus.gotcha)==false)
+				return res.setError(EAddrError.failed_to_savegotcha);
+			
+			sendDeliveryStatus(data.getScode(), session.getUserId(), order.senderid, order.orderid, EDeliveryStatus.gotcha, "Gotcha Order");
+			return res.setError(EAddrError.ok);
+		}
+		return res.setError(EAddrError.not_started_order);
 		
-		if(DbAppManager.getInst().updateDeliveryStatus(data.getScode(), data.getOrderid(), session.getUserId(), EDeliveryStatus.gotcha)==false)
-			return res.setError(EAddrError.failed_to_savegotcha);
-		
-		sendDeliveryStatus(data.getScode(), session.getUserId(), order.senderid, order.orderid, EDeliveryStatus.gotcha, "Gotcha Order");
-		return res.setError(EAddrError.ok);
 	}
 	
 	private ResponseData<EAddrError> doDeliverDeliveringOrder(AuthSession session, ResponseData<EAddrError> res, DataDeliverDelivering data) {
@@ -483,18 +496,17 @@ public class AddressCommandAction extends CommonAction {
 		RecDeliveryStatus status =  DbAppManager.getInst().getDeliveryStatus(data.getScode(), data.getOrderid(), session.getUserId());
 		if(status == DbRecord.Empty)
 			return res.setError(EAddrError.not_allowed_order);
-		if(status.status != EDeliveryStatus.delivering || status.status != EDeliveryStatus.before_delivered)
-			return res.setError(EAddrError.not_delivering_order);
 		
-		if(DbAppManager.getInst().updateDeliveryStatus(data.getScode(), data.getOrderid(), session.getUserId(), EDeliveryStatus.deliver_arrived)==false)
-			return res.setError(EAddrError.failed_to_savebeforedelivered);
-		
-		sendDeliveryStatus(data.getScode(), session.getUserId(), order.senderid, order.orderid, EDeliveryStatus.deliver_arrived, "Arrived In Receiver.");
-		
-		//[TODO] Send Message to Receiver
-		//sendDeliveryStatus()
-		
-		return res.setError(EAddrError.ok);
+		if(status.status == EDeliveryStatus.delivering || status.status == EDeliveryStatus.before_delivered) {
+			if(DbAppManager.getInst().updateDeliveryStatus(data.getScode(), data.getOrderid(), session.getUserId(), EDeliveryStatus.deliver_arrived)==false)
+				return res.setError(EAddrError.failed_to_savebeforedelivered);
+			
+			sendDeliveryStatus(data.getScode(), session.getUserId(), order.senderid, order.orderid, EDeliveryStatus.deliver_arrived, "Arrived In Receiver.");
+			//[TODO] Send Message to Receiver
+			//sendDeliveryStatus()
+			return res.setError(EAddrError.ok);
+		}
+		return res.setError(EAddrError.not_delivering_order);
 	}
 	
 	private ResponseData<EAddrError> doDeliveryComplete(AuthSession session, ResponseData<EAddrError> res, DataDeliveryCompleteByDelivers data) {
@@ -507,7 +519,8 @@ public class AddressCommandAction extends CommonAction {
 		if(status.status != EDeliveryStatus.deliver_arrived)	//delivered 상태에서 passcode를 올바르게 입력하여 confirm 상태로 변경할 수 있어야 함.
 			return res.setError(EAddrError.not_arrived_order);
 		
-		DbAppManager.getInst().updateFilesEnabled(data.getScode(), data.getFileids(), true);	//업로딩된 파일을 enabled 시킴. enabled=false은 주기적으로 삭제 필요
+		if(data.getFileids().size()>0)
+			DbAppManager.getInst().updateFilesEnabled(data.getScode(), data.getFileids(), true);	//업로딩된 파일을 enabled 시킴. enabled=false은 주기적으로 삭제 필요
 		List<String> queries = new ArrayList<>();
 		for(String fileid : data.getFileids())
 			queries.add(DbTransaction.getInst().queryInsertOrderFile(fileid, data.getOrderid(), session.getUserId(), EUserType.deliver));

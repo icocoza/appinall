@@ -35,9 +35,9 @@ public class RecDeliveryApply extends DbRecord {
 	@Override
 	public boolean createTable() {
 		String sql = String.format("CREATE TABLE IF NOT EXISTS %s (orderid VARCHAR(64) NOT NULL, deliverid VARCHAR(64) NOT NULL, "
-				+ "username VARCHAR(64) NOT NULL, begintime DATETIME NOT NULL, endtime DATETIME NOT NULL, choosetime DATETIME DEFAULT now(), "
+				+ "username VARCHAR(64) NOT NULL, begintime DATETIME, endtime DATETIME, choosetime DATETIME DEFAULT now(), "
 				+ "price INTEGER DEFAULT 0, delivertype VARCHAR(12), deliverytype VARCHAR(12), enabled BOOLEAN DEFAULT true,"
-				+ "PRIMARY KEY(orderid, deliverid), INDEX idx_begintime(begintime), INDEX idx_endtime(endtime))",  RecDeliveryApply.TBL_NAME);
+				+ "PRIMARY KEY(orderid, deliverid))",  RecDeliveryApply.TBL_NAME);
 		return super.createTable(sql); 
 	}
 
@@ -75,6 +75,12 @@ public class RecDeliveryApply extends DbRecord {
 		String sql = String.format("INSERT INTO %s (orderid, deliverid, username, begintime, endtime, price, delivertype, deliverytype) "
 				+ "VALUES ('%s','%s','%s','%s','%s',%d,'%s','%s')", RecDeliveryApply.TBL_NAME,
 				orderid, deliverid, username, sdf.format(begindt), sdf.format(enddt), price, delivertype.getValue(), deliverytype.getValue());
+		return super.insert(sql);
+	}
+	
+	public boolean insert(String orderid, String deliverid, String username) {
+		String sql = String.format("INSERT INTO %s (orderid, deliverid, username) "
+				+ "VALUES ('%s','%s','%s')", RecDeliveryApply.TBL_NAME, orderid, deliverid, username);
 		return super.insert(sql);
 	}
 	

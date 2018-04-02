@@ -2,17 +2,24 @@ package com.ccz.appinall.library.server.handler;
 
 import java.util.List;
 
-import com.ccz.appinall.common.config.DefaultPropertyKey;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import com.ccz.appinall.common.config.ChAttributeKey;
 import com.ccz.appinall.library.type.enums.EDataStoreType;
 import com.ccz.appinall.library.type.inf.IDataAccess;
-import com.ccz.appinall.library.type.inf.IServiceAction;
+import com.ccz.appinall.library.type.inf.IServiceHandler;
 import com.ccz.appinall.library.util.ProtocolWriter;
 
 import io.netty.channel.ChannelHandlerContext;
 
+@Component
 public class ServiceSelectionRawDataHandler extends ServiceSelectionHandler<IDataAccess> {
 	
-	public ServiceSelectionRawDataHandler(List<IServiceAction> serviceActionList) {
+	@Autowired
+	ChAttributeKey chAttributeKey;
+	
+	public ServiceSelectionRawDataHandler(List<IServiceHandler> serviceActionList) {
 		this.serviceActionList = serviceActionList;
 	}
 	
@@ -26,11 +33,11 @@ public class ServiceSelectionRawDataHandler extends ServiceSelectionHandler<IDat
 
 	private void stringData(ChannelHandlerContext ctx, IDataAccess da) {	//JSON data or Custom
 		try {
-			IServiceAction action = ctx.channel().attr(propertyServiceAction).get();
+			IServiceHandler action = ctx.channel().attr(propertyServiceAction).get();
 			if(action == null) {
 				action = findAction(da.getAction());
 				ctx.channel().attr(propertyServiceAction).set(action);
-				ctx.channel().attr(DefaultPropertyKey.writePropertyKey).set(new ProtocolWriter().new WritePlainText());
+				ctx.channel().attr(chAttributeKey.getWriteKey()).set(new ProtocolWriter().new WritePlainText());
 			}
 			if(action!=null)
 				action.process(ctx.channel(), da);
@@ -40,7 +47,7 @@ public class ServiceSelectionRawDataHandler extends ServiceSelectionHandler<IDat
 	
 	private void fileData(ChannelHandlerContext ctx,  IDataAccess da) {
 		try {
-			IServiceAction action = ctx.channel().attr(propertyServiceAction).get();
+			IServiceHandler action = ctx.channel().attr(propertyServiceAction).get();
 			if(action == null) {
 				action = findAction(da.getAction());
 				//process file

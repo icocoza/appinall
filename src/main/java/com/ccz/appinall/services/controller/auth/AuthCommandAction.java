@@ -7,6 +7,7 @@ import java.util.Random;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.ccz.appinall.common.config.ChAttributeKey;
 import com.ccz.appinall.common.rdb.DbAppManager;
 import com.ccz.appinall.common.rdb.DbTransaction;
 import com.ccz.appinall.library.dbhelper.DbRecord;
@@ -30,14 +31,15 @@ import lombok.extern.slf4j.Slf4j;
 
 
 @Slf4j
-//@Component
+@Component
 public class AuthCommandAction extends CommonAction {
 
 	@Autowired
 	SessionService sessionService;
+	@Autowired
+	ChAttributeKey chAttributeKey;
 	
-	public AuthCommandAction(Object sessionKey) {
-		super(sessionKey);
+	public AuthCommandAction() {
 	}
 
 	@SuppressWarnings("unused")
@@ -228,6 +230,9 @@ public class AuthCommandAction extends CommonAction {
 		queries.add(DbTransaction.getInst().queryInsertToken(auth.getUserid(), data.getUuid(), tokenid, token, true));
 		if(DbTransaction.getInst().transactionQuery(data.getTokenScode(), queries)==false)
 			return res.setError(EAuthError.failed_update_token);
+
+		DbAppManager.getInst().addEpid(data.getScode(), auth.getUserid(), data.getUuid(), data.getEpid());	//register epid
+
 		return res.setParam("tid", tokenid).setParam("token", token).setError(EAuthError.ok);
 	}
 	/** 
@@ -265,12 +270,11 @@ public class AuthCommandAction extends CommonAction {
 			return res.setError(EAuthError.not_exist_userinfo);
 		if(user.isSameApt(data.getTokenScode()) == false)
 			DbAppManager.getInst().updateAppCode(data.getTokenScode(), token.userid, data.getTokenScode());	//update apt code
-		DbAppManager.getInst().addEpid(data.getScode(), token.userid, data.getUuid(), data.getEpid());	//register epid
 		user.inappcode = data.getTokenAppId();
 		
 		AuthSession session = new AuthSession(ch, 1).putSession(user, data.getTokenScode());	//consider the sessionid to find instance when close
 		SessionManager.getInst().put(session);
-		ch.attr(super.attrAuthSessionKey).set(session);
+		ch.attr(chAttributeKey.getAuthSessionKey()).set(session);
 		
 		sessionService.addUserSession(token.userid, StrUtil.getHostIp());	//save to redis
 		

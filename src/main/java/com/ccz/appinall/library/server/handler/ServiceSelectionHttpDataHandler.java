@@ -2,15 +2,23 @@ package com.ccz.appinall.library.server.handler;
 
 import java.util.List;
 
-import com.ccz.appinall.common.config.DefaultPropertyKey;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import com.ccz.appinall.common.config.ChAttributeKey;
 import com.ccz.appinall.library.type.inf.IDataAccess;
-import com.ccz.appinall.library.type.inf.IServiceAction;
+import com.ccz.appinall.library.type.inf.IServiceHandler;
 import com.ccz.appinall.library.util.ProtocolWriter;
 
 import io.netty.channel.ChannelHandlerContext;
 
+@Component
 public class ServiceSelectionHttpDataHandler extends ServiceSelectionHandler<IDataAccess> {
-	public ServiceSelectionHttpDataHandler(List<IServiceAction> serviceActionList) {
+	
+	@Autowired
+	ChAttributeKey chAttributeKey;
+	
+	public ServiceSelectionHttpDataHandler(List<IServiceHandler> serviceActionList) {
 		this.serviceActionList = serviceActionList;
 	}
 	
@@ -21,11 +29,11 @@ public class ServiceSelectionHttpDataHandler extends ServiceSelectionHandler<IDa
     
 	private void doGet(ChannelHandlerContext ctx, IDataAccess data) {
 		try {
-			IServiceAction action = ctx.channel().attr(propertyServiceAction).get();
+			IServiceHandler action = ctx.channel().attr(propertyServiceAction).get();
 			if(action == null) {
 				action = findAction(data.getAction());
 				ctx.channel().attr(propertyServiceAction).set(action);
-				ctx.channel().attr(DefaultPropertyKey.writePropertyKey).set(new ProtocolWriter().new WriteHttpDefault());
+				ctx.channel().attr(chAttributeKey.getWriteKey()).set(new ProtocolWriter().new WriteHttpDefault());
 			}
 			action.process(ctx.channel(), data);
 		} catch (Exception e) {

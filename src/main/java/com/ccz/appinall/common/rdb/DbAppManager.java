@@ -674,6 +674,9 @@ public class DbAppManager {
 		return new RecDeliverCount(scode).getDeliverCount(orderids);
 	}
 	//for delivery apply
+	public boolean addDeliveryApply(String scode, String orderid, String deliverid, String username) {
+		return new RecDeliveryApply(scode).insert(orderid, deliverid, username);
+	}
 	public boolean addDeliveryApply(String scode, String orderid, String deliverid, String username, long begintime, long endtime, int price, EDeliverType delivertype, EDeliverMethod deliverytype) {
 		return new RecDeliveryApply(scode).insert(orderid, deliverid, username, begintime, endtime, price, delivertype, deliverytype);
 	}

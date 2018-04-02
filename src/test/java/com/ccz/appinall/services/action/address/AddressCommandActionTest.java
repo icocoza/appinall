@@ -9,7 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import com.ccz.appinall.application.ApplicationConfig;
 import com.ccz.appinall.common.config.ServicesConfig;
 import com.ccz.appinall.common.rdb.DbAppManager;
 import com.ccz.appinall.services.controller.address.AddressCommandAction;
@@ -28,8 +27,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 //@SpringBootTest
 public class AddressCommandActionTest {
 
-	@Autowired
-	ApplicationConfig applicationConfig;
 	@Autowired
 	AddressCommandAction addressCommandAction;
 	@Autowired

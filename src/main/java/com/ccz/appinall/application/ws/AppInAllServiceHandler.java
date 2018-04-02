@@ -6,7 +6,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.ccz.appinall.common.config.DefaultPropertyKey;
+import com.ccz.appinall.common.config.ChAttributeKey;
 import com.ccz.appinall.common.config.ServicesConfig;
 import com.ccz.appinall.library.datastore.HttpMultipart;
 import com.ccz.appinall.library.module.fcm.FCMConnMgr;
@@ -17,7 +17,7 @@ import com.ccz.appinall.library.server.session.SessionManager;
 import com.ccz.appinall.library.type.WebsocketPacketData;
 import com.ccz.appinall.library.type.inf.ICommandProcess;
 import com.ccz.appinall.library.type.inf.IDataAccess;
-import com.ccz.appinall.library.type.inf.IServiceAction;
+import com.ccz.appinall.library.type.inf.IServiceHandler;
 import com.ccz.appinall.library.util.StrUtil;
 import com.ccz.appinall.library.util.ProtocolWriter.IWriteProtocol;
 import com.ccz.appinall.services.controller.address.AddressCommandAction;
@@ -44,9 +44,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
-public class AppInAllServiceAction  implements IServiceAction {
-	public final AttributeKey<AuthSession> attrAuthSessionKey = AttributeKey.valueOf(AuthSession.class.getSimpleName());
-	public final AttributeKey<FileSession> attrFileSessionKey = AttributeKey.valueOf(FileSession.class.getSimpleName());
+public class AppInAllServiceHandler  implements IServiceHandler {
 	
 	private final String serviceCode = "appserver";
 	private List<ICommandProcess> cmdProcess = new ArrayList<>();
@@ -59,20 +57,33 @@ public class AppInAllServiceAction  implements IServiceAction {
 	@Autowired
 	SendMessageManager sendMessageManager;
 	
+	@Autowired AdminCommandAction adminCommandAction;
+	@Autowired AuthCommandAction authCommandAction;
+	@Autowired BoardCommandAction boardCommandAction;
+	@Autowired ChannelCommandAction channelCommandAction;
+	@Autowired FriendCommandAction friendCommandAction;
+	@Autowired MessageCommandAction messageCommandAction;
+	@Autowired AddressCommandAction addressCommandAction;
+	@Autowired LocationCommandAction locationCommandAction;
+	@Autowired FileCommandAction fileCommandAction;
+	
 	@Autowired
-	public AppInAllServiceAction(ServicesConfig servicesConfig, OrderGeoRepository geoRepository, RedisQueueManager<ERedisQueueCmd> redisQueueManager) {
+	ChAttributeKey chAttributeKey;
+	
+	public AppInAllServiceHandler() { }
+	
+	@Autowired
+	public IServiceHandler init() {
 		
-		this.servicesConfig = servicesConfig;
-		this.redisQueueManager = redisQueueManager; 
-		cmdProcess.add(new AdminCommandAction(attrAuthSessionKey));
-		cmdProcess.add(new AuthCommandAction(attrAuthSessionKey));
-		cmdProcess.add(new BoardCommandAction(attrAuthSessionKey));
-		cmdProcess.add(new ChannelCommandAction(attrAuthSessionKey));
-		cmdProcess.add(new FriendCommandAction(attrAuthSessionKey));
-		cmdProcess.add(new MessageCommandAction(attrAuthSessionKey));
-		cmdProcess.add(new AddressCommandAction(attrAuthSessionKey, geoRepository, servicesConfig, sendMessageManager));// AddressCommandAction(attrAuthSessionKey));
-		cmdProcess.add(new LocationCommandAction(attrAuthSessionKey));
-		cmdProcess.add(new FileCommandAction(attrAuthSessionKey, attrFileSessionKey, servicesConfig));
+		cmdProcess.add(adminCommandAction);
+		cmdProcess.add(authCommandAction);
+		cmdProcess.add(boardCommandAction);
+		cmdProcess.add(channelCommandAction);
+		cmdProcess.add(friendCommandAction);
+		cmdProcess.add(messageCommandAction);
+		cmdProcess.add(addressCommandAction);// AddressCommandAction(attrAuthSessionKey));
+		cmdProcess.add(locationCommandAction);
+		cmdProcess.add(fileCommandAction);
 		
 		//between server
 		RedisQueueKeyController<ERedisQueueCmd> interServerQueueKeyController = new RedisQueueKeyController<ERedisQueueCmd>(RedisQueueRepository.INTER_SERVER_KEY + StrUtil.getHostIp(), servicesConfig.getRedisQueueCount());
@@ -92,6 +103,7 @@ public class AppInAllServiceAction  implements IServiceAction {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		return this;
 	}
 	
 	@Override
@@ -113,17 +125,17 @@ public class AppInAllServiceAction  implements IServiceAction {
 
 	@Override
 	public void send(Channel ch, String data) {
-		IWriteProtocol wp = ch.attr(DefaultPropertyKey.writePropertyKey).get();
+		IWriteProtocol wp = ch.attr(chAttributeKey.getWriteKey()).get();
 		wp.write(ch, data);
 	}
 
 	@Override
 	public void onClose(Channel ch) {
-		AuthSession as = ch.attr(attrAuthSessionKey).get();
+		AuthSession as = ch.attr(chAttributeKey.getAuthSessionKey()).get();
 		if(as==null)
 			return;
 		SessionManager.getInst().del(as.getKey());
-		ch.attr(attrAuthSessionKey).set(null);
+		ch.attr(chAttributeKey.getAuthSessionKey()).set(null);
 	}
 	/** 
 	 * @param ch channel handle from netty

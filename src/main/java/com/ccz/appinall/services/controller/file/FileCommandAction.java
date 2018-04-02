@@ -1,5 +1,9 @@
 package com.ccz.appinall.services.controller.file;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import com.ccz.appinall.common.config.ChAttributeKey;
 import com.ccz.appinall.common.config.ServicesConfig;
 import com.ccz.appinall.common.rdb.DbAppManager;
 import com.ccz.appinall.library.datastore.HttpMultipart;
@@ -9,6 +13,7 @@ import com.ccz.appinall.library.type.WebsocketPacketData;
 import com.ccz.appinall.library.util.Crypto;
 import com.ccz.appinall.library.util.StrUtil;
 import com.ccz.appinall.services.controller.CommonAction;
+import com.ccz.appinall.services.controller.auth.AuthCommandAction;
 import com.ccz.appinall.services.controller.auth.AuthSession;
 import com.ccz.appinall.services.controller.file.RecDataFile.*;
 import com.ccz.appinall.services.enums.EFileCmd;
@@ -21,14 +26,14 @@ import io.netty.util.AttributeKey;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@Component
+
 public class FileCommandAction extends CommonAction {
 	
 	ServicesConfig servicesConfig;
-	
-	public FileCommandAction(AttributeKey<AuthSession> authSessionKey, AttributeKey<FileSession> fileSessionKey, ServicesConfig servicesConfig) {
-		super(authSessionKey);
-		super.setAttrFileSessionKey(fileSessionKey);
-		this.servicesConfig = servicesConfig;
+	@Autowired
+	ChAttributeKey chAttributeKey;
+	public FileCommandAction() {
 	}
 
 	@Override
@@ -37,7 +42,7 @@ public class FileCommandAction extends CommonAction {
 	@Override
 	public boolean processJsonData(Channel ch, JsonNode jdata) {
 		ResponseData<EFileError> res = new ResponseData<EFileError>(jdata.get("scode").asText(), jdata.get("rcode").asText(), jdata.get("cmd").asText());
-		AuthSession session = (AuthSession) ch.attr(super.attrAuthSessionKey).get();
+		AuthSession session = (AuthSession) ch.attr(chAttributeKey.getAuthSessionKey()).get();
 		switch(EFileCmd.getType(res.getCommand())) {
 		case fileinit:
 			res = doFileInit(session, res, new RecDataFile().new FileInit(jdata));			
@@ -92,7 +97,7 @@ public class FileCommandAction extends CommonAction {
 			return res.setError(EFileError.fail_to_createfile);
 		
 		FileSession session = new FileSession(ch, 2).putSession(uploadFile, data.getScode());	//consider the sessionid to find instance when close
-		ch.attr(super.attrFileSessionKey).set(session);
+		ch.attr(chAttributeKey.getFileSessionKey()).set(session);
 		ch.attr(attrWebsocketData).get().setFilemode(true);
 		return res.setError(EFileError.ok);
 	}

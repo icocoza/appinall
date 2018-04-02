@@ -42,7 +42,7 @@ public class AdminController {
 	@Autowired
 	ResourceLoaderService resourceLoaderService;
 	
-	AdminCommandAction adminCommandAction = new AdminCommandAction(null);
+	AdminCommandAction adminCommandAction = new AdminCommandAction();
 	
     /** Home page. */
     @RequestMapping("/index")

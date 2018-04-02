@@ -15,7 +15,7 @@ import com.ccz.appinall.library.module.scrap.ImageResizeWorker;
 import com.ccz.appinall.library.type.ResponseData;
 import com.ccz.appinall.library.type.WebsocketPacketData;
 import com.ccz.appinall.library.type.inf.IDataAccess;
-import com.ccz.appinall.library.type.inf.IServiceAction;
+import com.ccz.appinall.library.type.inf.IServiceHandler;
 import com.ccz.appinall.library.util.ProtocolWriter;
 import com.ccz.appinall.library.util.StrUtil;
 import com.ccz.appinall.library.util.ProtocolWriter.WriteWebsocket;
@@ -28,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
-public class AppInAllFileAction implements IServiceAction {
+public class AppInAllFileHandler implements IServiceHandler {
 	public final AttributeKey<FileSession> attrFileSessionKey = AttributeKey.valueOf(FileSession.class.getSimpleName());
 	private final AttributeKey<WebsocketPacketData> attrWebsocketData = AttributeKey.valueOf(WebsocketPacketData.class.getSimpleName());
 	
@@ -37,6 +37,10 @@ public class AppInAllFileAction implements IServiceAction {
 	private final String serviceCode = WebsocketBinaryData.BINARY_DATA;
 
 	private ImageResizeWorker imageResizeWorker = new ImageResizeWorker();
+	
+	public IServiceHandler init() {
+		return this;
+	}
 	
 	@Override
 	public void send(Channel ch, String data) {

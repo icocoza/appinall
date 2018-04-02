@@ -4,11 +4,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import com.ccz.appinall.common.config.ChAttributeKey;
 import com.ccz.appinall.common.rdb.DbAppManager;
 import com.ccz.appinall.library.type.ResponseData;
 import com.ccz.appinall.library.util.AsciiSplitter.ASS;
 import com.ccz.appinall.services.controller.CommonAction;
 import com.ccz.appinall.services.controller.auth.AuthSession;
+import com.ccz.appinall.services.controller.file.FileCommandAction;
 import com.ccz.appinall.services.controller.friend.RecDataFriend.*;
 import com.ccz.appinall.services.enums.EFriendCmd;
 import com.ccz.appinall.services.enums.EFriendError;
@@ -18,11 +23,14 @@ import com.ccz.appinall.services.model.db.RecFriend.RecFriendInfo;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import io.netty.channel.Channel;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
+@Component
 public class FriendCommandAction extends CommonAction {
-
-	public FriendCommandAction(Object sessionKey) {
-		super(sessionKey);
+	@Autowired
+	ChAttributeKey chAttributeKey;
+	public FriendCommandAction() {
 	}
 
 	private boolean processBoardData(Channel ch, String[] data, JsonNode jdata) {
@@ -32,7 +40,7 @@ public class FriendCommandAction extends CommonAction {
 		else
 			res = new ResponseData<EFriendError>(jdata.get("scode").asText(), jdata.get("rcode").asText(), jdata.get("cmd").asText());
 		
-		AuthSession ss = (AuthSession) ch.attr(super.attrAuthSessionKey).get();
+		AuthSession ss = (AuthSession) ch.attr(chAttributeKey.getAuthSessionKey()).get();
 		switch(EFriendCmd.getType(res.getCommand())) {
 		case addfriend: 
 			this.addFriend(ss, res, data != null ?new RecDataFriend().new AddFriend(data[3]) : new RecDataFriend().new AddFriend(jdata)); //O

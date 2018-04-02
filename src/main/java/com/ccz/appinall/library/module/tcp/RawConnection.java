@@ -10,7 +10,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import com.ccz.appinall.library.server.handler.RawPacketDataHandler;
 import com.ccz.appinall.library.server.handler.ServiceSelectionRawDataHandler;
 import com.ccz.appinall.library.type.DataType.IpPort;
-import com.ccz.appinall.library.type.inf.IServiceAction;
+import com.ccz.appinall.library.type.inf.IServiceHandler;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
@@ -29,9 +29,9 @@ public class RawConnection {
 	private Channel channel;
 	private EventLoopGroup nioEventLoop;
 	
-	private List<IServiceAction> serviceActionList;
+	private List<IServiceHandler> serviceActionList;
 	
-	public RawConnection(IpPort ipp, List<IServiceAction> actionList) {
+	public RawConnection(IpPort ipp, List<IServiceHandler> actionList) {
 		this.ipp = ipp;
 		this.serviceActionList = actionList;
 	}

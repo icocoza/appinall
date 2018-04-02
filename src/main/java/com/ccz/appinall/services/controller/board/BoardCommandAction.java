@@ -3,12 +3,17 @@ package com.ccz.appinall.services.controller.board;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import com.ccz.appinall.common.config.ChAttributeKey;
 import com.ccz.appinall.common.rdb.DbAppManager;
 import com.ccz.appinall.library.dbhelper.DbRecord;
 import com.ccz.appinall.library.type.ResponseData;
 import com.ccz.appinall.library.util.AsciiSplitter.ASS;
 import com.ccz.appinall.library.util.StrUtil;
 import com.ccz.appinall.services.controller.CommonAction;
+import com.ccz.appinall.services.controller.auth.AuthCommandAction;
 import com.ccz.appinall.services.controller.auth.AuthSession;
 import com.ccz.appinall.services.controller.board.RecDataBoard.*;
 import com.ccz.appinall.services.enums.EBoardCmd;
@@ -21,11 +26,16 @@ import com.ccz.appinall.services.model.db.RecVoteUser;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import io.netty.channel.Channel;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Component
 
 public class BoardCommandAction extends CommonAction {
-
-	public BoardCommandAction(Object sessionKey) {
-		super(sessionKey);
+	@Autowired
+	ChAttributeKey chAttributeKey;
+	
+	public BoardCommandAction() {
 	}
 
 	private boolean processBoardData(Channel ch, String[] data, JsonNode jdata) {
@@ -35,7 +45,7 @@ public class BoardCommandAction extends CommonAction {
 		else
 			res = new ResponseData<EBoardError>(jdata.get("scode").asText(), jdata.get("rcode").asText(), jdata.get("cmd").asText());
 		
-		AuthSession ss = (AuthSession) ch.attr(super.attrAuthSessionKey).get();
+		AuthSession ss = (AuthSession) ch.attr(chAttributeKey.getAuthSessionKey()).get();
 		switch(EBoardCmd.getType(res.getCommand())) {
 		case addboard:
 			res = this.doAddBoard(ss, res, data!=null ? new RecDataBoard().new AddBoard(data[3]) : new RecDataBoard().new AddBoard(jdata)); //O

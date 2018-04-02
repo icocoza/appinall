@@ -8,7 +8,7 @@ import javax.net.ssl.SSLException;
 
 import com.ccz.appinall.library.server.handler.HttpPacketDataHandler;
 import com.ccz.appinall.library.server.handler.ServiceSelectionHttpDataHandler;
-import com.ccz.appinall.library.type.inf.IServiceAction;
+import com.ccz.appinall.library.type.inf.IServiceHandler;
 
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
@@ -26,7 +26,7 @@ import static io.netty.handler.codec.http2.Http2SecurityUtil.CIPHERS;
 
 public class Http2orHttpServerInitializer extends ChannelInitializer<SocketChannel> {
 
-	protected List<IServiceAction> mActionList = new LinkedList<IServiceAction>();
+	protected List<IServiceHandler> mActionList = new LinkedList<IServiceHandler>();
 	private boolean ssl;
 	private String uploadDir;
 	
@@ -47,7 +47,7 @@ public class Http2orHttpServerInitializer extends ChannelInitializer<SocketChann
 		pipeline.addLast(new ServiceSelectionHttpDataHandler(mActionList));		
 	}
 	
-	public Http2orHttpServerInitializer AddAction(IServiceAction act) {
+	public Http2orHttpServerInitializer AddAction(IServiceHandler act) {
 		mActionList.add(act);
 		return this;
 	}

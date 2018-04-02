@@ -141,12 +141,18 @@ public class RecDataAddr {
 		public DataOrderSelectByDeliver(JsonNode jnode) {
 			super(jnode);
 			this.orderid = jnode.get("orderid").asText();
-			this.begintime = jnode.get("begintime").asLong();
-			this.endtime = jnode.get("endtime").asLong();
-			this.duration = jnode.get("duration").asInt();
-			this.price = jnode.get("price").asInt();	//Not used yet
-			this.delivertype = EDeliverType.valueOf(jnode.get("delivertype").asText());
-			this.deliverytype = EDeliverMethod.valueOf(jnode.get("deliverytype").asText());
+			if(jnode.has("begintime"))
+				this.begintime = jnode.get("begintime").asLong();
+			if(jnode.has("endtime"))
+				this.endtime = jnode.get("endtime").asLong();
+			if(jnode.has("duration"))
+				this.duration = jnode.get("duration").asInt();
+			if(jnode.has("price"))
+				this.price = jnode.get("price").asInt();	//Not used yet
+			if(jnode.has("delivertype"))
+				this.delivertype = EDeliverType.valueOf(jnode.get("delivertype").asText());
+			if(jnode.has("deliverytype"))
+				this.deliverytype = EDeliverMethod.valueOf(jnode.get("deliverytype").asText());
 		}
 	}
 
@@ -210,7 +216,7 @@ public class RecDataAddr {
 		private String orderid;
 		private String endcode;
 		private String message;
-		private List<String> fileids;
+		private List<String> fileids = new ArrayList<String>();
 		
 		public DataDeliveryCompleteByDelivers(JsonNode jnode) {
 			super(jnode);
@@ -221,7 +227,6 @@ public class RecDataAddr {
 			if(jnode.has("message"))
 				this.message = jnode.get("message").asText();
 			if(jnode.has("fileids")) {
-				fileids = new ArrayList<String>();
 				ArrayNode arrNode = (ArrayNode) jnode.get("fileids");
 				for(int i=0; i<arrNode.size(); i++)
 					fileids.add(arrNode.get(i).asText());

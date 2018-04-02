@@ -2,17 +2,28 @@ package com.ccz.appinall.library.server.handler;
 
 import java.util.List;
 
-import com.ccz.appinall.common.config.DefaultPropertyKey;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import com.ccz.appinall.common.config.ChAttributeKey;
 import com.ccz.appinall.library.type.enums.EDataStoreType;
 import com.ccz.appinall.library.type.inf.IDataAccess;
-import com.ccz.appinall.library.type.inf.IServiceAction;
+import com.ccz.appinall.library.type.inf.IServiceHandler;
 import com.ccz.appinall.library.util.ProtocolWriter;
 
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 
+@ChannelHandler.Sharable
+@Component
 public class ServiceSelectionWebsocketDataHandler extends ServiceSelectionHandler<IDataAccess> {
 
-	public ServiceSelectionWebsocketDataHandler(List<IServiceAction> serviceActionList) {
+	@Autowired 
+	ChAttributeKey chAttributeKey;
+	
+	public ServiceSelectionWebsocketDataHandler() {		}
+	
+	public void setActionList(List<IServiceHandler> serviceActionList) {
 		this.serviceActionList = serviceActionList;
 	}
 	
@@ -26,11 +37,11 @@ public class ServiceSelectionWebsocketDataHandler extends ServiceSelectionHandle
 	
 	private void textData(ChannelHandlerContext ctx, IDataAccess da) {	//JSON data or Custom
 		try {
-			IServiceAction action = ctx.channel().attr(propertyServiceAction).get();
+			IServiceHandler action = ctx.channel().attr(propertyServiceAction).get();
 			if(action == null) {
 				action = findAction(da.getAction());
 				ctx.channel().attr(propertyServiceAction).set(action);
-				ctx.channel().attr(DefaultPropertyKey.writePropertyKey).set(new ProtocolWriter().new WriteWebsocket());
+				ctx.channel().attr(chAttributeKey.getWriteKey()).set(new ProtocolWriter().new WriteWebsocket());
 			}
 			if(action!=null)
 				action.process(ctx.channel(), da);
@@ -40,7 +51,7 @@ public class ServiceSelectionWebsocketDataHandler extends ServiceSelectionHandle
 	}
 	
 	private void fileData(ChannelHandlerContext ctx, IDataAccess da) {
-		IServiceAction action = findAction(da.getAction());
+		IServiceHandler action = findAction(da.getAction());
 		action.process(ctx.channel(), da);
 	}
 
