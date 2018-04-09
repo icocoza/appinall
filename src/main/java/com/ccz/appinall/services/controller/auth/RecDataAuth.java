@@ -7,23 +7,29 @@ import com.ccz.appinall.services.enums.EUserAuthType;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import lombok.Getter;
+import lombok.Setter;
 
 public class RecDataAuth {
 	
 	@Getter
 	public class DataRegUser extends RecDataCommon {
-		private String uuid, username, usertype, ostype, osversion, appversion, inappcode;
+		private String uuid, username;
 		protected EUserAuthType authtype = EUserAuthType.none;
 		
 		public DataRegUser(JsonNode jnode) {
 			super(jnode);
 			this.uuid = jnode.get("uuid").asText();
 			this.username = jnode.get("username").asText();
-			this.usertype = jnode.get("usertype").asText();
-			this.ostype = jnode.get("ostype").asText();
-			this.osversion = jnode.get("osversion").asText();
-			this.appversion = jnode.get("appversion").asText();
-			this.inappcode = jnode.get("inappcode").asText();
+		}
+		
+		public DataRegUser(String uuid, String username, RecDataCommon data) {	//for anonymmous, created manually
+			super(data);
+			this.uuid = uuid;
+			this.username = username;
+		}
+		
+		public boolean isAnonymous() {
+			return authtype == EUserAuthType.none;
 		}
 	}
 	
@@ -61,32 +67,58 @@ public class RecDataAuth {
 		}
 	}
 	
+	public class DataLogin extends DataSignIn {
+		@Getter private String uid, pw;
+		@Getter private String usertype, ostype, osversion, appversion, inappcode;
+		@Getter private String epid;
+		
+		public DataLogin(JsonNode jnode) {
+			super(jnode);
+			this.uid = jnode.get("uid").asText();
+			if(jnode.has("pw"))
+				this.pw = jnode.get("pw").asText();
+			this.usertype = jnode.get("usertype").asText();
+			this.ostype = jnode.get("ostype").asText();
+			this.osversion = jnode.get("osversion").asText();
+			this.appversion = jnode.get("appversion").asText();
+			this.inappcode = jnode.get("inappcode").asText();
+			this.epid = jnode.get("epid").asText();
+		}
+		
+		public boolean isValidIdPw() {
+			if(uid==null || uid.length()<8 || pw==null || pw.length()<6 )
+				return false;
+			return true;
+		}
+	}
+	
+	public class DataAnonyLogin extends DataLogin {
+		@Getter private String uuid;
+		
+		public DataAnonyLogin(JsonNode jnode) {
+			super(jnode);
+			this.uuid = jnode.get("uuid").asText();
+		}
+	} 
+	
 	public class DataSignIn extends RecDataCommon {
+		private String regtoken;
 		
-		private String regToken;
+		@Getter private String tokenid, uuid;
 		
-		@Getter
-		private String tokenid, uuid;
-		@Getter
-		private String tokenUserid, tokenUuid;//by regToken
-		@Getter
-		private String epid;
-		@Getter
-		private  EUserAuthType tokenAuthType = EUserAuthType.none;//by regToken
+		@Getter private String tokenUserid, tokenUuid;//by regToken
+		@Getter private  EUserAuthType tokenAuthType = EUserAuthType.none;//by regToken
 		
 		public DataSignIn(JsonNode jnode) {
 			super(jnode);
 			if(jnode.has("regToken"))
-				this.regToken = jnode.get("regToken").asText();
+				this.regtoken = jnode.get("regToken").asText();
 			if(jnode.has("regtoken"))
-				this.regToken = jnode.get("regtoken").asText();
+				this.regtoken = jnode.get("regtoken").asText();
 			if(jnode.has("tokenid"))
 				this.tokenid = jnode.get("tokenid").asText();
 			if(jnode.has("tid"))
 				this.tokenid = jnode.get("tid").asText();
-			if(jnode.has("epid"))
-				this.epid = jnode.get("epid").asText();
-
 			if(jnode.has("uuid"))
 				this.uuid = jnode.get("uuid").asText();
 			
@@ -94,9 +126,9 @@ public class RecDataAuth {
 		}
 		
 		private void decodeRegToken() {
-			if(this.regToken==null)
+			if(this.regtoken==null)
 				return;
-			String dec = Crypto.AES256Cipher.getInst().dec(regToken);
+			String dec = Crypto.AES256Cipher.getInst().dec(regtoken);
 			String[] chunk = dec.split(ASS.UNIT);
 			tokenUserid = chunk[0];
 			tokenUuid = chunk[1];
@@ -114,20 +146,10 @@ public class RecDataAuth {
 		}
 	}
 	
-	public class DataLogin extends DataSignIn {
-		@Getter
-		private String uid, pw;
+	public class DataAnonySignIn extends RecDataCommon {
 		
-		public DataLogin(JsonNode jnode) {
+		public DataAnonySignIn(JsonNode jnode) {
 			super(jnode);
-			this.uid = jnode.get("uid").asText();
-			this.pw = jnode.get("pw").asText();
-		}
-		
-		public boolean isValidIdPw() {
-			if(uid==null || uid.length()<8 || pw==null || pw.length()<6 )
-				return false;
-			return true;
 		}
 		
 	}

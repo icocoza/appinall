@@ -106,10 +106,10 @@ public class RecDeliveryOrder extends DbRecord {
 		return Arrays.asList(fromid, toid);
 	}
 	
-	public DbRecord getOrder(String orderid) {
+	public RecDeliveryOrder getOrder(String orderid) {
 		String sql = String.format("SELECT * FROM %s WHERE orderid='%s'", RecDeliveryOrder.TBL_NAME, orderid);
 		if(super.getOne(sql)==DbRecord.Empty)
-			return DbRecord.Empty;
+			return (RecDeliveryOrder)RecDeliveryOrder.Empty;
 		return this;
 	}
 	

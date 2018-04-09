@@ -14,12 +14,10 @@ public class SessionRepository {
 	
 	private final String KEY = "server:user:";
 	
-	public void save(String userId, SessionData sd) {
+	public SessionData save(String userId, String ip) {
+		SessionData sd = new SessionData(userId, ip);
 		redisSessionTemplate.opsForValue().set(KEY + userId, sd);
-	}
-	
-	public void save(String userId, String ip) {
-		redisSessionTemplate.opsForValue().set(KEY + userId, new SessionData(userId, ip));
+		return sd;
 	}
 
 	public SessionData get(String userId) {

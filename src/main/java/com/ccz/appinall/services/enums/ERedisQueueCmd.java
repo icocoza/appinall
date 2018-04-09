@@ -5,7 +5,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public enum ERedisQueueCmd {
-	none("none"), delivery_status("delivery_status"), fcm_push("fcm_push");
+	none("none"), delivery_status("delivery_status"), fcm_push("fcm_push"), gps_info("gps_info");
 	
 	public final String value;
 	

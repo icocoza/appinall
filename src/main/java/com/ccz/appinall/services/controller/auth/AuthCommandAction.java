@@ -13,12 +13,15 @@ import com.ccz.appinall.common.rdb.DbTransaction;
 import com.ccz.appinall.library.dbhelper.DbRecord;
 import com.ccz.appinall.library.server.session.SessionManager;
 import com.ccz.appinall.library.type.ResponseData;
+import com.ccz.appinall.library.type.inf.ICommandFunction;
 import com.ccz.appinall.library.util.AsciiSplitter.ASS;
 import com.ccz.appinall.library.util.Crypto;
 import com.ccz.appinall.library.util.KeyGen;
+import com.ccz.appinall.library.util.ShortUUID;
 import com.ccz.appinall.library.util.StrUtil;
 import com.ccz.appinall.services.controller.CommonAction;
 import com.ccz.appinall.services.controller.auth.RecDataAuth.*;
+import com.ccz.appinall.services.enums.EAddrError;
 import com.ccz.appinall.services.enums.EAuthCmd;
 import com.ccz.appinall.services.enums.EAuthError;
 import com.ccz.appinall.services.enums.EUserAuthType;
@@ -35,92 +38,47 @@ import lombok.extern.slf4j.Slf4j;
 public class AuthCommandAction extends CommonAction {
 
 	@Autowired
-	SessionService sessionService;
+	SessionService sessionService;	//to save redis
+	@Autowired
+	SessionManager sessionManager;	//to save local memory
 	@Autowired
 	ChAttributeKey chAttributeKey;
 	
 	public AuthCommandAction() {
+		super.setCommandFunction(EAuthCmd.reg_idpw.getValue(), doRegIdPw);
+		super.setCommandFunction(EAuthCmd.reg_email.getValue(), doRegEmail);
+		super.setCommandFunction(EAuthCmd.reg_phone.getValue(), doRegPhone);
+		super.setCommandFunction(EAuthCmd.login.getValue(), doLogin);
+		super.setCommandFunction(EAuthCmd.anony_login.getValue(), doAnonyLogin);
+		super.setCommandFunction(EAuthCmd.signin.getValue(), doSignin);
+		super.setCommandFunction(EAuthCmd.anony_signin.getValue(), doSignin);
+		super.setCommandFunction(EAuthCmd.change_pw.getValue(), doUpdatePW);
+		super.setCommandFunction(EAuthCmd.reissue_email.getValue(), doUpdateEmail);
+		super.setCommandFunction(EAuthCmd.reissue_phone.getValue(), doUpdatePhoneNo);
+		//super.setCommandFunction(EAuthCmd.verify_email.getValue(), null);
+		super.setCommandFunction(EAuthCmd.verify_sms.getValue(), doVerifyPhoneNo);
 	}
 
-	@SuppressWarnings("unused")
-	@Override
-	public boolean processPacketData(Channel ch, String[] data) {
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public boolean processCommand(Channel ch, JsonNode jdata) {
+		String cmd = jdata.get("cmd").asText();
+		ResponseData<EAuthError> res = new ResponseData<EAuthError>(jdata.get("scode").asText(), jdata.get("rcode").asText(), cmd);
+		//AuthSession session = (AuthSession) ch.attr(chAttributeKey.getAuthSessionKey()).get();
+		
+		ICommandFunction cmdFunc = super.getCommandFunction(cmd);
+		if(cmdFunc!=null) {
+			res = (ResponseData<EAuthError>) cmdFunc.doAction(ch, res, jdata);
+			send(ch, res.toString());
+			return true;
+		}
 		return false;
 	}
 
-	@Override
-	public boolean processJsonData(Channel ch, JsonNode jdata) {
-		ResponseData<EAuthError> res = new ResponseData<EAuthError>(jdata.get("scode").asText(), jdata.get("rcode").asText(), jdata.get("cmd").asText());
-		
-		switch(EAuthCmd.getType(res.getCommand())) {
-		case reg_idpw:
-			res = this.doRegister(res, new RecDataAuth().new DataRegIdPw(jdata));
-			break;
-		case reg_email:
-			res = this.doRegister(res, new RecDataAuth().new DataRegEmail(jdata));
-			break;
-		case reg_phone:
-			res = this.doRegister(res, new RecDataAuth().new DataRegPhone(jdata));
-			break;
-		case login:
-			res = this.doLogin(res, new RecDataAuth().new DataLogin(jdata)); //가입 후 한번은 로그인 해야 함
-			break;
-		case signin:
-			res = this.doSignin(ch, res, new RecDataAuth().new DataSignIn(jdata)); //한번 로그인 한 이후에는 토큰으로 로그인 하면 됨 
-			break;
-		case change_pw:
-			res = this.doUpdatePW(res, new RecDataAuth().new DataUpdateIdUser(jdata));
-			break;
-		case reissue_email:	//send email
-			res = this.doUpdateEmail(res, new RecDataAuth().new DataUpdateEmailUser(jdata));
-			break;
-		case reissue_phone:	//send sms and update sms code
-			res = this.doUpdatePhoneNo(res, new RecDataAuth().new DataUpdatePhoneUser(jdata));
-			break;
-		case verify_email: //from HTTP GET Request
-			break;
-		case verify_sms:
-			res = this.doVerifyPhoneNo(res, new RecDataAuth().new DataVerifyPhoneUser(jdata));
-			break;
-		default:
-			return false;
-		}
-		if(res != null) {
-			send(ch, res.toString());
-			log.info(res.toString());
-		}
-		return true;
-	}
-
-	/** modified...check RecUser schema 
-	 * @param ch 
-	 * @param userData, registration string data 
-	 * 		  [app token][ssh1 mac or uuid][user name][user type][os type][os version][app version][email]
-	 * 		  user type => 'u'
-	 * 		  inAppCode => to distinguish app service types for service operator
-	 * @return AES256([userid][uuid])
-	 * 
-	 * 1. check application id
-	 * 2. find authtype, return error if exist
-	 * 3. register userAuth by authtype
-	 * 4. register user 
-	 * 5. return the Base62 token which encrypted AES256
-	 */
-	private ResponseData<EAuthError> doRegister(ResponseData<EAuthError> res, DataRegUser data) {
+	ICommandFunction<Channel, ResponseData<EAuthError>, JsonNode> doRegIdPw = (Channel ch, ResponseData<EAuthError> res, JsonNode jnode) -> {
+		DataRegIdPw data = new RecDataAuth().new DataRegIdPw(jnode);
 		RecAdminApp app = DbAppManager.getInst().getApp(data.getTokenAppId());	
 		if(app == DbRecord.Empty)
 			return res.setError(EAuthError.wrong_appid);
-		
-		if(data instanceof DataRegIdPw)
-			return doRegIdPw(res, (DataRegIdPw) data);
-		else if(data instanceof DataRegEmail)
-			return doRegEmail(res, (DataRegEmail) data);
-		else if(data instanceof DataRegPhone)
-			return doRegPhone(res, (DataRegPhone) data);
-		return res.setError(EAuthError.unknown_datatype);
-	}
-	
-	private ResponseData<EAuthError> doRegIdPw(ResponseData<EAuthError> res, DataRegIdPw data) {
 		if(data.getUid().length()<8)
 			return res.setError(EAuthError.userid_more_than_8);
 		if(StrUtil.isAlphaNumeric(data.getUid())==false)
@@ -128,53 +86,48 @@ public class AuthCommandAction extends CommonAction {
 		if(data.getPw().length()<6)
 			return res.setError(EAuthError.pass_more_than_6);
 		
-		if( DbAppManager.getInst().findUid(data.getTokenScode(), data.getUid()) == true )
+		if( DbAppManager.getInst().findUid(data.getScode(), data.getUid()) == true )
 			return res.setError(EAuthError.already_exist_userid);
 		
 		String userid = KeyGen.makeKeyWithSeq("us");
 		String authQuery = DbTransaction.getInst().queryInsertUID(userid, data.getUid(), data.getPw());
 		return doRegisterUser(res, userid, data.getUid(), authQuery, data);
-	}
+	};
 	
-	private ResponseData<EAuthError> doRegEmail(ResponseData<EAuthError> res, DataRegEmail data) {
+	ICommandFunction<Channel, ResponseData<EAuthError>, JsonNode> doRegEmail = (Channel ch, ResponseData<EAuthError> res, JsonNode jnode) -> {
+		DataRegEmail data = new RecDataAuth().new DataRegEmail(jnode);
+		RecAdminApp app = DbAppManager.getInst().getApp(data.getTokenAppId());	
+		if(app == DbRecord.Empty)
+			return res.setError(EAuthError.wrong_appid);
 		if(StrUtil.isEmail(data.getEmail()) == false)
 			return res.setError(EAuthError.invalid_email_format);
 		
-		if( DbAppManager.getInst().findEmail(data.getTokenScode(), data.getEmail()) == true )
+		if( DbAppManager.getInst().findEmail(data.getScode(), data.getEmail()) == true )
 			return res.setError(EAuthError.already_exist_email);
 		
 		String userid = KeyGen.makeKeyWithSeq("us");
 		String authQuery = DbTransaction.getInst().queryInsertEmail(userid, data.getEmail());
 		return doRegisterUser(res, userid, data.getEmail(), authQuery, data);
-	}
+	};
 	
-	private ResponseData<EAuthError> doRegPhone(ResponseData<EAuthError> res, DataRegPhone data) {
+	ICommandFunction<Channel, ResponseData<EAuthError>, JsonNode> doRegPhone = (Channel ch, ResponseData<EAuthError> res, JsonNode jnode) -> {
+		DataRegPhone data = new RecDataAuth().new DataRegPhone(jnode);
+		RecAdminApp app = DbAppManager.getInst().getApp(data.getTokenAppId());	
+		if(app == DbRecord.Empty)
+			return res.setError(EAuthError.wrong_appid);
 		if(StrUtil.isPhone(data.getPhoneno()) == false)
 			return res.setError(EAuthError.invalid_phoneno_format);
 		
-		if( DbAppManager.getInst().findPhoneno(data.getTokenScode(), data.getPhoneno()) == true )
+		if( DbAppManager.getInst().findPhoneno(data.getScode(), data.getPhoneno()) == true )
 			return res.setError(EAuthError.already_exist_phoneno);
 		
 		String userid = KeyGen.makeKeyWithSeq("us");
 		String authQuery = DbTransaction.getInst().queryInsertEmail(userid, data.getPhoneno());
 		return doRegisterUser(res, userid, data.getPhoneno(), authQuery, data);
-	}
+	};
 	
-	private ResponseData<EAuthError> doRegisterUser(ResponseData<EAuthError> res, String userid, String regId, String authQuery, DataRegUser data) {
-		String tokenid = StrUtil.getSha1Uuid("tid");
-		String token = Crypto.AES256Cipher.getInst().enc(regId+ASS.UNIT+data.getUuid()+ASS.UNIT+data.getAuthtype());
-		
-		List<String> queries = new ArrayList<>();
-		queries.add(authQuery);
-		queries.add(DbTransaction.getInst().queryInsertUser(userid, data.getUsername(), data.getUsertype(), data.getOstype(), data.getOsversion(), data.getAppversion()));
-		queries.add(DbTransaction.getInst().queryInsertToken(userid, data.getUuid(), tokenid, token, false));
-		if(DbTransaction.getInst().transactionQuery(data.getTokenScode(), queries)==false)
-			return res.setError(EAuthError.failed_register);
-		
-		return res.setParam("tid", tokenid).setParam("token", token).setError(EAuthError.ok);
-	}
-	
-	private ResponseData<EAuthError> doLogin(ResponseData<EAuthError> res, DataLogin data) {
+	ICommandFunction<Channel, ResponseData<EAuthError>, JsonNode> doLogin = (Channel ch, ResponseData<EAuthError> res, JsonNode jnode) -> {
+		DataLogin data = new RecDataAuth().new DataLogin(jnode);
 		if(data.isValidAppToken()==false)
 			return res.setError(EAuthError.invalid_app_token);
 		RecAdminApp app = DbAppManager.getInst().getApp(data.getTokenAppId());	
@@ -183,58 +136,8 @@ public class AuthCommandAction extends CommonAction {
 		if(data.isValidUserToken() == true)
 			return doLoginByToken(res, data);
 		return doLoginByIdPw(res, data);
-	}
+	};
 	
-	private ResponseData<EAuthError> doLoginByToken(ResponseData<EAuthError> res, DataLogin data) {	//already signed user who has token
-		if(data.isValidUuid()==false)
-			return res.setError(EAuthError.invalid_user_token);
-		
-		RecUserToken token = DbAppManager.getInst().getUserTokenByTokenId(data.getTokenScode(), data.getTokenid());
-		if(token==DbRecord.Empty)
-			return res.setError(EAuthError.invalid_user_tokenid);
-		if(data.getTokenUuid().equals(token.uuid)==false)
-			return res.setError(EAuthError.invalid_or_expired_token);
-		
-		RecUserAuth auth = DbAppManager.getInst().getUserAuth(data.getTokenScode(), token.userid);
-		if(DbRecord.Empty == auth)
-			return res.setError(EAuthError.unauthorized_userid);
-		if(auth.isSameUid(data.getUid())==false || auth.isSamePw(data.getPw())==false)
-			return res.setError(EAuthError.invalid_user);
-		
-		if(DbAppManager.getInst().enableToken(data.getTokenScode(), token.userid, token.tokenid, true) == false)
-			return res.setError(EAuthError.unknown_error);
-		
-		return res.setError(EAuthError.ok);
-	}
-	
-	private ResponseData<EAuthError> doLoginByIdPw(ResponseData<EAuthError> res, DataLogin data) {		//new login using id and pw
-		RecUserAuth auth = DbAppManager.getInst().getUserAuthByUid(data.getScode(), data.getUid());
-		if(DbRecord.Empty == auth)
-			return res.setError(EAuthError.not_exist_user);
-		if(auth.isSamePw(data.getPw())==false)
-			return res.setError(EAuthError.invalid_user);
-		RecUserToken recToken = DbAppManager.getInst().getUserTokenByUserId(data.getScode(), auth.getUserid());
-		if(recToken==DbRecord.Empty)
-			return res.setError(EAuthError.unauthorized_userid);
-		
-		if(recToken.uuid.equals(data.getUuid()) == true) {
-			String token = Crypto.AES256Cipher.getInst().enc(data.getUid()+ASS.UNIT+data.getUuid()+ASS.UNIT+auth.getAuthtype());
-			DbAppManager.getInst().updateToken(data.getScode(), auth.getUserid(), recToken.tokenid, token, true);
-			return res.setParam("tid", recToken.tokenid).setParam("token", token).setError(EAuthError.ok);
-		}
-		
-		String tokenid = StrUtil.getSha1Uuid("tid");
-		String token = Crypto.AES256Cipher.getInst().enc(data.getUid()+ASS.UNIT+data.getUuid()+ASS.UNIT+EUserAuthType.uid.getValue());
-		List<String> queries = new ArrayList<>();
-		queries.add(DbTransaction.getInst().queryDeleteTokenByUuid(auth.getUserid(), recToken.uuid));
-		queries.add(DbTransaction.getInst().queryInsertToken(auth.getUserid(), data.getUuid(), tokenid, token, true));
-		if(DbTransaction.getInst().transactionQuery(data.getTokenScode(), queries)==false)
-			return res.setError(EAuthError.failed_update_token);
-
-		DbAppManager.getInst().addEpid(data.getScode(), auth.getUserid(), data.getUuid(), data.getEpid());	//register epid
-
-		return res.setParam("tid", tokenid).setParam("token", token).setError(EAuthError.ok);
-	}
 	/** 
 	 * login data
 	 * @param ch
@@ -243,7 +146,8 @@ public class AuthCommandAction extends CommonAction {
 	 * 			token => AES256([userid][uuid][authtype])
 	 * @return the lasttime which is last joined time
 	 */
-	private ResponseData<EAuthError> doSignin(Channel ch, ResponseData<EAuthError> res, DataSignIn data) {
+	ICommandFunction<Channel, ResponseData<EAuthError>, JsonNode> doSignin = (Channel ch, ResponseData<EAuthError> res, JsonNode jnode) -> {
+		DataSignIn data = new RecDataAuth().new DataSignIn(jnode);
 		if(data.isValidAppToken()==false)
 			return res.setError(EAuthError.invalid_app_token);
 		RecAdminApp app = DbAppManager.getInst().getApp(data.getTokenAppId());	
@@ -253,7 +157,7 @@ public class AuthCommandAction extends CommonAction {
 		if(data.isValidUserToken()==false || data.isValidUuid()==false)
 			return res.setError(EAuthError.invalid_user_token);
 		
-		RecUserToken token = DbAppManager.getInst().getUserTokenByTokenId(data.getTokenScode(), data.getTokenid());
+		RecUserToken token = DbAppManager.getInst().getUserTokenByTokenId(data.getScode(), data.getTokenid());
 		if(token==DbRecord.Empty)
 			return res.setError(EAuthError.invalid_user_tokenid);
 		if(data.getTokenUuid().equals(token.uuid)==false)
@@ -261,27 +165,27 @@ public class AuthCommandAction extends CommonAction {
 		if(token.enabled == false)
 			return res.setError(EAuthError.unauthorized_token);
 		
-		RecUserAuth auth = DbAppManager.getInst().getUserAuth(data.getTokenScode(), token.userid);
+		RecUserAuth auth = DbAppManager.getInst().getUserAuth(data.getScode(), token.userid);
 		if(DbRecord.Empty == auth)
 			return res.setError(EAuthError.unauthorized_userid);
 		
-		RecUser user = DbAppManager.getInst().getUser(data.getTokenScode(), token.userid);
+		RecUser user = DbAppManager.getInst().getUser(data.getScode(), token.userid);
 		if(DbRecord.Empty == user)
 			return res.setError(EAuthError.not_exist_userinfo);
-		if(user.isSameApt(data.getTokenScode()) == false)
-			DbAppManager.getInst().updateAppCode(data.getTokenScode(), token.userid, data.getTokenScode());	//update apt code
+		if(user.isSameApt(data.getScode()) == false)
+			DbAppManager.getInst().updateAppCode(data.getScode(), token.userid, data.getScode());	//update apt code
 		user.inappcode = data.getTokenAppId();
 		
-		AuthSession session = new AuthSession(ch, 1).putSession(user, data.getTokenScode());	//consider the sessionid to find instance when close
-		SessionManager.getInst().put(session);
+		AuthSession session = new AuthSession(ch, 1).putSession(user, data.getScode());	//consider the sessionid to find instance when close
+		session.setSessionData(sessionService.addUserSession(token.userid, StrUtil.getHostIp()));	//save to redis
 		ch.attr(chAttributeKey.getAuthSessionKey()).set(session);
-		
-		sessionService.addUserSession(token.userid, StrUtil.getHostIp());	//save to redis
+		sessionManager.put(session);
 		
 		return res.setError(EAuthError.ok).setParam(""+user.lasttime);
-	}
+	};
 
-	private ResponseData<EAuthError> doUpdatePW(ResponseData<EAuthError> res, DataUpdateIdUser data) {
+	ICommandFunction<Channel, ResponseData<EAuthError>, JsonNode> doUpdatePW = (Channel ch, ResponseData<EAuthError> res, JsonNode jnode) -> {
+		DataUpdateIdUser data = new RecDataAuth().new DataUpdateIdUser(jnode);
 		if(data.isValidAppToken()==false)
 			return res.setError(EAuthError.invalid_app_token);
 		if(data.getUuid() == null || data.getUuid().length() < 1)
@@ -303,14 +207,14 @@ public class AuthCommandAction extends CommonAction {
 		List<String> queries = new ArrayList<>();
 		queries.add(DbTransaction.getInst().queryDeleteTokenByUuid(auth.getUserid(), data.getUuid()));
 		queries.add(DbTransaction.getInst().queryInsertToken(auth.getUserid(), data.getUuid(), tokenid, token, false));
-		queries.add(DbTransaction.getInst().queryUpdateUser(auth.getUserid(), data.getOstype(), data.getOsversion(), data.getAppversion()));
 		queries.add(DbTransaction.getInst().queryUpdatePw(data.getUid(), data.getNewpw()));
-		if(DbTransaction.getInst().transactionQuery(data.getTokenScode(), queries)==false)
+		if(DbTransaction.getInst().transactionQuery(data.getScode(), queries)==false)
 			return res.setError(EAuthError.failed_change_pw);
 		return res.setParam("tid", tokenid).setParam("token", token).setError(EAuthError.ok);
-	}
+	};
 	
-	private ResponseData<EAuthError> doUpdateEmail(ResponseData<EAuthError> res, DataUpdateEmailUser data) {
+	ICommandFunction<Channel, ResponseData<EAuthError>, JsonNode> doUpdateEmail = (Channel ch, ResponseData<EAuthError> res, JsonNode jnode) -> {
+		DataUpdateEmailUser data = new RecDataAuth().new DataUpdateEmailUser(jnode);
 		if(data.isValidAppToken()==false)
 			return res.setError(EAuthError.invalid_app_token);
 		if(data.getUuid() == null || data.getUuid().length() < 1)
@@ -331,16 +235,16 @@ public class AuthCommandAction extends CommonAction {
 		List<String> queries = new ArrayList<>();
 		queries.add(DbTransaction.getInst().queryUpdateEmailCode(data.getEmail(), emailcode));
 		queries.add(DbTransaction.getInst().queryInsertToken(auth.getUserid(), data.getUuid(), tokenid, token, false));
-		queries.add(DbTransaction.getInst().queryUpdateUser(auth.getUserid(), data.getOstype(), data.getOsversion(), data.getAppversion()));
-		if(DbTransaction.getInst().transactionQuery(data.getTokenScode(), queries)==false)
+		if(DbTransaction.getInst().transactionQuery(data.getScode(), queries)==false)
 			return res.setError(EAuthError.failed_email_verify);
 		
 		//[TODO] Send Email
 		
 		return res.setParam("tid", tokenid).setParam("token", token).setError(EAuthError.ok);
-	}
+	};
 
-	private ResponseData<EAuthError> doUpdatePhoneNo(ResponseData<EAuthError> res, DataUpdatePhoneUser data) {
+	ICommandFunction<Channel, ResponseData<EAuthError>, JsonNode> doUpdatePhoneNo = (Channel ch, ResponseData<EAuthError> res, JsonNode jnode) -> {
+		DataUpdatePhoneUser data = new RecDataAuth().new DataUpdatePhoneUser(jnode);
 		if(data.isValidAppToken()==false)
 			return res.setError(EAuthError.invalid_app_token);
 		if(data.getUuid() == null || data.getUuid().length() < 1)
@@ -361,16 +265,16 @@ public class AuthCommandAction extends CommonAction {
 		List<String> queries = new ArrayList<>();
 		queries.add(DbTransaction.getInst().queryUpdateSMSCode(data.getPhoneno(), smscode));
 		queries.add(DbTransaction.getInst().queryInsertToken(auth.getUserid(), data.getUuid(), tokenid, token, false));
-		queries.add(DbTransaction.getInst().queryUpdateUser(auth.getUserid(), data.getOstype(), data.getOsversion(), data.getAppversion()));
-		if(DbTransaction.getInst().transactionQuery(data.getTokenScode(), queries)==false)
+		if(DbTransaction.getInst().transactionQuery(data.getScode(), queries)==false)
 			return res.setError(EAuthError.failed_phone_Verify);
 		
 		//[TODO] Send SMS
 		
 		return res.setParam("tid", tokenid).setParam("token", token).setError(EAuthError.ok);
-	}
+	};
 	
-	private ResponseData<EAuthError> doVerifyPhoneNo(ResponseData<EAuthError> res, DataVerifyPhoneUser data) {
+	ICommandFunction<Channel, ResponseData<EAuthError>, JsonNode> doVerifyPhoneNo = (Channel ch, ResponseData<EAuthError> res, JsonNode jnode) -> {
+		DataVerifyPhoneUser data = new RecDataAuth().new DataVerifyPhoneUser(jnode);
 		if(data.isValidAppToken()==false)
 			return res.setError(EAuthError.invalid_app_token);
 		if(data.getUuid() == null || data.getUuid().length() < 1)
@@ -389,9 +293,109 @@ public class AuthCommandAction extends CommonAction {
 		if(auth.isSameSmsCode(data.getSmscode())==false)
 			return res.setError(EAuthError.mismatch_smscode);
 		
-		if(DbAppManager.getInst().enableToken(data.getTokenScode(), auth.getUserid(), data.getTokenid(), true) == false)
+		if(DbAppManager.getInst().enableToken(data.getScode(), auth.getUserid(), data.getTokenid(), true) == false)
 			return res.setError(EAuthError.unknown_error);
 		
 		return res.setError(EAuthError.ok);
+	};
+	
+	/**
+	 * 
+	 * @param res
+	 * @param data
+	 * 		scode, rcode, cmd
+	 * 		regtoken
+	 * 		uid, inappcode, uuid
+	 * 		epid, ostype, osversion, appversion
+	 * @return
+	 */
+	ICommandFunction<Channel, ResponseData<EAuthError>, JsonNode> doAnonyLogin = (Channel ch, ResponseData<EAuthError> res, JsonNode jnode) -> {
+		DataAnonyLogin data = new RecDataAuth().new DataAnonyLogin(jnode);
+		if( DbAppManager.getInst().findUid(data.getScode(), data.getUid()) == true )
+			return res.setError(EAuthError.already_exist_userid);
+
+		String userid = KeyGen.makeKeyWithSeq("anonyus");
+		String authQuery = DbTransaction.getInst().queryInsertUID(userid, data.getUid(), data.getInappcode()); //anonymous user는 uid(client defined)와 inappcode를 pw로 사용함(즉, passcode 없음) 
+		DataRegUser regUser = new RecDataAuth().new DataRegUser(data.getUuid(), ShortUUID.next(), data);
+		
+		if(doRegisterUser(res, userid, data.getUid(), authQuery, regUser).getError() != EAuthError.ok)
+			return res;
+
+		RecUserAuth auth = DbAppManager.getInst().getUserAuth(data.getScode(), userid);
+		if(DbRecord.Empty == auth)
+			return res.setError(EAuthError.not_exist_user);
+		RecUserToken recToken = DbAppManager.getInst().getUserTokenByUserId(data.getScode(), auth.getUserid());
+		if(recToken==DbRecord.Empty)
+			return res.setError(EAuthError.unauthorized_userid);
+		
+		DbAppManager.getInst().addEpid(data.getScode(), auth.getUserid(), data.getUuid(), data.getEpid());	//register epid
+		DbAppManager.getInst().updateUserInfo(data.getScode(), auth.getUserid(), data.getOstype(), data.getOsversion(), data.getAppversion());
+		
+		return res;
+	};
+	
+	private ResponseData<EAuthError> doRegisterUser(ResponseData<EAuthError> res, String userid, String regId, String authQuery, DataRegUser data) {
+		String tokenid = StrUtil.getSha1Uuid("tid");
+		String token = Crypto.AES256Cipher.getInst().enc(regId+ASS.UNIT+data.getUuid()+ASS.UNIT+data.getAuthtype());
+		
+		List<String> queries = new ArrayList<>();
+		queries.add(authQuery);
+		queries.add(DbTransaction.getInst().queryInsertUser(userid, data.getUsername(), data.isAnonymous()));
+		queries.add(DbTransaction.getInst().queryInsertToken(userid, data.getUuid(), tokenid, token, false));
+		if(DbTransaction.getInst().transactionQuery(data.getScode(), queries)==false)
+			return res.setError(EAuthError.failed_register);
+		
+		return res.setParam("tid", tokenid).setParam("token", token).setError(EAuthError.ok);
+	}
+	
+	private ResponseData<EAuthError> doLoginByToken(ResponseData<EAuthError> res, DataLogin data) {
+		if(data.isValidUuid()==false)
+			return res.setError(EAuthError.invalid_user_token);
+		
+		RecUserToken token = DbAppManager.getInst().getUserTokenByTokenId(data.getScode(), data.getTokenid());
+		if(token==DbRecord.Empty)
+			return res.setError(EAuthError.invalid_user_tokenid);
+		if(data.getTokenUuid().equals(token.uuid)==false)
+			return res.setError(EAuthError.invalid_or_expired_token);
+		
+		RecUserAuth auth = DbAppManager.getInst().getUserAuth(data.getScode(), token.userid);
+		if(DbRecord.Empty == auth)
+			return res.setError(EAuthError.unauthorized_userid);
+		if(auth.isSameUid(data.getUid())==false || auth.isSamePw(data.getPw())==false)
+			return res.setError(EAuthError.invalid_user);
+		
+		if(DbAppManager.getInst().enableToken(data.getScode(), token.userid, token.tokenid, true) == false)
+			return res.setError(EAuthError.unknown_error);
+		DbAppManager.getInst().updateUserInfo(data.getScode(), auth.getUserid(), data.getOstype(), data.getOsversion(), data.getAppversion());
+		return res.setError(EAuthError.ok);
+	}
+	
+	private ResponseData<EAuthError> doLoginByIdPw(ResponseData<EAuthError> res, DataLogin data) {
+		RecUserAuth auth = DbAppManager.getInst().getUserAuthByUid(data.getScode(), data.getUid());
+		if(DbRecord.Empty == auth)
+			return res.setError(EAuthError.not_exist_user);
+		if(auth.isSamePw(data.getPw())==false)
+			return res.setError(EAuthError.invalid_user);
+		RecUserToken recToken = DbAppManager.getInst().getUserTokenByUserId(data.getScode(), auth.getUserid());
+		if(recToken==DbRecord.Empty)
+			return res.setError(EAuthError.unauthorized_userid);
+		
+		if(recToken.uuid.equals(data.getUuid()) == true) {
+			String token = Crypto.AES256Cipher.getInst().enc(data.getUid()+ASS.UNIT+data.getUuid()+ASS.UNIT+auth.getAuthtype());
+			DbAppManager.getInst().updateToken(data.getScode(), auth.getUserid(), recToken.tokenid, token, true);
+			return res.setParam("tid", recToken.tokenid).setParam("token", token).setError(EAuthError.ok);
+		}
+		
+		String tokenid = StrUtil.getSha1Uuid("tid");
+		String token = Crypto.AES256Cipher.getInst().enc(data.getUid()+ASS.UNIT+data.getUuid()+ASS.UNIT+EUserAuthType.uid.getValue());
+		List<String> queries = new ArrayList<>();
+		queries.add(DbTransaction.getInst().queryDeleteTokenByUuid(auth.getUserid(), recToken.uuid));
+		queries.add(DbTransaction.getInst().queryInsertToken(auth.getUserid(), data.getUuid(), tokenid, token, true));
+		if(DbTransaction.getInst().transactionQuery(data.getScode(), queries)==false)
+			return res.setError(EAuthError.failed_update_token);
+
+		DbAppManager.getInst().addEpid(data.getScode(), auth.getUserid(), data.getUuid(), data.getEpid());	//register epid
+		DbAppManager.getInst().updateUserInfo(data.getScode(), auth.getUserid(), data.getOstype(), data.getOsversion(), data.getAppversion());
+		return res.setParam("tid", tokenid).setParam("token", token).setError(EAuthError.ok);
 	}
 }

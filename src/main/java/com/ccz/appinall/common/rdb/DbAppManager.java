@@ -207,8 +207,8 @@ public class DbAppManager {
 	 * @param email
 	 * @return true if success
 	 */
-	public RecUser addUser(String scode, String userid, String username, String usertype, String ostype, String osversion, String appversion) {
-		return (RecUser) new RecUser(scode).insert(userid, username, usertype, ostype, osversion, appversion);
+	public RecUser addUser(String scode, String userid, String username, boolean anonymous, String ostype, String osversion, String appversion) {
+		return (RecUser) new RecUser(scode).insert(userid, username, anonymous, ostype, osversion, appversion);
 	}
 
 	public RecUser getUser(String scode, String userid) {
@@ -220,6 +220,9 @@ public class DbAppManager {
 	}
 	public boolean updateLasttime(String scode, String userid) {
 		return new RecUser(scode).updateLastVisit(userid);
+	}
+	public boolean updateUserInfo(String scode, String userid, String ostype, String osversion, String appversion) {
+		return new RecUser(scode).updateUser(userid, ostype, osversion, appversion);
 	}
 	
 	//for user token
@@ -645,7 +648,7 @@ public class DbAppManager {
 			EGoodsSize size, EGoodsWeight weight, EGoodsType type, int price, long begintime, long endtime, String photourl) {
 		return new RecDeliveryOrder(scode).insert(orderid, userid, from, to, name, notice, size, weight, type, price, begintime, endtime, photourl);
 	}
-	public DbRecord getOrder(String scode, String orderid) {
+	public RecDeliveryOrder getOrder(String scode, String orderid) {
 		return new RecDeliveryOrder(scode).getOrder(orderid);
 	}
 	public boolean updateOrder(String scode, String orderid, String from, String to, String name, String notice,

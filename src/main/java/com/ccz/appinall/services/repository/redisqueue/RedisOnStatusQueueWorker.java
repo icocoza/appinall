@@ -1,6 +1,7 @@
 package com.ccz.appinall.services.repository.redisqueue;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import com.ccz.appinall.library.module.redisqueue.IRedisQueueWorker;
 import com.ccz.appinall.library.server.session.SessionItem;
@@ -10,11 +11,16 @@ import com.ccz.appinall.services.model.redis.QueueDeliveryStatus;
 import com.ccz.appinall.services.repository.redis.QueueServerRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+@Component
 public class RedisOnStatusQueueWorker implements IRedisQueueWorker<ERedisQueueCmd> {
 
 	private final ERedisQueueCmd cmd = ERedisQueueCmd.delivery_status;
+	
 	@Autowired
 	QueueServerRepository queueServerRepository;
+	@Autowired
+	SessionManager sessionManager;
+	
 	@Override
 	public ERedisQueueCmd getCommand() {
 		return cmd;
@@ -28,7 +34,7 @@ public class RedisOnStatusQueueWorker implements IRedisQueueWorker<ERedisQueueCm
 		if(null == qds || null == qds.to)
 			return false;
 		
-		SessionItem si = SessionManager.getInst().get(qds.to);
+		SessionItem si = sessionManager.get(qds.to);
 		if(si != null) {	//exist session in this server
 			si.getCh().writeAndFlush(json);
 			return true;

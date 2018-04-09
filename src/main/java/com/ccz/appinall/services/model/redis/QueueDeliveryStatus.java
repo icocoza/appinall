@@ -10,7 +10,9 @@ public class QueueDeliveryStatus extends QueueCmd {
 	@Getter QueueData data;
 	Notification notification = new Notification();
 	
-	public QueueDeliveryStatus() {}	//need for serialize
+	public QueueDeliveryStatus() {
+		super.cmd = ERedisQueueCmd.delivery_status;
+	}	//need for serialize
 	
 	public QueueDeliveryStatus(String scode, String from, String to, String orderid, EDeliveryStatus status, String msg) {
 		super.cmd = ERedisQueueCmd.delivery_status;

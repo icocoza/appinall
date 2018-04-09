@@ -45,9 +45,13 @@ public class DbTransaction {
 	public String queryInsertToken(String userid, String uuid, String tokenid, String token, boolean enabled) {
 		return RecUserToken.qInsertToken(userid, uuid, tokenid, token, enabled);
 	}
-	
-	public String queryInsertUser(String userid, String username, String usertype, String ostype, String osversion, String appversion) {
-		return RecUser.qInsert(userid, username, usertype, ostype, osversion, appversion); 
+
+	public String queryInsertUser(String userid, String username, boolean anonymous) {
+		return RecUser.qInsert(userid, username, anonymous); 
+	}
+
+	public String queryInsertUser(String userid, String username, boolean anonymous, String ostype, String osversion, String appversion) {
+		return RecUser.qInsert(userid, username, anonymous, ostype, osversion, appversion); 
 	}
 	
 	public String queryUpdateUser(String userid, String ostype, String osversion, String appversion) {

@@ -12,6 +12,11 @@ public class UpdateApp extends ModifyApp {
 	
 	public UpdateApp() {}
 	
+	public UpdateApp(JsonNode jObj) {
+		super(jObj);
+		status = EAdminAppStatus.none;
+	}
+	
 	public UpdateApp(String data, EAdminAppStatus status) {
 		super(data);
 		this.status = status;

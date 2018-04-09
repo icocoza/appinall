@@ -15,10 +15,10 @@ public class SessionManager {
 	
 	Map<String, SessionItem> ssMap = new ConcurrentHashMap<>();
 	
-	private static SessionManager s_pThis = null;
-	public static synchronized SessionManager getInst() {
-		return s_pThis = (s_pThis == null? new SessionManager() : s_pThis);
-	}
+//	private static SessionManager s_pThis = null;
+//	public static synchronized SessionManager getInst() {
+//		return s_pThis = (s_pThis == null? new SessionManager() : s_pThis);
+//	}
 
 	public SessionItem put(SessionItem si) {
 		SessionItem previousItem = ssMap.put(si.getKey(), si);

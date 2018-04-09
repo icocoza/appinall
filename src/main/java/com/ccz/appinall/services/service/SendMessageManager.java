@@ -8,6 +8,7 @@ import com.ccz.appinall.library.server.session.SessionManager;
 import com.ccz.appinall.services.enums.EDeliveryStatus;
 import com.ccz.appinall.services.enums.ERedisQueueCmd;
 import com.ccz.appinall.services.model.redis.QueueDeliveryStatus;
+import com.ccz.appinall.services.model.redis.QueueGpsInfo;
 import com.ccz.appinall.services.model.redis.SessionData;
 import com.ccz.appinall.services.repository.redis.QueueServerRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -19,13 +20,15 @@ public class SendMessageManager {
 	@Autowired
 	SessionService sessionService;
 	@Autowired
+	SessionManager sessionManager;
+	@Autowired
 	QueueServerRepository queueServerRepository;
 	
 	public void sendDeliveryStatus(QueueDeliveryStatus qds) throws JsonProcessingException {
 		ObjectMapper objectMapper = new ObjectMapper();
 		String json = objectMapper.writeValueAsString(qds);
 		
-		SessionItem si = SessionManager.getInst().get(qds.to);
+		SessionItem si = sessionManager.get(qds.to);
 		if(si != null) {	//exist session in this server
 			si.getCh().writeAndFlush(json);
 			return;
@@ -40,6 +43,20 @@ public class SendMessageManager {
 		qds.cmd = ERedisQueueCmd.fcm_push;
 		json = objectMapper.writeValueAsString(qds);
 		queueServerRepository.enqueueQueueCommand(json);
+	}
+	
+	public void sendGpsInfo(QueueGpsInfo gps) throws JsonProcessingException {
+		ObjectMapper objectMapper = new ObjectMapper();
+		String json = objectMapper.writeValueAsString(gps);
+		
+		SessionItem si = sessionManager.get(gps.to);
+		if(si != null) {	//exist session in this server
+			si.getCh().writeAndFlush(json);
+			return;
+		} 
+		SessionData sd = sessionService.getUserSession(gps.to);
+		if(sd != null)
+			queueServerRepository.enqueueServerCommand(sd.getIp(), json);
 	}
 	
 }

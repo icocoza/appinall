@@ -10,12 +10,17 @@ import com.ccz.appinall.library.datastore.HttpMultipart;
 import com.ccz.appinall.library.server.session.SessionManager;
 import com.ccz.appinall.library.type.ResponseData;
 import com.ccz.appinall.library.type.WebsocketPacketData;
+import com.ccz.appinall.library.type.inf.ICommandFunction;
 import com.ccz.appinall.library.util.Crypto;
 import com.ccz.appinall.library.util.StrUtil;
 import com.ccz.appinall.services.controller.CommonAction;
 import com.ccz.appinall.services.controller.auth.AuthCommandAction;
 import com.ccz.appinall.services.controller.auth.AuthSession;
 import com.ccz.appinall.services.controller.file.RecDataFile.*;
+import com.ccz.appinall.services.enums.EAddrError;
+import com.ccz.appinall.services.enums.EBoardCmd;
+import com.ccz.appinall.services.enums.EBoardError;
+import com.ccz.appinall.services.enums.EChannelError;
 import com.ccz.appinall.services.enums.EFileCmd;
 import com.ccz.appinall.services.enums.EFileError;
 import com.ccz.appinall.services.model.db.RecFile;
@@ -29,45 +34,35 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 
 public class FileCommandAction extends CommonAction {
+	private final AttributeKey<WebsocketPacketData> attrWebsocketData = AttributeKey.valueOf(WebsocketPacketData.class.getSimpleName());
 	
-	ServicesConfig servicesConfig;
-	@Autowired
-	ChAttributeKey chAttributeKey;
+	@Autowired	ServicesConfig servicesConfig;
+
+	@Autowired	ChAttributeKey chAttributeKey;
+	
 	public FileCommandAction() {
-	}
-
-	@Override
-	public boolean processPacketData(Channel ch, String[] data) { 	return false;	}
-
-	@Override
-	public boolean processJsonData(Channel ch, JsonNode jdata) {
-		ResponseData<EFileError> res = new ResponseData<EFileError>(jdata.get("scode").asText(), jdata.get("rcode").asText(), jdata.get("cmd").asText());
-		AuthSession session = (AuthSession) ch.attr(chAttributeKey.getAuthSessionKey()).get();
-		switch(EFileCmd.getType(res.getCommand())) {
-		case fileinit:
-			res = doFileInit(session, res, new RecDataFile().new FileInit(jdata));			
-			break;
-		case filesstart:
-			res = doFileStart(ch, res, new RecDataFile().new FileStart(jdata));
-			break;
-		default:
-			return false;
-		}
-		if(res != null && ch != null) 
-			send(ch, res.toString());
-		log.info(res.toString());
-		return true;
+		super.setCommandFunction(EFileCmd.fileinit.getValue(), doFileInit);
+		super.setCommandFunction(EFileCmd.filesstart.getValue(), doFileStart);
 	}
 	
-	@Override
-	public boolean processHttpMultipart(Channel ch, HttpMultipart multipart) {
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public boolean processCommand(Channel ch, JsonNode jdata) {
+		String cmd = jdata.get("cmd").asText();
+		ResponseData<EFileError> res = new ResponseData<EFileError>(jdata.get("scode").asText(), jdata.get("rcode").asText(), cmd);
+		AuthSession session = (AuthSession) ch.attr(chAttributeKey.getAuthSessionKey()).get();
+		
+		ICommandFunction cmdFunc = super.getCommandFunction(cmd);
+		if(cmdFunc!=null) {
+			res = (ResponseData<EFileError>) cmdFunc.doAction(EFileCmd.getType(cmd).isAuth()?session : ch, res, jdata);
+			send(ch, res.toString());
+			return true;
+		}
 		return false;
 	}
+
 	
-	static int s_seq = 0;
-	synchronized int getSeq() {	return ++s_seq % 1000;	 }
-	
-	private ResponseData<EFileError> doFileInit(AuthSession session, ResponseData<EFileError> res, FileInit data) {
+	ICommandFunction<AuthSession, ResponseData<EFileError>, JsonNode> doFileInit = (AuthSession ss, ResponseData<EFileError> res, JsonNode jnode) -> {
+		FileInit data = new RecDataFile().new FileInit(jnode);
 		if(data.getFilesize() < 1)
 			return res.setError(EFileError.invalid_file_size);
 		if(data.getFilesize() > servicesConfig.getFileUploadMax())
@@ -77,15 +72,14 @@ public class FileCommandAction extends CommonAction {
 		
 		String fileid = StrUtil.getUuid("file");//Crypto.AES256Cipher.getInst().enc(data.getScode()+"/"+session.getUserId()+"/"+System.currentTimeMillis()+"/"+seq);
 		
-		if(DbAppManager.getInst().addFileInit(data.getScode(), fileid, session.getUserId(), data.getFilename(), data.getFiletype(), data.getFilesize()) == false)
+		if(DbAppManager.getInst().addFileInit(data.getScode(), fileid, ss.getUserId(), data.getFilename(), data.getFiletype(), data.getFilesize()) == false)
 			return res.setError(EFileError.fail_to_uploadfile);
 		
 		return res.setError(EFileError.ok).setParam("fileid", fileid).setParam("ip", servicesConfig.getFileUploadIp()).setParam("port", servicesConfig.getFileUploadPort()+"");
-	}
+	};
 	
-	private final AttributeKey<WebsocketPacketData> attrWebsocketData = AttributeKey.valueOf(WebsocketPacketData.class.getSimpleName());
-	
-	private ResponseData<EFileError> doFileStart(Channel ch, ResponseData<EFileError> res, FileStart data) {
+	ICommandFunction<Channel, ResponseData<EFileError>, JsonNode> doFileStart = (Channel ch, ResponseData<EFileError> res, JsonNode jnode) -> {
+		FileStart data = new RecDataFile().new FileStart(jnode);
 		if(data.getFileid()==null || data.getFileid().length()<1)
 			return res.setError(EFileError.invalid_fileid);
 		RecFile recfile = DbAppManager.getInst().getFileInfo(data.getScode(), data.getFileid());
@@ -99,7 +93,8 @@ public class FileCommandAction extends CommonAction {
 		FileSession session = new FileSession(ch, 2).putSession(uploadFile, data.getScode());	//consider the sessionid to find instance when close
 		ch.attr(chAttributeKey.getFileSessionKey()).set(session);
 		ch.attr(attrWebsocketData).get().setFilemode(true);
+		
 		return res.setError(EFileError.ok);
-	}
+	};
 
 }

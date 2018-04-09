@@ -3,18 +3,17 @@ package com.ccz.appinall.services.controller.channel;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.ccz.appinall.common.config.ChAttributeKey;
 import com.ccz.appinall.common.rdb.DbAppManager;
 import com.ccz.appinall.library.type.ResponseData;
+import com.ccz.appinall.library.type.inf.ICommandFunction;
 import com.ccz.appinall.library.util.AsciiSplitter.ASS;
 import com.ccz.appinall.library.util.StrUtil;
 import com.ccz.appinall.services.controller.CommonAction;
-import com.ccz.appinall.services.controller.auth.AuthCommandAction;
 import com.ccz.appinall.services.controller.auth.AuthSession;
 import com.ccz.appinall.services.controller.channel.RecDataChannel.*;
+import com.ccz.appinall.services.enums.EAddrError;
 import com.ccz.appinall.services.enums.EChannelCmd;
 import com.ccz.appinall.services.enums.EChannelError;
 import com.ccz.appinall.services.model.db.RecChMime;
@@ -30,60 +29,31 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 
 public class ChannelCommandAction extends CommonAction{
-	@Autowired
-	ChAttributeKey chAttributeKey;
 	
 	public ChannelCommandAction() {
+		super.setCommandFunction(EChannelCmd.chcreate.getValue(), channelCreate); //O
+		super.setCommandFunction(EChannelCmd.chexit.getValue(), channelExit); //O
+		super.setCommandFunction(EChannelCmd.chenter.getValue(), channelEnter); //O
+		super.setCommandFunction(EChannelCmd.chinvite.getValue(), channelInvite); //O
+		super.setCommandFunction(EChannelCmd.chmime.getValue(), channelMime); //O
+		super.setCommandFunction(EChannelCmd.chcount.getValue(), channelCount); //O
+		super.setCommandFunction(EChannelCmd.chlastmsg.getValue(), channelLastMessage); //O
+		super.setCommandFunction(EChannelCmd.chinfo.getValue(), channelInfos); //O
 	}
 
-	private boolean processBoardData(Channel ch, String[] data, JsonNode jdata) {
-		ResponseData<EChannelError> res = null;
-		if(data != null)
-			res = new ResponseData<EChannelError>(data[0], data[1], data[2]);
-		else
-			res = new ResponseData<EChannelError>(jdata.get("scode").asText(), jdata.get("rcode").asText(), jdata.get("cmd").asText());
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public boolean processCommand(Channel ch, JsonNode jdata) {
+		String cmd = jdata.get("cmd").asText();
+		ResponseData<EChannelError> res = new ResponseData<EChannelError>(jdata.get("scode").asText(), jdata.get("rcode").asText(), cmd);
+		AuthSession session = (AuthSession) ch.attr(chAttributeKey.getAuthSessionKey()).get();
 		
-		AuthSession ss = (AuthSession) ch.attr(chAttributeKey.getAuthSessionKey()).get();
-		switch(EChannelCmd.getType(res.getCommand())) {
-		case chcreate:
-			res = this.channelCreate(ss, res, data != null? new RecDataChannel().new ChCreate(data[3]) : new RecDataChannel().new ChCreate(jdata)); //O
-			break;
-		case chexit:
-			res = this.channelExit(ss, res, data != null? new RecDataChannel().new ChExit(data[3]) : new RecDataChannel().new ChExit(jdata)); //O
-			break;
-		case chenter:
-			res = this.channelEnter(ss, res, data != null? new RecDataChannel().new ChEnter(data[3]) : new RecDataChannel().new ChEnter(jdata)); //O
-			break;
-		case chinvite:
-			res = this.channelInvite(ss, res, data != null? new RecDataChannel().new ChInvite(data[3]): new RecDataChannel().new ChInvite(jdata)); //O
-			break;
-		case chmime:
-			res = this.channelMime(ss, res, data != null? new RecDataChannel().new ChMime(data[3]) : new RecDataChannel().new ChMime(jdata)); //O
-			break;
-		case chcount:
-			res = this.channelCount(ss, res, null); //O
-			break;
-		case chlastmsg:
-			res = this.channelLastMessage(ss, res, data != null? new RecDataChannel().new ChLastMsg(data[3]) : new RecDataChannel().new ChLastMsg(jdata)); //O
-			break;
-		case chinfo:
-			res = this.channelInfos(ss, res, data != null? new RecDataChannel().new ChInfo(data[3]) : new RecDataChannel().new ChInfo(jdata)); //O
-			break;
-		default:
-			return false;
-		}
-		if(res != null)
+		ICommandFunction cmdFunc = super.getCommandFunction(cmd);
+		if(cmdFunc!=null) {
+			res = (ResponseData<EChannelError>) cmdFunc.doAction(session, res, jdata);
 			send(ch, res.toString());
-		return true;
-	}
-	@Override
-	public boolean processPacketData(Channel ch, String[] data) {
-		return processBoardData(ch, data, null);
-	}
-
-	@Override
-	public boolean processJsonData(Channel ch, JsonNode jdata) {
-		return processBoardData(ch, null, jdata);
+			return true;
+		}
+		return false;
 	}
 
 	/** 
@@ -93,22 +63,23 @@ public class ChannelCommandAction extends CommonAction{
 	 * @param userData, { user id/ .. }
 	 * @return channel id
 	 */
-	private ResponseData<EChannelError> channelCreate(AuthSession ss, ResponseData<EChannelError> res, ChCreate rec) {
-		if(rec.attendees.size()>1)		
-			rec.attendees.add(ss.getUserId());
+	ICommandFunction<AuthSession, ResponseData<EChannelError>, JsonNode> channelCreate = (AuthSession ss, ResponseData<EChannelError> res, JsonNode jnode) -> {
+		ChCreate data = new RecDataChannel().new ChCreate(jnode);
+		if(data.attendees.size()>1)		
+			data.attendees.add(ss.getUserId());
 		else {
-			RecChannel ch = DbAppManager.getInst().findChannel(ss.scode, ss.getUserId(), rec.attendees.get(0));
+			RecChannel ch = DbAppManager.getInst().findChannel(ss.scode, ss.getUserId(), data.attendees.get(0));
 			if(ch!=RecChannel.Empty) {
 				DbAppManager.getInst().addMyChannel(ss.scode, ss.getUserId(), ch.chid);
 				return res.setError(EChannelError.eOK).setParam(ch.chid);
 			}
 		}
 		String chid = StrUtil.getSha1Uuid("ch");
-		String strattendees = rec.attendees.stream().collect(Collectors.joining(ASS.RECORD));
-		DbAppManager.getInst().addChannel(ss.scode, chid, ss.getUserId(), strattendees, rec.attendees.size()+1);	//attendee
+		String strattendees = data.attendees.stream().collect(Collectors.joining(ASS.RECORD));
+		DbAppManager.getInst().addChannel(ss.scode, chid, ss.getUserId(), strattendees, data.attendees.size()+1);	//attendee
 		DbAppManager.getInst().addMyChannel(ss.scode, ss.getUserId(), chid);
 		return res.setError(EChannelError.eOK).setParam(chid);
-	}
+	};
 	
 	/** 
 	 * exit channel
@@ -118,11 +89,12 @@ public class ChannelCommandAction extends CommonAction{
 	 * @return channel id
 	 * [TODO] broadcast exit message to others
 	 */
-	private ResponseData<EChannelError> channelExit(AuthSession ss, ResponseData<EChannelError> res, ChExit rec) {
-		RecChannel ch = DbAppManager.getInst().getChannel(ss.scode, rec.chid);
+	ICommandFunction<AuthSession, ResponseData<EChannelError>, JsonNode> channelExit = (AuthSession ss, ResponseData<EChannelError> res, JsonNode jnode) -> {
+		ChExit data = new RecDataChannel().new ChExit(jnode);
+		RecChannel ch = DbAppManager.getInst().getChannel(ss.scode, data.chid);
 		if(ch==RecChannel.Empty)
 			return res.setError(EChannelError.eNoChannel);
-		DbAppManager.getInst().delMyChannel(ss.scode, ss.getUserId(), rec.chid);
+		DbAppManager.getInst().delMyChannel(ss.scode, ss.getUserId(), data.chid);
 		if(ch.type > 2){	//type is original attendee count. this value is not changed.
 			if(ch.attendees.contains(ss.getUserId())) {
 				ch.attendees = ch.attendees.replace(ss.getUserId()+ASS.RECORD, ""); //try to delete id with delimiter
@@ -130,13 +102,13 @@ public class ChannelCommandAction extends CommonAction{
 				//[TODO] broadcast exit message to others
 			}
 			if(ch.attendees.length()==0)
-				DbAppManager.getInst().delChannel(ss.scode, rec.chid);
+				DbAppManager.getInst().delChannel(ss.scode, data.chid);
 			else
-				DbAppManager.getInst().updateChannelAttendees(ss.scode, rec.chid, ch.attendees, --ch.attendeecnt);
+				DbAppManager.getInst().updateChannelAttendees(ss.scode, data.chid, ch.attendees, --ch.attendeecnt);
 		}
-		String param = String.format("%s%s%s", rec.chid, ASS.GROUP, ch.attendees);
+		String param = String.format("%s%s%s", data.chid, ASS.GROUP, ch.attendees);
 		return res.setError(EChannelError.eOK).setParam(param);
-	}
+	};
 	
 	/** 
 	 * enter channel
@@ -145,14 +117,15 @@ public class ChannelCommandAction extends CommonAction{
 	 * @param userData, channel id
 	 * @return
 	 */
-	private ResponseData<EChannelError> channelEnter(AuthSession ss, ResponseData<EChannelError> res, ChEnter rec) {
-		RecChannel ch = DbAppManager.getInst().getChannel(ss.scode, rec.chid);
+	ICommandFunction<AuthSession, ResponseData<EChannelError>, JsonNode> channelEnter = (AuthSession ss, ResponseData<EChannelError> res, JsonNode jnode) -> {
+		ChEnter data = new RecDataChannel().new ChEnter(jnode);
+		RecChannel ch = DbAppManager.getInst().getChannel(ss.scode, data.chid);
 		if(ch==RecChannel.Empty)
 			return res.setError(EChannelError.eNoChannel);
 		
-		DbAppManager.getInst().addMyChannel(ss.scode, ss.getUserId(), rec.chid);
-		return res.setError(EChannelError.eOK).setParam(rec.chid);
-	}
+		DbAppManager.getInst().addMyChannel(ss.scode, ss.getUserId(), data.chid);
+		return res.setError(EChannelError.eOK).setParam(data.chid);
+	};
 	
 	/** 
 	 * invite friends
@@ -161,12 +134,13 @@ public class ChannelCommandAction extends CommonAction{
 	 * @param userData, channel id | { user id / ... }
 	 * @return
 	 */
-	private ResponseData<EChannelError> channelInvite(AuthSession ss, ResponseData<EChannelError> res, ChInvite rec) {
-		RecChannel ch = DbAppManager.getInst().getChannel(ss.scode, rec.chid);
+	ICommandFunction<AuthSession, ResponseData<EChannelError>, JsonNode> channelInvite = (AuthSession ss, ResponseData<EChannelError> res, JsonNode jnode) -> {
+		ChInvite data = new RecDataChannel().new ChInvite(jnode);
+		RecChannel ch = DbAppManager.getInst().getChannel(ss.scode, data.chid);
 		if(ch==RecChannel.Empty)
 			return res.setError(EChannelError.eNoChannel);
 		
-		for(String userid : rec.attendees) {
+		for(String userid : data.attendees) {
 			if(ch.attendees.contains(userid)==false) {
 				ch.attendees = ch.attendees + ASS.RECORD + userid;
 				ch.attendeecnt++;
@@ -175,11 +149,11 @@ public class ChannelCommandAction extends CommonAction{
 		}
 		if(ch.type>2 && ch.attendees.contains(ss.getUserId())==false)
 			ch.attendees = ch.attendees + ASS.RECORD + ss.getUserId();
-		if(DbAppManager.getInst().updateChannelAttendees(ss.scode, rec.chid, ch.attendees, ch.attendeecnt, ch.type)==false)
+		if(DbAppManager.getInst().updateChannelAttendees(ss.scode, data.chid, ch.attendees, ch.attendeecnt, ch.type)==false)
 			return res.setError(EChannelError.eFailToUpdate);
-		String param = String.format("%s%s%s", rec.chid, ASS.GROUP, ch.attendees);
+		String param = String.format("%s%s%s", data.chid, ASS.GROUP, ch.attendees);
 		return res.setError(EChannelError.eOK).setParam(param);
-	}
+	};
 	
 	/** 
 	 * my channel list
@@ -188,13 +162,14 @@ public class ChannelCommandAction extends CommonAction{
 	 * @param userData, [offset][count]
 	 * @return
 	 */
-	private ResponseData<EChannelError> channelMime(AuthSession ss, ResponseData<EChannelError> res, ChMime rec) {
-		List<RecChMime> chList = DbAppManager.getInst().getMyChannelList(ss.scode, ss.getUserId(), rec.offset, rec.count);
+	ICommandFunction<AuthSession, ResponseData<EChannelError>, JsonNode> channelMime = (AuthSession ss, ResponseData<EChannelError> res, JsonNode jnode) -> {
+		ChMime data = new RecDataChannel().new ChMime(jnode);
+		List<RecChMime> chList = DbAppManager.getInst().getMyChannelList(ss.scode, ss.getUserId(), data.offset, data.count);
 		if(chList.size() < 1)
 			return res.setError(EChannelError.eNoListData);
 		String param = chList.stream().map(e->e.chid).collect(Collectors.joining(ASS.RECORD));
 		return res.setError(EChannelError.eOK).setParam(param);
-	}
+	};
 	
 	/** 
 	 * my channel count
@@ -203,10 +178,10 @@ public class ChannelCommandAction extends CommonAction{
 	 * @param userData, 
 	 * @return
 	 */
-	private ResponseData<EChannelError> channelCount(AuthSession ss, ResponseData<EChannelError> res, String userData) {
+	ICommandFunction<AuthSession, ResponseData<EChannelError>, JsonNode> channelCount = (AuthSession ss, ResponseData<EChannelError> res, JsonNode jnode) -> {
 		int count = DbAppManager.getInst().getMyChannelCount(ss.scode, ss.getUserId());
 		return res.setError(EChannelError.eOK).setParam(count+"");
-	}
+	};
 	
 	/** 
 	 * channel last message
@@ -215,11 +190,12 @@ public class ChannelCommandAction extends CommonAction{
 	 * @param userData, { channel id / ... }
 	 * @return { [channel id][last message][last time] / ... }
 	 */
-	private ResponseData<EChannelError> channelLastMessage(AuthSession ss, ResponseData<EChannelError> res, ChLastMsg rec) {
-		List<RecChLastMsg> chList = DbAppManager.getInst().getChannelLastMsg(ss.scode, rec.chids);
+	ICommandFunction<AuthSession, ResponseData<EChannelError>, JsonNode> channelLastMessage = (AuthSession ss, ResponseData<EChannelError> res, JsonNode jnode) -> {
+		ChLastMsg data = new RecDataChannel().new ChLastMsg(jnode);
+		List<RecChLastMsg> chList = DbAppManager.getInst().getChannelLastMsg(ss.scode, data.chids);
 		String param = chList.stream().map(e->String.format("%s%s%s%s%d", e.chid, ASS.UNIT, e.lastmsg, ASS.UNIT, e.lasttime.getTime())).collect(Collectors.joining(ASS.RECORD));
 		return res.setError(EChannelError.eOK).setParam(param);
-	}
+	};
 	
 	/** 
 	 * channel last message
@@ -229,11 +205,12 @@ public class ChannelCommandAction extends CommonAction{
 	 * @return { [channel id]|[user id / user id / ...]|[last message]|[last time] ! ...}
 	 * [TODO] Consider the divider
 	 */
-	private ResponseData<EChannelError> channelInfos(AuthSession ss, ResponseData<EChannelError> res, ChInfo rec) {
-		List<RecChMimeExt> chList = DbAppManager.getInst().getMyChannelInfoList(ss.scode, ss.getUserId(), rec.offset, rec.count);
+	ICommandFunction<AuthSession, ResponseData<EChannelError>, JsonNode> channelInfos = (AuthSession ss, ResponseData<EChannelError> res, JsonNode jnode) -> {
+		ChInfo data = new RecDataChannel().new ChInfo(jnode);
+		List<RecChMimeExt> chList = DbAppManager.getInst().getMyChannelInfoList(ss.scode, ss.getUserId(), data.offset, data.count);
 		String param = chList.stream().map(e->String.format("%s%s%s%s%s%s%d", e.chid, ASS.GROUP, e.userid2, ASS.GROUP, e.lastmsg, ASS.GROUP, e.lasttime.getTime())).collect(Collectors.joining(ASS.FILE));
 		return res.setError(EChannelError.eOK).setParam(param);
-	}
+	};
 	
 
 }

@@ -25,4 +25,6 @@ public enum EAdminError {
 	/*for common*/
 	mismatch_token_or_expired_token,
 	
+	unknown_command,
+	
 }

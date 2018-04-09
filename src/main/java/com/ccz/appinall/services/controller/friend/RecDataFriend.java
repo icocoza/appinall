@@ -78,7 +78,15 @@ public class RecDataFriend {
 			this.estatus = EFriendStatus.getType(status);
 		}
 	}
-	
+
+	public class FriendCount {
+		public EFriendStatus estatus;
+		
+		public FriendCount(JsonNode jObj) {
+			estatus = EFriendStatus.getType(jObj.get("status").asText());
+		}
+	}
+
 	public class Friendids {
 		public EFriendStatus estatus;
 		public int offset, count;

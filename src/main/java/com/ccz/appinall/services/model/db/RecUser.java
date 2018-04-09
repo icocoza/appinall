@@ -1,5 +1,7 @@
 package com.ccz.appinall.services.model.db;
 
+import java.sql.Timestamp;
+
 import com.ccz.appinall.library.dbhelper.DbReader;
 import com.ccz.appinall.library.dbhelper.DbRecord;
 
@@ -7,11 +9,12 @@ public class RecUser extends DbRecord {
 	static final String TBL_NAME = "user";
 	
 	public String userid;
-	public String username, usertype;
+	public String username;
+	public boolean anonymous;
 	public String ostype, osversion, appversion;
 	public String inappcode; //optional
 	public Boolean enabledtoken;
-	public long   jointime, leavetime, lasttime;
+	public Timestamp   jointime, leavetime, lasttime;
 	public int likes, dislikes;
 
 	public RecUser(String poolName) {
@@ -21,8 +24,8 @@ public class RecUser extends DbRecord {
 
 	public boolean createTable() {
 		String sql = String.format("CREATE TABLE IF NOT EXISTS %s (userid VARCHAR(64) NOT NULL PRIMARY KEY, "
-				+ "username VARCHAR(64) NOT NULL, usertype VARCHAR(4) DEFAULT 'u', ostype VARCHAR(16), osversion VARCHAR(8), appversion VARCHAR(8), "
-				+ "inappcode VARCHAR(8), jointime LONG, leavetime LONG, lasttime LONG, likes INTEGER DEFAULT 0, dislikes INTEGER DEFAULT 0) ", RecUser.TBL_NAME);
+				+ "username VARCHAR(64) NOT NULL, anonymous BOOLEAN DEFAULT false, ostype VARCHAR(16), osversion VARCHAR(8), appversion VARCHAR(8), "
+				+ "inappcode VARCHAR(8), jointime DATETIME DEFAULT now(), leavetime DATETIME, lasttime DATETIME, likes INTEGER DEFAULT 0, dislikes INTEGER DEFAULT 0) ", RecUser.TBL_NAME);
 		
 		return super.createTable(sql);
 	}
@@ -32,14 +35,14 @@ public class RecUser extends DbRecord {
 		RecUser rec = (RecUser)r;
 		rec.userid = rd.getString("userid");
 		rec.username = rd.getString("username");
-		rec.usertype = rd.getString("usertype");
+		rec.anonymous = rd.getBoolean("anonymous");
 		rec.ostype = rd.getString("ostype");
 		rec.osversion = rd.getString("osversion");
 		rec.appversion = rd.getString("appversion");
 		rec.inappcode = rd.getString("inappcode");
-		rec.jointime = rd.getLong("jointime");
-		rec.leavetime = rd.getLong("leavetime");
-		rec.lasttime = rd.getLong("lasttime");
+		rec.jointime = rd.getDate("jointime");
+		rec.leavetime = rd.getDate("leavetime");
+		rec.lasttime = rd.getDate("lasttime");
 		rec.likes = rd.getInt("likes");
 		rec.dislikes = rd.getInt("dislikes");
 		return rec;
@@ -55,16 +58,28 @@ public class RecUser extends DbRecord {
 		return doLoad(rd, new RecUser(super.poolName));
 	}
 	
-	public DbRecord insert(String userid, String username, String usertype, String ostype, String osversion, String appversion) {
-		return super.insert(qInsert(userid, username, usertype, ostype, osversion, appversion)) ? this : DbRecord.Empty;
+	public DbRecord insert(String userid, String username, boolean isanonymous) {
+		return super.insert(qInsert(userid, username, isanonymous)) ? this : DbRecord.Empty;
+	}
+	
+	public DbRecord insert(String userid, String username, boolean isanonymous, String ostype, String osversion, String appversion) {
+		return super.insert(qInsert(userid, username, isanonymous, ostype, osversion, appversion)) ? this : DbRecord.Empty;
+	}
+	
+	static public String qInsert(String userid, String username, boolean isanonymous) {
+		return String.format("INSERT INTO %s (userid, username, anonymous) VALUES('%s', '%s', %b)", RecUser.TBL_NAME, userid, username, isanonymous);
 	}
 
-	static public String qInsert(String userid, String username, String usertype, String ostype, String osversion, String appversion) {
-		return String.format("INSERT INTO %s (userid, username, usertype, ostype, osversion, appversion, jointime, leavetime, lasttime) "
-								 + "VALUES('%s', '%s', '%s', '%s', '%s', '%s', %d, 0, 0)", RecUser.TBL_NAME,
-								 userid, username, usertype, ostype, osversion, appversion, System.currentTimeMillis());
+	static public String qInsert(String userid, String username, boolean isanonymous, String ostype, String osversion, String appversion) {
+		return String.format("INSERT INTO %s (userid, username, anonymous, ostype, osversion, appversion, jointime, leavetime, lasttime) "
+								 + "VALUES('%s', '%s', %b, '%s', '%s', '%s', %d, 0, 0)", RecUser.TBL_NAME,
+								 userid, username, isanonymous, ostype, osversion, appversion, System.currentTimeMillis());
 	}
 
+	public boolean updateUser(String userid, String ostype, String osversion, String appversion) {
+		return super.update(qUpdateUser(userid, ostype, osversion, appversion));
+	}
+	
 	static public String qUpdateUser(String userid, String ostype, String osversion, String appversion) {
 		return String.format("UPDATE %s SET ostype='%s', osversion='%s', appversion='%s' WHERE userid='%s'", RecUser.TBL_NAME, ostype, osversion, appversion, userid);
 	}
@@ -96,6 +111,11 @@ public class RecUser extends DbRecord {
 
 	public boolean updateUsername(String userid, String username) {
 		String sql = String.format("UPDATE %s SET username='%s' WHERE userid='%s'", RecUser.TBL_NAME, username, userid);
+		return super.update(sql);
+	}
+	
+	public boolean changeAnonymousToNormal(String userid) {
+		String sql = String.format("UPDATE %s SET anonymous=TRUE WHERE userid='%s'", RecUser.TBL_NAME, userid);
 		return super.update(sql);
 	}
 	

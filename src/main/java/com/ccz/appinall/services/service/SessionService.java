@@ -12,8 +12,8 @@ public class SessionService {
 	@Autowired
 	SessionRepository sessionRepository;
 	
-	public void addUserSession(String userid, String ip) {
-		sessionRepository.save(userid, ip);		
+	public SessionData addUserSession(String userid, String ip) {
+		return sessionRepository.save(userid, ip);		
 	}
 
 	public void deleteUserSession(String userid, SessionData sd) {

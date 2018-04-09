@@ -55,6 +55,7 @@ public class ProtocolWriter {
 				ByteBuf byBuf = ch.alloc().buffer(bytes.length);
 				ch.writeAndFlush(new TextWebSocketFrame(byBuf.writeBytes(bytes)));
 			} catch (Exception e) {
+				e.printStackTrace();
 			}
 		}
 	}

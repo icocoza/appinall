@@ -3,13 +3,17 @@ package com.ccz.appinall.services.enums;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import lombok.Getter;
+
 public enum EFileCmd {
-	none("none"), fileinit("fileinit"), filesstart("filestart"), thumbnail("thumbnail"), upload("upload");
+	none("none", false), fileinit("fileinit", true), filesstart("filestart", false), thumbnail("thumbnail", true), upload("upload", false);
 	
 	public final String value;
+	@Getter private final boolean auth;
 	
-	private EFileCmd(String value) {
+	private EFileCmd(String value, boolean auth) {
 		this.value = value;
+		this.auth = auth;
 	}
 	
 	public String getValue() {

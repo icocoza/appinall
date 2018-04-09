@@ -1,4 +1,4 @@
-package com.ccz.appinall.services.controller.address;
+package com.ccz.appinall.services.controller.delivery;
 
 import com.ccz.appinall.services.enums.EDeliveryStatus;
 import com.ccz.appinall.services.model.redis.QueueDeliveryStatus;
