@@ -6,7 +6,6 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.support.ReloadableResourceBundleMessageSource;
 import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
@@ -68,7 +67,7 @@ public class SpringWebConfig extends WebMvcConfigurerAdapter implements Applicat
     @Bean
     public SpringTemplateEngine templateEngine(){
         SpringTemplateEngine templateEngine = new SpringTemplateEngine();
-        templateEngine.setEnableSpringELCompiler(true); // Compiled SpringEL should speed up executions
+        //templateEngine.setEnableSpringELCompiler(true); // Compiled SpringEL should speed up executions
         templateEngine.setTemplateResolver(templateResolver());
         //templateEngine.addDialect(new SpringSecurityDialect());
         return templateEngine;
