@@ -130,7 +130,7 @@ public class AdminCommandAction extends CommonAction {
 				data.storeurl, data.description, data.status, apptoken, data.fcmid, data.fcmkey)==false)
 			return res.setError(EAdminError.failed_to_add_app);
         DbAppManager.getInst().initApp(data.scode, 3, 6);
-		return res.setError(EAdminError.ok).setParam("%s%s%s", appid, ASS.UNIT, apptoken);
+		return res.setError(EAdminError.ok).setParamFormat("%s%s%s", appid, ASS.UNIT, apptoken);
 	};
 	
 	ICommandFunction<Channel, ResponseData<EAdminError>, AdminCommon> delApp = (Channel ch, ResponseData<EAdminError> res, AdminCommon rec) -> {

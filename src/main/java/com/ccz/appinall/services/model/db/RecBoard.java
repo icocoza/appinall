@@ -7,8 +7,11 @@ import java.util.stream.Collectors;
 
 import com.ccz.appinall.library.dbhelper.DbReader;
 import com.ccz.appinall.library.dbhelper.DbRecord;
+import com.ccz.appinall.services.enums.EBoardItemType;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import lombok.Data;
+import lombok.Getter;
 
 //@Entity
 //@Data
@@ -20,9 +23,13 @@ import lombok.Data;
 public class RecBoard  extends DbRecord {	//this data move to NoSQL like MongoDb.
 	static final String TBL_NAME = "board";
 	
-	public String boardid, itemtype, title, content;
+	public String boardid, title;
+	public EBoardItemType itemtype;
+	public String  content;
 	public boolean hasimage, hasfile;
-	public String category, aptcode, createuserid, createusername;
+	public String category, aptcode;
+	@JsonIgnore public String createuserid;
+	public String createusername;
 	public Timestamp createtime;
 	
 	public RecBoard(String poolName) {
@@ -41,7 +48,7 @@ public class RecBoard  extends DbRecord {	//this data move to NoSQL like MongoDb
 	protected DbRecord doLoad(DbReader rd, DbRecord r) {
 		RecBoard rec = (RecBoard)r;
 		rec.boardid = rd.getString("boardid");
-		rec.itemtype = rd.getString("itemtype");
+		rec.itemtype = EBoardItemType.getType(rd.getString("itemtype"));
 		rec.title = rd.getString("title");
 		rec.content = rd.getString("content");
 		rec.hasimage = rd.getBoolean("hasimage");
@@ -64,7 +71,7 @@ public class RecBoard  extends DbRecord {	//this data move to NoSQL like MongoDb
 		return doLoad(rd, new RecBoard(poolName));
 	}
 
-	public boolean insert(String boardid, String itemtype, String title, String content, boolean hasimage, boolean hasfile, 
+	public boolean insert(String boardid, EBoardItemType itemtype, String title, String content, boolean hasimage, boolean hasfile, 
 			String category, String aptcode, String createuserid, String createusername) {
 		String sql = String.format("INSERT INTO %s (boardid, itemtype, title, content, hasimage, hasfile, category, "
 				+ "aptcode, createuserid, createusername) "
@@ -101,6 +108,12 @@ public class RecBoard  extends DbRecord {	//this data move to NoSQL like MongoDb
 		return super.update(sql);
 	}
 
+	public boolean updateBoard(String boardid, String userid, String title, String content, boolean hasimage, boolean hasfile, String category) {
+		String sql = String.format("UPDATE %s SET title='%s', content='%s', hasimage=%b, hasfile=%b, category='%s' WHERE createuserid='%s' AND boardid='%s'", 
+				RecBoard.TBL_NAME, title, content, hasimage, hasfile, category, userid, boardid);
+		return super.update(sql);
+	}
+
 	public List<RecBoard> getList(String category, int offset, int count) {
 		String sql = String.format("SELECT * FROM %s WHERE category='%s' ORDER BY createtime DESC LIMIT %d, %d", 
 				RecBoard.TBL_NAME, category, offset, count);
@@ -113,13 +126,13 @@ public class RecBoard  extends DbRecord {	//this data move to NoSQL like MongoDb
 		return super.getList(sql).stream().map(e->(RecBoard)e).collect(Collectors.toList());
 	}
 	
-	public List<RecBoard> getTypedList(String itemtype, String category, int offset, int count) {
+	public List<RecBoard> getTypedList(EBoardItemType itemtype, String category, int offset, int count) {
 		String sql = String.format("SELECT * FROM %s WHERE itemtype='%s' AND category='%s' ORDER BY createtime DESC LIMIT %d, %d", 
 				RecBoard.TBL_NAME, itemtype, category, offset, count);
 		return super.getList(sql).stream().map(e->(RecBoard)e).collect(Collectors.toList());
 	}
 
-	public List<RecBoard> getTypedList(String userid, String itemtype, String category, int offset, int count) {
+	public List<RecBoard> getTypedList(String userid, EBoardItemType itemtype, String category, int offset, int count) {
 		String sql = String.format("SELECT * FROM %s WHERE createuserid='%s' AND itemtype='%s' AND category='%s' ORDER BY createtime DESC LIMIT %d, %d", 
 				RecBoard.TBL_NAME, userid, itemtype, category, offset, count);
 		return super.getList(sql).stream().map(e->(RecBoard)e).collect(Collectors.toList());

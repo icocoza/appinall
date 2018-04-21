@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 
 import com.ccz.appinall.library.dbhelper.DbReader;
 import com.ccz.appinall.library.dbhelper.DbRecord;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import lombok.Data;
 
@@ -18,7 +19,8 @@ public class RecBoardReply extends DbRecord {
 	public static final String TBL_NAME = "boardreply";
 	
 	public long replyid, parentid;
-	public String boardid, userid, username;
+	@JsonIgnore public String boardid;
+	public String userid, username;
 	public short depth;
 	public String msg;
 	public Timestamp replytime;

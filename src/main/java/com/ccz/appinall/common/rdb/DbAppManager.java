@@ -2,7 +2,6 @@ package com.ccz.appinall.common.rdb;
 
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -12,25 +11,12 @@ import org.springframework.data.geo.Point;
 
 import com.ccz.appinall.library.dbhelper.DbConnMgr;
 import com.ccz.appinall.library.dbhelper.DbRecord;
-import com.ccz.appinall.services.enums.EAdminAppStatus;
-import com.ccz.appinall.services.enums.EAdminStatus;
-import com.ccz.appinall.services.enums.EDeliverType;
-import com.ccz.appinall.services.enums.EDeliveryStatus;
-import com.ccz.appinall.services.enums.EDeliverMethod;
-import com.ccz.appinall.services.enums.EFriendStatus;
-import com.ccz.appinall.services.enums.EGoodsSize;
-import com.ccz.appinall.services.enums.EGoodsType;
-import com.ccz.appinall.services.enums.EGoodsWeight;
-import com.ccz.appinall.services.enums.EMessageType;
-import com.ccz.appinall.services.enums.EUserAuthType;
-import com.ccz.appinall.services.enums.EUserRole;
-import com.ccz.appinall.services.enums.EUserType;
+import com.ccz.appinall.services.enums.*;
 import com.ccz.appinall.services.model.db.*;
 import com.ccz.appinall.services.model.db.RecChMime.RecChMimeExt;
 import com.ccz.appinall.services.model.db.RecChannel.RecChLastMsg;
 import com.ccz.appinall.services.model.db.RecFriend.RecFriendInfo;
 import com.ccz.appinall.services.model.db.RecMessageDel.RecDelId;
-import com.google.gson.internal.Streams;
 
 public class DbAppManager {
 	public static DbAppManager s_pThis;
@@ -357,7 +343,7 @@ public class DbAppManager {
 	 * @param createuserid
 	 * @return
 	 */
-	public boolean addBoardShort(String scode, String boardid, String itemtype, String title, String content, boolean hasimage, boolean hasfile, 
+	public boolean addBoardShort(String scode, String boardid, EBoardItemType itemtype, String title, String content, boolean hasimage, boolean hasfile, 
 			String category, String aptcode, String createuserid, String createusername) {
 		return new RecBoard(scode).insert(boardid, itemtype, title, content, hasimage, hasfile, category, aptcode, createuserid, createusername);
 	}
@@ -379,6 +365,9 @@ public class DbAppManager {
 	public boolean delBoard(String scode, String userid, String boardid) {
 		return new RecBoard(scode).delete(userid, boardid);
 	}
+	public boolean updateBoard(String scode, String userid, String boardid, String title, String content, boolean hasimage, boolean hasfile, String category) {
+		return new RecBoard(scode).updateBoard(boardid, userid, title, content, hasimage, hasfile, category);
+	}
 
 	// for board content
 	public boolean addBoardContent(String scode, String boardid, String content) {
@@ -399,10 +388,10 @@ public class DbAppManager {
 	 * @param islike, like type if true, else dislike type
 	 * @return
 	 */
-	public boolean addBoardLikeDislike(String scode, String boardid, String userid, String username, String preference) {
+	public boolean addBoardLikeDislike(String scode, String boardid, String userid, String username, EBoardPreference preference) {
 		return new RecBoardUser(scode).insert(boardid, userid, username, preference);
 	}
-	public boolean delBoardLikeDislike(String scode, String boardid, String userid, String preference) {
+	public boolean delBoardLikeDislike(String scode, String boardid, String userid, EBoardPreference preference) {
 		return new RecBoardUser(scode).delete(boardid, userid, preference);
 	}
 	
@@ -432,8 +421,8 @@ public class DbAppManager {
 	}
 	
 	//for voteinfo
-	public boolean addVoteInfo(String scode, String boardid, String userid, long expiretime, boolean isclosed) {
-		return new RecVoteInfo(scode).insert(boardid, userid, expiretime, isclosed);
+	public boolean addVoteInfo(String scode, String boardid, String userid, long expiretime) {
+		return new RecVoteInfo(scode).insert(boardid, userid, expiretime);
 	}
 	public boolean updateVoteExpireTime(String scode, String boardid, String userid, long expiretime) {
 		return new RecVoteInfo(scode).updateExpireTime(boardid, userid, expiretime);
@@ -453,8 +442,8 @@ public class DbAppManager {
 	}
 	
 	//for vote item
-	public boolean addVote(String scode, String boardid, String vitemid, String votetext, String voteurl) {
-		return new RecVote(scode).insert(boardid, vitemid, votetext, voteurl);
+	public boolean addVote(String scode, String boardid, String vitemid, String votetext) {
+		return new RecVote(scode).insert(boardid, vitemid, votetext);
 	}
 	public List<RecVote> getVoteItemList(String scode, String boardid) {
 		return new RecVote(scode).getVoteItemList(boardid);
@@ -467,9 +456,9 @@ public class DbAppManager {
 	public boolean updateVoteitemText(String scode, String boardid, String vitemid, String votetext) {
 		return new RecVote(scode).updateVoteText(boardid, vitemid, votetext);
 	}
-	public boolean updateVoteitemUrl(String scode, String boardid, String vitemid, String voteurl) {
-		return new RecVote(scode).updateVoteUrl(boardid, vitemid, voteurl);
-	}
+//	public boolean updateVoteitemUrl(String scode, String boardid, String vitemid, String voteurl) {
+//		return new RecVote(scode).updateVoteUrl(boardid, vitemid, voteurl);
+//	}
 	public boolean deleteVoteitem(String scode, String boardid, String vitemid) {
 		if(vitemid==null)
 			return new RecVote(scode).delete(boardid);

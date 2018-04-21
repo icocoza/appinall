@@ -1,31 +1,32 @@
 package com.ccz.appinall.services.enums;
 
 public enum EBoardError {
-	eOK,
-	eNoSession,
+	OK,
+	NoSession,
 	
-	eFailAddBoard,
-	eFailDeleteBoard,
-	eFailUpdate,
-	eFailAddReply,
-	eFailDeleteReply,
-	eFailAddVoteUser,
-	eFailDelVoteUser,
+	FailAddBoard,
+	FailDeleteBoard,
+	FailUpdate,
+	FailAddReply,
+	FailDeleteReply,
+	FailAddVoteUser,
+	FailDelVoteUser,
 	
-	eNotExistLikedUser,
-	eNotExistDislikeUser,
-	eNotExistVoteUser,
-	eNotExistVoteInfo,
+	NotExistLikedUser,
+	NotExistDislikeUser,
+	NotExistVoteUser,
+	NotExistVoteInfo,
 
-	eAlreadyLiked,
-	eAlreadyDisliked,
-	eAlreadyVoteUser,
-	eAlreadyExpired,
+	AlreadyLiked,
+	AlreadyDisliked,
+	AlreadyVoteUser,
+	AlreadyExpired,
 
-	eNoData,
-	eNoListData,
-	eInvalidParameter,
-	ePermissionDeni,
+	NoData,
+	NoListData,
+	InvalidParameter,
+	PermissionDeny,
 	
-	eWrongAptCode
+	WrongAptCode,
+	UnknownError
 }

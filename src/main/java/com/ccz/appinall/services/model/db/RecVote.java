@@ -17,7 +17,7 @@ public class RecVote extends DbRecord {
 	
 	public String vitemid, boardid; //boardid could have many vitemid(vote item id)
 	public int selectcount;
-	public String votetext, voteurl;
+	public String votetext;//, voteurl;
 	
 	public RecVote(String poolName) {
 		super(poolName);
@@ -38,7 +38,7 @@ public class RecVote extends DbRecord {
 		rec.boardid = rd.getString("boardid");
 		rec.selectcount = rd.getInt("selectcount");
 		rec.votetext = rd.getString("votetext");
-		rec.voteurl = rd.getString("voteurl");
+		//rec.voteurl = rd.getString("voteurl");
 		return rec;
 	}
 
@@ -52,9 +52,9 @@ public class RecVote extends DbRecord {
 		return doLoad(rd, new RecVote(poolName));
 	}
 
-	public boolean insert(String boardid, String vitemid, String votetext, String voteurl) {
-		String sql = String.format("INSERT INTO %s (vitemid, boardid, votetext, voteurl) VALUES('%s','%s','%s','%s')", RecVote.TBL_NAME, 
-				vitemid, boardid, votetext, voteurl);
+	public boolean insert(String boardid, String vitemid, String votetext) {
+		String sql = String.format("INSERT INTO %s (vitemid, boardid, votetext) VALUES('%s','%s','%s')", RecVote.TBL_NAME, 
+				vitemid, boardid, votetext);
 		return super.insert(sql);
 	}
 	
@@ -76,11 +76,11 @@ public class RecVote extends DbRecord {
 		return super.update(sql);
 	}
 	
-	public boolean updateVoteUrl(String boardid, String vitemid, String voteurl) {
-		String sql = String.format("UPDATE %s SET voteurl='%s' WHERE vitemid='%s' AND boardid='%s'", 
-				RecVote.TBL_NAME, voteurl, vitemid, boardid);
-		return super.update(sql);
-	}
+//	public boolean updateVoteUrl(String boardid, String vitemid, String voteurl) {
+//		String sql = String.format("UPDATE %s SET voteurl='%s' WHERE vitemid='%s' AND boardid='%s'", 
+//				RecVote.TBL_NAME, voteurl, vitemid, boardid);
+//		return super.update(sql);
+//	}
 	
 	public boolean delete(String boardid) {
 		String sql = String.format("DELETE FROM %s WHERE boardid='%s'", RecVote.TBL_NAME, boardid);

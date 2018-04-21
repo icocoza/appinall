@@ -78,7 +78,7 @@ public class AddressCommandAction extends CommonAction {
 			return res.setError(EAddrError.no_search_result);
 		
 		ArrayNode arrNode = copySearshResultToResponse((ArrayNode) hitsNode.get("hits"));
-		return res.setData(arrNode).setError(EAddrError.ok);
+		return res.setParam("data", arrNode).setError(EAddrError.ok);
 	};
 	
 

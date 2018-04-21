@@ -2,6 +2,7 @@ package com.ccz.appinall.services.model.db;
 
 import com.ccz.appinall.library.dbhelper.DbReader;
 import com.ccz.appinall.library.dbhelper.DbRecord;
+import com.ccz.appinall.services.enums.EBoardPreference;
 
 //@Entity
 //@Data
@@ -11,7 +12,7 @@ public class RecBoardUser extends DbRecord {
 	
 	public String boardid, userid;
 	public String username;
-	public String preference;
+	public EBoardPreference preference;
 	public long visittime;
 	
 	public RecBoardUser(String poolName) {
@@ -31,7 +32,7 @@ public class RecBoardUser extends DbRecord {
 		rec.boardid = rd.getString("boardid");
 		rec.userid = rd.getString("userid");
 		rec.username = rd.getString("username");
-		rec.preference = rd.getString("preference");
+		rec.preference = EBoardPreference.getType(rd.getString("preference"));
 		rec.visittime = rd.getLong("visittime");
 		return rec;
 	}
@@ -46,7 +47,7 @@ public class RecBoardUser extends DbRecord {
 		return doLoad(rd, new RecBoardUser(poolName));
 	}
 
-	public boolean insert(String boardid, String userid, String username, String preference) {
+	public boolean insert(String boardid, String userid, String username, EBoardPreference preference) {
 		String sql = String.format("INSERT INTO %s (boardid, userid, username, preference) "
 				 + "VALUES('%s', '%s', '%s', '%s')", RecBoardUser.TBL_NAME, boardid, userid, username, preference);
 		return super.insert(sql);
@@ -57,7 +58,7 @@ public class RecBoardUser extends DbRecord {
 		return super.delete(sql);
 	}
 	
-	public boolean delete(String boardid, String userid, String preference ) {
+	public boolean delete(String boardid, String userid, EBoardPreference preference ) {
 		String sql = String.format("DELETE FROM %s WHERE boardid='%s' AND userid='%s' AND preference='%s'", 
 				RecBoardUser.TBL_NAME, boardid, userid, preference);
 		return super.delete(sql);

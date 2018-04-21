@@ -1,30 +1,30 @@
 package com.ccz.appinall.services.controller.board;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import com.ccz.appinall.library.util.AsciiSplitter.ASS;
+import com.ccz.appinall.services.enums.EBoardItemType;
+import com.ccz.appinall.services.enums.EBoardPreference;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 public class RecDataBoard {
 	public class AddBoard {
-		public String itemtype, title, content; 
+		public EBoardItemType itemtype;
+		public String title, content; 
 		public boolean hasimage, hasfile;
 		public String category, appcode;
 		
-		public AddBoard(String data) {
-			String[] sarray = data.split(ASS.UNIT, -1);
-			itemtype = sarray[0];
-			title = sarray[1];
-			content = sarray[2]; 
-			hasimage = Boolean.parseBoolean(sarray[3]);
-			hasfile = Boolean.parseBoolean(sarray[4]);
-			category = sarray[5];
-			appcode = sarray[6];
-		}
 		public AddBoard(JsonNode jObj) {
-			itemtype = jObj.get("itemtype").asText();
+			itemtype = EBoardItemType.getType(jObj.get("itemtype").asText());
 			title = jObj.get("title").asText();
 			content = jObj.get("content").asText(); 
 			hasimage = jObj.get("hasimage").asBoolean();
@@ -62,14 +62,6 @@ public class RecDataBoard {
 		public String boardid, content; 
 		public boolean hasimage, hasfile;
 		
-		public UpdateBoardContent(String data) {
-			String[] sarray = data.split(ASS.UNIT, -1);
-			boardid = sarray[0];
-			content = sarray[1]; 
-			hasimage = Boolean.parseBoolean(sarray[2]);
-			hasfile = Boolean.parseBoolean(sarray[3]);
-			
-		}
 		public UpdateBoardContent(JsonNode jObj) {
 			boardid = jObj.get("boardid").asText();
 			content = jObj.get("content").asText(); 
@@ -92,6 +84,22 @@ public class RecDataBoard {
 		}
 
 	}
+	
+	public class UpdateBoard {
+		public String boardid, title, content, category; 
+		public boolean hasimage, hasfile;
+		
+		public UpdateBoard(JsonNode jObj) {
+			boardid = jObj.get("boardid").asText();
+			title = jObj.get("title").asText();
+			content = jObj.get("content").asText(); 
+			hasimage = jObj.get("hasimage").asBoolean();
+			hasfile = jObj.get("hasfile").asBoolean();
+			category = jObj.get("category").asText();
+		}
+
+	}
+
 	public class BoardList {
 		public String category;
 		public int offset, count;
@@ -122,26 +130,18 @@ public class RecDataBoard {
 
 	}
 	public class BoardLike {
-		public String boardid, preference;
+		public String boardid;
+		public EBoardPreference preference;
 		public boolean isadd;
 		
-		public BoardLike(String data) {
-			String[] sarray = data.split(ASS.UNIT, -1);
-			boardid = sarray[0];
-			preference = sarray[1];
-			isadd = Boolean.parseBoolean(sarray[2]);
-		}
 		public BoardLike(JsonNode jObj) {
 			boardid = jObj.get("boardid").asText();
-			preference = jObj.get("preference").asText();
+			preference = EBoardPreference.getType(jObj.get("preference").asText());
 			isadd = jObj.get("isadd").asBoolean();
 		}
 
 	}
 	public class BoardDislike extends BoardLike{
-		public BoardDislike(String data) {
-			super(data);
-		}
 		public BoardDislike(JsonNode jObj) {
 			super(jObj);
 		}
@@ -199,39 +199,29 @@ public class RecDataBoard {
 	public class AddVote {
 		public AddBoard board;
 		public long expiretime;
-		public boolean isclose;
-		public List<VoteText> itemList = new ArrayList<>();
+		//public boolean isclose;
+		//public List<VoteText> itemList = new ArrayList<>();
+		public List<String> itemList = new ArrayList<>();
 		
-		public AddVote(String data) {
-			String[] sarray = data.split(ASS.GROUP, -1);
-			board = new AddBoard(sarray[0]);
-			String[] second = sarray[1].split(ASS.UNIT);
-			expiretime = Long.parseLong(second[0]);
-			isclose = Boolean.parseBoolean(second[1]);
-			String[] third = sarray[2].split(ASS.RECORD, -1);
-			for(String vote : third) {
-				String[] svote = vote.split(ASS.UNIT, -1);
-				itemList.add(new VoteText(svote[0], svote[1]));
-			}
-		}
 		public AddVote(JsonNode jObj) {
 			board = new AddBoard(jObj);
 			expiretime = jObj.get("expiretime").asLong();
-			isclose = jObj.get("isclose").asBoolean();
+			//isclose = jObj.get("isclose").asBoolean();
 			ArrayNode jArr = (ArrayNode) jObj.get("voteitem");
 			for(JsonNode jItem : jArr)
-				itemList.add(new VoteText(jItem.get("votetext").asText(), jItem.get("voteurl").asText()));
+				//itemList.add(new VoteText(jItem.get("votetext").asText(), jItem.get("voteurl").asText()));
+				itemList.add(jItem.asText());
 			}
 		}
 		
-		public class VoteText {
-			public String votetext, voteurl;
-			
-			public VoteText(String votetext, String voteurl) {
-				this.votetext = votetext;
-				this.voteurl = voteurl;
-			}
-		}
+//		public class VoteText {
+//			public String votetext, voteurl;
+//			
+//			public VoteText(String votetext, String voteurl) {
+//				this.votetext = votetext;
+//				this.voteurl = voteurl;
+//			}
+//		}
 
 	public class SelectVote {
 		public String boardid, vitemid;
@@ -260,22 +250,32 @@ public class RecDataBoard {
 		}
 
 	}
-	public class VoteUpdate {
-		public String boardid, type, value;
-		
-		public VoteUpdate(String data) {
-			String[] sarray = data.split(ASS.UNIT, -1);
-			boardid = sarray[0];
-			type = sarray[1];
-			value = sarray[2];
-		}
-		public VoteUpdate(JsonNode jObj) {
-			boardid = jObj.get("boardid").asText();
-			type = jObj.get("type").asText();
-			value = jObj.get("value").asText();
-		}
 
+	@Data
+	@NoArgsConstructor
+	public class VoteUpdate {
+		private String boardid;
+		private Long expiretime;
+		private Boolean isclose;
+		private List<VoteItemData> voteitems;
+		
+		public VoteUpdate(String json) throws JsonParseException, JsonMappingException, IOException {
+			ObjectMapper objectMapper = new ObjectMapper();
+			VoteUpdate obj = (VoteUpdate) objectMapper.readValue(json, VoteUpdate.class);
+			this.boardid = obj.boardid;
+			this.expiretime = obj.expiretime;
+			this.isclose = obj.isclose;
+			this.voteitems = obj.voteitems;
+		}
 	}
+	
+	@Data
+	public class VoteItemData {
+		public VoteItemData() {		}
+		public String vitemid;
+		public String votetext;
+	}
+	
 	public class VoteItem {
 		public String boardid, vitemid, type, value;
 		public VoteItem(String data) {

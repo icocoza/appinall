@@ -40,8 +40,8 @@ public class LocationCommandAction extends CommonAction {
 	
 	public LocationCommandAction() {
 		super.setCommandFunction(ELocationCmd.geoloc.getValue(), doGeoLoc);
-		super.setCommandFunction(ELocationCmd.joinchannel.geoloc.getValue(), doJoinChannel);
-		super.setCommandFunction(ELocationCmd.leavechannel.geoloc.getValue(), doLeaveChannel);
+		super.setCommandFunction(ELocationCmd.joinchannel.getValue(), doJoinChannel);
+		super.setCommandFunction(ELocationCmd.leavechannel.getValue(), doLeaveChannel);
 	}
 	
 	@SuppressWarnings({ "rawtypes", "unchecked" })

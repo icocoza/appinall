@@ -19,17 +19,11 @@ public class ResponseData<T> {
 	
 	@Getter 
 	T error;
-	@Getter 
-	String param;
 	
 	@Getter @Setter
 	String token;
 	
-	boolean bjson = true;
-	Map<String, String> mapParam = new HashMap<>();
-	
-	@Getter
-	JsonNode jsonData;
+	Map<String, Object> mapParam = new HashMap<>();
 	
 	public ResponseData(String serviceCode, String code, String cmd) {
 		this.serviceCode = serviceCode;
@@ -37,11 +31,6 @@ public class ResponseData<T> {
 		this.cmd = cmd;
 	}
 	
-	public ResponseData(String serviceCode, String code, String cmd, boolean bjson) {
-		this(serviceCode, code, cmd);
-		this.bjson = bjson;
-	}
-
 	public String getCommand() {
 		return cmd;
 	}
@@ -52,61 +41,38 @@ public class ResponseData<T> {
 	}
 	
 	public ResponseData<T> setParam(String p) {
-		this.param = p;
+		mapParam.put("data", p);
 		return this;
 	}
 	
 	@SuppressWarnings("resource")
-	public ResponseData<T> setParam(String format, Object... args) {
-		this.param = new Formatter().format(format, args).toString();
+	public ResponseData<T> setParamFormat(String format, Object... args) {
+		setParam(new Formatter().format(format, args).toString());
 		return this;
     }
 	
-	public ResponseData<T> setParam(String k, String v) {
+	public ResponseData<T> setParam(String k, Object v) {
 		mapParam.put(k, v);
 		return this;
 	}
 	
-	public ResponseData<T> setData(JsonNode jdata) {
-		this.jsonData = jdata;
-		return this;
+	public String getDataParam() {
+		if(mapParam.containsKey("data"))
+			return (String)mapParam.get("data");
+		return "";
 	}
-	
-	public Map<String, String> getParams() {
+	public Map<String, Object> getParams() {
 		return mapParam;
 	}
 	
-	public String toString() {
-		if(bjson)
-			return toJsonString();
-		return toAscString();
-	}
-	
-	private String toAscString() {
-		StringBuilder sb = new StringBuilder();
-		sb.append(serviceCode);
-		sb.append(AsciiSplitter.CHUNK);
-		sb.append(code);
-		sb.append(AsciiSplitter.CHUNK);
-		sb.append(cmd);
-		sb.append(AsciiSplitter.CHUNK);
-		sb.append(error.toString());
-		sb.append(AsciiSplitter.CHUNK);
-		sb.append(param);
-		return sb.toString();
-	}
-	
-	private String toJsonString() {
+	public String toJsonString() {
 		ObjectMapper objectMapper = new ObjectMapper();
-		ObjectNode objNode = objectMapper.createObjectNode();
+		ObjectNode objNode = (ObjectNode) objectMapper.convertValue(mapParam, JsonNode.class);
 		objNode.put("service", serviceCode);
 		objNode.put("cmd", cmd);
 		objNode.put("result", error.toString());
-		Set<Entry<String, String>> sets = mapParam.entrySet();
-		for(Entry<String,String> item : sets)
-			objNode.put(item.getKey(), item.getValue());
-		if(jsonData != null)
-			objNode.set("data", jsonData);
+		//if(jsonData != null)
+		//	objNode.set("data", jsonData);
 		return objNode.toString();
 	}
 }

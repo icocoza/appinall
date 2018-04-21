@@ -5,10 +5,10 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public enum EBoardCmd {
 	none("none"), addboard("addboard"), delboard("delboard"), 
-	updatetitle("updatetitle"), updatecontent("updatecontent"), updatecategory("updatecategory"), boardlist("boardlist"), boardcontent("boardcontent"), 
+	updatetitle("updatetitle"), updatecontent("updatecontent"), updatecategory("updatecategory"), updateboard("updateboard"), boardlist("boardlist"), boardcontent("boardcontent"), 
 	like("like"), dislike("dislike"),
 	addreply("addreply"), delreply("delreply"), replylist("replylist"),
-	vote("vote"), selvote("selvote"), voteitemlist("voteitemlist"), voteupdate("voteupdate"), voteitem("voteitem"), changeselection("changeselection"), 
+	vote("vote"), selvote("selvote"), voteitemlist("voteitemlist"), voteupdate("voteupdate"), changeselection("changeselection"), 
 	voteinfolist("voteinfolist");
 	
 	public final String value;

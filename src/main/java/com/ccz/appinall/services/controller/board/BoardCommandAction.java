@@ -1,5 +1,6 @@
 package com.ccz.appinall.services.controller.board;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -22,6 +23,8 @@ import com.ccz.appinall.services.model.db.RecBoardReply;
 import com.ccz.appinall.services.model.db.RecVote;
 import com.ccz.appinall.services.model.db.RecVoteInfo;
 import com.ccz.appinall.services.model.db.RecVoteUser;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import io.netty.channel.Channel;
@@ -38,6 +41,7 @@ public class BoardCommandAction extends CommonAction {
 		super.setCommandFunction(EBoardCmd.updatetitle.getValue(), doUpdateBoardTitle);//O
 		super.setCommandFunction(EBoardCmd.updatecontent.getValue(), doUpdateBoardContent);//O
 		super.setCommandFunction(EBoardCmd.updatecategory.getValue(), doUpdateBoardCategory);//O
+		super.setCommandFunction(EBoardCmd.updateboard.getValue(), doUpdateBoard);//O
 		super.setCommandFunction(EBoardCmd.boardlist.getValue(), doGetBoardList);//O
 		super.setCommandFunction(EBoardCmd.boardcontent.getValue(), doGetBoardContent);//O
 		super.setCommandFunction(EBoardCmd.like.getValue(), incBoardLike);//O
@@ -46,10 +50,9 @@ public class BoardCommandAction extends CommonAction {
 		super.setCommandFunction(EBoardCmd.delreply.getValue(), delReply);//O
 		super.setCommandFunction(EBoardCmd.replylist.getValue(), getReplyList);//O
 		super.setCommandFunction(EBoardCmd.vote.getValue(), addVote);//O
-		super.setCommandFunction(EBoardCmd.selvote.getValue(), selectVoteItem);//O
 		super.setCommandFunction(EBoardCmd.voteitemlist.getValue(), getVoteItemList);//O
-		super.setCommandFunction(EBoardCmd.voteupdate.getValue(), updateVoteInfo);//O
-		super.setCommandFunction(EBoardCmd.voteitem.getValue(), updateVoteItem);//O
+		super.setCommandFunction(EBoardCmd.selvote.getValue(), selectVoteItem);//O
+		super.setCommandFunction(EBoardCmd.voteupdate.getValue(), updateVote);//O
 		super.setCommandFunction(EBoardCmd.changeselection.getValue(), changeVoteSelection);//O
 		super.setCommandFunction(EBoardCmd.voteinfolist.getValue(), getVoteInfoList);//O
 	}
@@ -80,7 +83,7 @@ public class BoardCommandAction extends CommonAction {
 	ICommandFunction<AuthSession, ResponseData<EBoardError>, JsonNode> doAddBoard = (AuthSession ss, ResponseData<EBoardError> res, JsonNode jnode) -> {
 		AddBoard data = new RecDataBoard().new AddBoard(jnode);
 		if(ss==null)
-			return res.setError(EBoardError.eNoSession);
+			return res.setError(EBoardError.NoSession);
 		return addBoard(ss, res, data);
 	};
 	
@@ -93,10 +96,10 @@ public class BoardCommandAction extends CommonAction {
 	ICommandFunction<AuthSession, ResponseData<EBoardError>, JsonNode> doDelBoard = (AuthSession ss, ResponseData<EBoardError> res, JsonNode jnode) -> {
 		DelBoard data = new RecDataBoard().new DelBoard(jnode); 
 		if(ss==null)
-			return res.setError(EBoardError.eNoSession);
+			return res.setError(EBoardError.NoSession);
 		if(DbAppManager.getInst().delBoard(ss.scode, ss.getUserId(), data.boardid)==false)
-			return res.setError(EBoardError.eFailDeleteBoard);
-		return res.setError(EBoardError.eOK);
+			return res.setError(EBoardError.FailDeleteBoard);
+		return res.setError(EBoardError.OK);
 	};
 
 	/** 
@@ -105,15 +108,15 @@ public class BoardCommandAction extends CommonAction {
 	 * @param res : response data
 	 * @param eCmd : command enum
 	 * @param userData, [board id], [title]
-	 * @return eFailUpdate if failed, else eOK
+	 * @return FailUpdate if failed, else OK
 	 */
 	ICommandFunction<AuthSession, ResponseData<EBoardError>, JsonNode> doUpdateBoardTitle = (AuthSession ss, ResponseData<EBoardError> res, JsonNode jnode) -> {
 		UpdateBoardTitle data = new RecDataBoard().new UpdateBoardTitle(jnode);
 		if(ss==null)
-			return res.setError(EBoardError.eNoSession);
+			return res.setError(EBoardError.NoSession);
 		if(DbAppManager.getInst().updateBoardTitle(ss.scode, ss.getUserId(), data.boardid, data.title)==false)
-			return res.setError(EBoardError.eFailUpdate);
-		return res.setError(EBoardError.eOK);//.setParam(""+user.lasttime);
+			return res.setError(EBoardError.FailUpdate);
+		return res.setError(EBoardError.OK);//.setParam(""+user.lasttime);
 	};
 	
 	/** 
@@ -126,11 +129,11 @@ public class BoardCommandAction extends CommonAction {
 	ICommandFunction<AuthSession, ResponseData<EBoardError>, JsonNode> doUpdateBoardContent = (AuthSession ss, ResponseData<EBoardError> res, JsonNode jnode) -> {
 		UpdateBoardContent data = new RecDataBoard().new UpdateBoardContent(jnode);
 		if(ss==null)
-			return res.setError(EBoardError.eNoSession);
+			return res.setError(EBoardError.NoSession);
 		if(DbAppManager.getInst().updateBoardShortContent(ss.scode, ss.getUserId(), data.boardid, getShortContent(data.content), data.hasimage, data.hasfile)==false)
-			return res.setError(EBoardError.eFailUpdate);
+			return res.setError(EBoardError.FailUpdate);
 		DbAppManager.getInst().updateBoardContent(ss.scode, data.boardid, data.content);
-		return res.setError(EBoardError.eOK);//.setParam(""+user.lasttime);
+		return res.setError(EBoardError.OK);//.setParam(""+user.lasttime);
 	};
 
 	/** 
@@ -143,10 +146,26 @@ public class BoardCommandAction extends CommonAction {
 	ICommandFunction<AuthSession, ResponseData<EBoardError>, JsonNode> doUpdateBoardCategory = (AuthSession ss, ResponseData<EBoardError> res, JsonNode jnode) -> {
 		UpdateBoardCategory data = new RecDataBoard().new UpdateBoardCategory(jnode);
 		if(ss==null)
-			return res.setError(EBoardError.eNoSession);
+			return res.setError(EBoardError.NoSession);
 		if(DbAppManager.getInst().updateBoardCategory(ss.scode, ss.getUserId(), data.boardid, data.category)==false)
-			return res.setError(EBoardError.eFailUpdate);
-		return res.setError(EBoardError.eOK);//.setParam(""+user.lasttime);
+			return res.setError(EBoardError.FailUpdate);
+		return res.setError(EBoardError.OK);//.setParam(""+user.lasttime);
+	};
+	/** 
+	 * update board's content
+	 * @param ss
+	 * @param res
+	 * @param userData, [board id][content][hasimage][hasfile]
+	 * @return
+	 */
+	ICommandFunction<AuthSession, ResponseData<EBoardError>, JsonNode> doUpdateBoard = (AuthSession ss, ResponseData<EBoardError> res, JsonNode jnode) -> {
+		UpdateBoard data = new RecDataBoard().new UpdateBoard(jnode);
+		if(ss==null)
+			return res.setError(EBoardError.NoSession);
+		if(DbAppManager.getInst().updateBoard(ss.scode, ss.getUserId(), data.boardid, data.title, getShortContent(data.content), data.hasimage, data.hasfile, data.category)==false)
+			return res.setError(EBoardError.FailUpdate);
+		DbAppManager.getInst().updateBoardContent(ss.scode, data.boardid, data.content);
+		return res.setError(EBoardError.OK);//.setParam(""+user.lasttime);
 	};
 
 	/** 
@@ -159,21 +178,17 @@ public class BoardCommandAction extends CommonAction {
 	ICommandFunction<AuthSession, ResponseData<EBoardError>, JsonNode> doGetBoardList = (AuthSession ss, ResponseData<EBoardError> res, JsonNode jnode) -> {
 		BoardList data = new RecDataBoard().new BoardList(jnode);
 		if(ss==null)
-			return res.setError(EBoardError.eNoSession);
+			return res.setError(EBoardError.NoSession);
 		List<RecBoard> boardList = null;
-		if(data.userid==null)
+		if(data.userid==null || data.userid.length()<1)
 			boardList = DbAppManager.getInst().getBoardList(ss.scode, data.category, data.offset, data.count);	//load all list
 		else
 			boardList = DbAppManager.getInst().getBoardList(ss.scode, data.userid, data.category, data.offset, data.count); //load a specific user's list
 		if(boardList.size()<1)
-			return res.setError(EBoardError.eNoListData);
+			return res.setError(EBoardError.NoListData);
 		
-		String param = boardList.stream().map(e-> String.format("%s%s%s%s%s%s%s%s%b%s%b%s%s%s%s%s%s", e.boardid, ASS.UNIT, 
-								   e.itemtype, ASS.UNIT, e.title, ASS.UNIT, e.content, ASS.UNIT, e.hasimage, ASS.UNIT, e.hasfile, ASS.UNIT, 
-								   e.category, ASS.UNIT, e.createusername, ASS.UNIT, e.createtime)).
-						   collect(Collectors.joining(ASS.RECORD));
-		
-		return res.setError(EBoardError.eOK).setParam(param);
+		res.setParam("data", boardList);
+		return res.setError(EBoardError.OK);
 	};
 
 	/** 
@@ -186,13 +201,13 @@ public class BoardCommandAction extends CommonAction {
 	ICommandFunction<AuthSession, ResponseData<EBoardError>, JsonNode> doGetBoardContent = (AuthSession ss, ResponseData<EBoardError> res, JsonNode jnode) -> {
 		BoardContent data = new RecDataBoard().new BoardContent(jnode);
 		if(ss==null)
-			return res.setError(EBoardError.eNoSession);
+			return res.setError(EBoardError.NoSession);
 		//String[] usData = userData.split(ASS.UNIT, -1);
 		String content = DbAppManager.getInst().getBoardContent(ss.scode, data.boardid);
 		if(content==null)
-			return res.setError(EBoardError.eNoData);
+			return res.setError(EBoardError.NoData);
 		DbAppManager.getInst().incBoardVisit(ss.scode, data.boardid);
-		return res.setError(EBoardError.eOK).setParam(String.format("%s%s%s", data.boardid, ASS.UNIT, content));
+		return res.setError(EBoardError.OK).setParam(content);
 	};
 	
 	/** 
@@ -205,17 +220,17 @@ public class BoardCommandAction extends CommonAction {
 	ICommandFunction<AuthSession, ResponseData<EBoardError>, JsonNode> incBoardLike = (AuthSession ss, ResponseData<EBoardError> res, JsonNode jnode) -> {
 		BoardLike data = new RecDataBoard().new BoardLike(jnode);
 		if(ss==null)
-			return res.setError(EBoardError.eNoSession);
+			return res.setError(EBoardError.NoSession);
 		
 		//if add request
 		if(data.isadd == true && DbAppManager.getInst().addBoardLikeDislike(ss.scode, data.boardid, ss.getUserId(), ss.getUsername(), data.preference) == false)
-			return res.setError(EBoardError.eAlreadyLiked);
+			return res.setError(EBoardError.AlreadyLiked);
 		//else if del request
 		else if(data.isadd==false && DbAppManager.getInst().delBoardLikeDislike(ss.scode, data.boardid, ss.getUserId(), data.preference) == false)
-			return res.setError(EBoardError.eNotExistLikedUser);
+			return res.setError(EBoardError.NotExistLikedUser);
 			
 		DbAppManager.getInst().incBoardLike(ss.scode, data.boardid, data.isadd);
-		return res.setError(EBoardError.eOK);
+		return res.setError(EBoardError.OK);
 	};
 	
 	/** 
@@ -228,17 +243,17 @@ public class BoardCommandAction extends CommonAction {
 	ICommandFunction<AuthSession, ResponseData<EBoardError>, JsonNode> incBoardDislike = (AuthSession ss, ResponseData<EBoardError> res, JsonNode jnode) -> {
 		BoardDislike data = new RecDataBoard().new BoardDislike(jnode);
 		if(ss==null)
-			return res.setError(EBoardError.eNoSession);
+			return res.setError(EBoardError.NoSession);
 		
 		//if add request
 		if(data.isadd == true && DbAppManager.getInst().addBoardLikeDislike(ss.scode, data.boardid, ss.getUserId(), ss.getUsername(), data.preference) == false)
-			return res.setError(EBoardError.eAlreadyDisliked);
+			return res.setError(EBoardError.AlreadyDisliked);
 		//else if del request
 		else if(data.isadd==false && DbAppManager.getInst().delBoardLikeDislike(ss.scode, data.boardid, ss.getUserId(), data.preference) == false)
-			return res.setError(EBoardError.eNotExistDislikeUser);
+			return res.setError(EBoardError.NotExistDislikeUser);
 		
 		DbAppManager.getInst().incBoardDislike(ss.scode, data.boardid, data.isadd);
-		return res.setError(EBoardError.eOK);
+		return res.setError(EBoardError.OK);
 	};
 	
 	/** 
@@ -252,10 +267,10 @@ public class BoardCommandAction extends CommonAction {
 	ICommandFunction<AuthSession, ResponseData<EBoardError>, JsonNode> addReply = (AuthSession ss, ResponseData<EBoardError> res, JsonNode jnode) -> {
 		AddReply data = new RecDataBoard().new AddReply(jnode);
 		if(ss==null)
-			return res.setError(EBoardError.eNoSession);
+			return res.setError(EBoardError.NoSession);
 		if(DbAppManager.getInst().addReply(ss.scode, data.boardid, data.parentrepid, ss.getUserId(), ss.getUsername(), (short)data.depth, data.msg)==false)
-			return res.setError(EBoardError.eFailAddReply);
-		return res.setError(EBoardError.eOK);
+			return res.setError(EBoardError.FailAddReply);
+		return res.setError(EBoardError.OK);
 	};
 	
 	/** 
@@ -268,10 +283,10 @@ public class BoardCommandAction extends CommonAction {
 	ICommandFunction<AuthSession, ResponseData<EBoardError>, JsonNode> delReply = (AuthSession ss, ResponseData<EBoardError> res, JsonNode jnode) -> {
 		DelReply data = new RecDataBoard().new DelReply(jnode);
 		if(ss==null)
-			return res.setError(EBoardError.eNoSession);
+			return res.setError(EBoardError.NoSession);
 		if(DbAppManager.getInst().delReply(ss.scode, data.boardid, data.replyid, ss.getUserId())==false)
-			return res.setError(EBoardError.eFailDeleteReply);
-		return res.setError(EBoardError.eOK);
+			return res.setError(EBoardError.FailDeleteReply);
+		return res.setError(EBoardError.OK);
 	};
 	
 	/** 
@@ -284,14 +299,12 @@ public class BoardCommandAction extends CommonAction {
 	ICommandFunction<AuthSession, ResponseData<EBoardError>, JsonNode> getReplyList = (AuthSession ss, ResponseData<EBoardError> res, JsonNode jnode) -> {
 		ReplyList data = new RecDataBoard().new ReplyList(jnode);
 		if(ss==null)
-			return res.setError(EBoardError.eNoSession);
+			return res.setError(EBoardError.NoSession);
 		List<RecBoardReply> replyList = DbAppManager.getInst().getReplyList(ss.scode, data.boardid, data.offset, data.count);
 		if(replyList.size() < 1)
-			return res.setError(EBoardError.eNoListData);
-		String param = replyList.stream().map(e->String.format("%s%s%s%s%d%s%s%s%s%s%s", 
-				e.replyid, ASS.UNIT, e.parentid, ASS.UNIT, e.depth, ASS.UNIT, e.msg, ASS.UNIT, e.username, ASS.UNIT, e.replytime)).
-				collect(Collectors.joining(ASS.RECORD));
-		return res.setError(EBoardError.eOK).setParam(data.boardid+ASS.GROUP+param);
+			return res.setError(EBoardError.NoListData);
+		res.setParam("data", replyList);
+		return res.setError(EBoardError.OK);
 	};
 	
 	/** 
@@ -305,49 +318,25 @@ public class BoardCommandAction extends CommonAction {
 	ICommandFunction<AuthSession, ResponseData<EBoardError>, JsonNode> addVote = (AuthSession ss, ResponseData<EBoardError> res, JsonNode jnode) -> {
 		AddVote data = new RecDataBoard().new AddVote(jnode);
 		if(ss==null)
-			return res.setError(EBoardError.eNoSession);
-		if( (res = addBoard(ss, res, data.board)).getError() != EBoardError.eOK)	//1. board info of vote
+			return res.setError(EBoardError.NoSession);
+		if( (res = addBoard(ss, res, data.board)).getError() != EBoardError.OK)	//1. board info of vote
 			return res;
-		if( DbAppManager.getInst().addVoteInfo(ss.scode, res.getParam(), ss.getUserId(), data.expiretime, data.isclose) == false ) {
-			DbAppManager.getInst().delBoard(ss.scode, ss.getUserId(), res.getParam());
-			return res.setError(EBoardError.eInvalidParameter);
+		
+		String newBoardid = res.getDataParam();
+		if( DbAppManager.getInst().addVoteInfo(ss.scode, newBoardid, ss.getUserId(), data.expiretime) == false ) {
+			DbAppManager.getInst().delBoard(ss.scode, ss.getUserId(), newBoardid);
+			return res.setError(EBoardError.InvalidParameter);
 		}
 		if(data.itemList.size() < 2) {
-			DbAppManager.getInst().delBoard(ss.scode, ss.getUserId(), res.getParam());
-			DbAppManager.getInst().deleteVoteInfo(ss.scode, res.getParam(), ss.getUserId());
-			return res.setError(EBoardError.eInvalidParameter);
+			DbAppManager.getInst().delBoard(ss.scode, ss.getUserId(), newBoardid);
+			DbAppManager.getInst().deleteVoteInfo(ss.scode, newBoardid, ss.getUserId());
+			return res.setError(EBoardError.InvalidParameter);
 		}
-		for(VoteText item : data.itemList) {
+		for(String votetext : data.itemList) {
 			String voteitemid = StrUtil.getSha1Uuid("vid");
-			DbAppManager.getInst().addVote(ss.scode, res.getParam(), voteitemid, item.votetext, item.voteurl);
+			DbAppManager.getInst().addVote(ss.scode, newBoardid, voteitemid, votetext);
 		}
-		return res.setError(EBoardError.eOK);
-	};
-	
-	/** 
-	 * select item of vote of board
-	 * @param ss
-	 * @param res
-	 * @param userData, [board id][vote item id][is select or unselect,true or false]
-	 * @return
-	 */
-	ICommandFunction<AuthSession, ResponseData<EBoardError>, JsonNode> selectVoteItem = (AuthSession ss, ResponseData<EBoardError> res, JsonNode jnode) -> {
-		SelectVote data = new RecDataBoard().new SelectVote(jnode);
-		if(ss==null)
-			return res.setError(EBoardError.eNoSession);
-		RecVoteUser voteuser = DbAppManager.getInst().getVoteUser(ss.scode, ss.getUserId(), data.boardid);
-		
-		if(data.isselect==true && voteuser!=DbRecord.Empty)
-			return res.setError(EBoardError.eAlreadyVoteUser);
-		else if(data.isselect==false && voteuser==DbRecord.Empty)
-			return res.setError(EBoardError.eNotExistVoteUser);
-		if(data.isselect==true && DbAppManager.getInst().addVoteUser(ss.scode, ss.getUserId(), data.boardid, data.vitemid)==false)
-			return res.setError(EBoardError.eFailAddVoteUser);
-		else if(data.isselect==false && DbAppManager.getInst().delVoteUser(ss.scode, ss.getUserId(), data.boardid)==false)
-			return res.setError(EBoardError.eFailDelVoteUser);
-		
-		DbAppManager.getInst().updateVoteSelection(ss.scode, data.boardid, data.vitemid, data.isselect);
-		return res.setError(EBoardError.eOK);
+		return res.setError(EBoardError.OK);
 	};
 	
 	/** 
@@ -358,59 +347,65 @@ public class BoardCommandAction extends CommonAction {
 	ICommandFunction<AuthSession, ResponseData<EBoardError>, JsonNode> getVoteItemList = (AuthSession ss, ResponseData<EBoardError> res, JsonNode jnode) -> {
 		VoteItemList data = new RecDataBoard().new VoteItemList(jnode);
 		if(ss==null)
-			return res.setError(EBoardError.eNoSession);
+			return res.setError(EBoardError.NoSession);
 		List<RecVote> voteList = DbAppManager.getInst().getVoteItemList(ss.scode, data.boardid);
-		String param = voteList.stream().map(e->String.format("%s%s%s%s%s%s%s", 
-					   e.vitemid, ASS.UNIT, e.selectcount, ASS.UNIT, e.votetext, ASS.UNIT, e.voteurl)).collect(Collectors.joining(ASS.RECORD));
-		return res.setError(EBoardError.eOK).setParam(data.boardid + ASS.GROUP + param);
+		return res.setError(EBoardError.OK).setParam("data", voteList);
 	};
 
-	/** 
-	 * update vote info.. expire time or early close
-	 * @param ss
-	 * @param res
-	 * @param userData, [board id][type][value]
-	 * 		  type -> "expire", value = milliseconds
-	 * 		  value -> "close", true or false
-	 * @return [board id][type][value]
-	 */
-	ICommandFunction<AuthSession, ResponseData<EBoardError>, JsonNode> updateVoteInfo = (AuthSession ss, ResponseData<EBoardError> res, JsonNode jnode) -> {
-		VoteUpdate data = new RecDataBoard().new VoteUpdate(jnode);
-		if(ss==null)
-			return res.setError(EBoardError.eNoSession);
-		RecVoteInfo vi = DbAppManager.getInst().getVoteInfo(ss.scode, data.boardid);
-		if(vi == DbRecord.Empty)
-			return res.setError(EBoardError.eNotExistVoteInfo);
-		else if(vi.userid.equals(ss.getUserId())==false)
-			return res.setError(EBoardError.ePermissionDeni);
-		else if(vi.expiretime < System.currentTimeMillis() || vi.isclosed == true)
-			return res.setError(EBoardError.eAlreadyExpired);
-			
-		if("expire".equals(data.type))
-			DbAppManager.getInst().updateVoteExpireTime(ss.scode, data.boardid, ss.getUserId(), Long.parseLong(data.value));
-		else if("close".equals(data.type))
-			DbAppManager.getInst().updateVoteClose(ss.scode, data.boardid, ss.getUserId(), Boolean.parseBoolean(data.value));
-		return res.setError(EBoardError.eOK).setParam(data.boardid+ASS.UNIT+data.type+ASS.UNIT+data.value);
-	};
 
 	/** 
-	 * update vote item
+	 * select item of vote of board
 	 * @param ss
 	 * @param res
-	 * @param userData, [board id][vote item id][type][value]
-	 * 		  type -> "text", "url"
+	 * @param userData, [board id][vote item id][is select or unselect,true or false]
 	 * @return
 	 */
-	ICommandFunction<AuthSession, ResponseData<EBoardError>, JsonNode> updateVoteItem = (AuthSession ss, ResponseData<EBoardError> res, JsonNode jnode) -> {
-		VoteItem data = new RecDataBoard().new VoteItem(jnode);
+	ICommandFunction<AuthSession, ResponseData<EBoardError>, JsonNode> selectVoteItem = (AuthSession ss, ResponseData<EBoardError> res, JsonNode jnode) -> {
+		SelectVote data = new RecDataBoard().new SelectVote(jnode);
 		if(ss==null)
-			return res.setError(EBoardError.eNoSession);
+			return res.setError(EBoardError.NoSession);
+		RecVoteUser voteuser = DbAppManager.getInst().getVoteUser(ss.scode, ss.getUserId(), data.boardid);
 		
-		if("text".equals(data.type))
-			DbAppManager.getInst().updateVoteitemText(ss.scode, data.boardid, data.vitemid, data.value);
-		else if("url".equals(data.type))
-			DbAppManager.getInst().updateVoteitemUrl(ss.scode, data.boardid, data.vitemid, data.value);
-		return res.setError(EBoardError.eOK).setParam(data.boardid+ASS.UNIT+data.vitemid+ASS.UNIT+data.type+ASS.UNIT+data.value);
+		if(data.isselect==true && voteuser!=DbRecord.Empty)
+			return res.setError(EBoardError.AlreadyVoteUser);
+		else if(data.isselect==false && voteuser==DbRecord.Empty)
+			return res.setError(EBoardError.NotExistVoteUser);
+		if(data.isselect==true && DbAppManager.getInst().addVoteUser(ss.scode, ss.getUserId(), data.boardid, data.vitemid)==false)
+			return res.setError(EBoardError.FailAddVoteUser);
+		else if(data.isselect==false && DbAppManager.getInst().delVoteUser(ss.scode, ss.getUserId(), data.boardid)==false)
+			return res.setError(EBoardError.FailDelVoteUser);
+		
+		DbAppManager.getInst().updateVoteSelection(ss.scode, data.boardid, data.vitemid, data.isselect);
+		return res.setError(EBoardError.OK);
+	};
+	
+	ICommandFunction<AuthSession, ResponseData<EBoardError>, JsonNode> updateVote = (AuthSession ss, ResponseData<EBoardError> res, JsonNode jnode) -> {
+		VoteUpdate data;
+		try {
+			data = new RecDataBoard().new VoteUpdate(jnode.toString());
+		} catch (Exception e) {
+			return res.setError(EBoardError.UnknownError);
+		}
+		if(ss==null)
+			return res.setError(EBoardError.NoSession);
+		RecVoteInfo vi = DbAppManager.getInst().getVoteInfo(ss.scode, data.getBoardid());
+		if(vi == DbRecord.Empty)
+			return res.setError(EBoardError.NotExistVoteInfo);
+		else if(vi.userid.equals(ss.getUserId())==false)
+			return res.setError(EBoardError.PermissionDeny);
+		else if(vi.expiretime < System.currentTimeMillis() || vi.isclosed == true)
+			return res.setError(EBoardError.AlreadyExpired);
+			
+		if(data.getExpiretime()!=null && data.getExpiretime()>0)
+			DbAppManager.getInst().updateVoteExpireTime(ss.scode, data.getBoardid(), ss.getUserId(), data.getExpiretime());
+		if(data.getIsclose() != null)
+			DbAppManager.getInst().updateVoteClose(ss.scode, data.getBoardid(), ss.getUserId(), data.getIsclose());
+		if(data.getVoteitems()!=null) {
+			List<VoteItemData> voteitems = data.getVoteitems();
+			for(VoteItemData voteitem : voteitems)
+				DbAppManager.getInst().updateVoteitemText(ss.scode, data.getBoardid(), voteitem.getVitemid(), voteitem.getVotetext());
+		}
+		return res.setError(EBoardError.OK);
 	};
 
 	/** 
@@ -423,10 +418,10 @@ public class BoardCommandAction extends CommonAction {
 	ICommandFunction<AuthSession, ResponseData<EBoardError>, JsonNode> changeVoteSelection = (AuthSession ss, ResponseData<EBoardError> res, JsonNode jnode) -> {
 		ChangeVoteSelection data = new RecDataBoard().new ChangeVoteSelection(jnode);
 		if(ss==null)
-			return res.setError(EBoardError.eNoSession);
+			return res.setError(EBoardError.NoSession);
 		if(DbAppManager.getInst().changeSelectItem(ss.scode, ss.getUserId(), data.boardid, data.vitemid)==false)
-			return res.setError(EBoardError.eNotExistVoteInfo);
-		return res.setError(EBoardError.eOK).setParam(data.boardid+ASS.UNIT+data.vitemid);
+			return res.setError(EBoardError.NotExistVoteInfo);
+		return res.setError(EBoardError.OK).setParam(data.boardid+ASS.UNIT+data.vitemid);
 	};
 	
 	/** 
@@ -439,15 +434,15 @@ public class BoardCommandAction extends CommonAction {
 	ICommandFunction<AuthSession, ResponseData<EBoardError>, JsonNode> getVoteInfoList = (AuthSession ss, ResponseData<EBoardError> res, JsonNode jnode) -> {
 		VoteInfoList data = new RecDataBoard().new VoteInfoList(jnode);
 		if(ss==null)
-			return res.setError(EBoardError.eNoSession);
+			return res.setError(EBoardError.NoSession);
 		
 		List<RecVoteInfo> vinfolist = DbAppManager.getInst().getVoteInfoList(ss.scode, data.boardids);
 		if(vinfolist.size()<1)
-			return res.setError(EBoardError.eNoListData);
+			return res.setError(EBoardError.NoListData);
 
 		String param = vinfolist.stream().map(e->String.format("%s%s%d%s%b", 
 				   e.boardid, ASS.UNIT, e.expiretime, ASS.UNIT, e.isclosed)).collect(Collectors.joining(ASS.RECORD));
-		return res.setError(EBoardError.eOK).setParam(param);
+		return res.setError(EBoardError.OK).setParam(param);
 	};
 	
 	
@@ -455,11 +450,11 @@ public class BoardCommandAction extends CommonAction {
 		String boardid = StrUtil.getSha1Uuid("brd");
 		if(DbAppManager.getInst().addBoardShort(ss.scode, boardid, data.itemtype, data.title, getShortContent(data.content), data.hasimage,
 				data.hasfile, data.category, data.appcode, ss.getUserId(), ss.getUsername())==false) 		//insert content's shortcut
-			return res.setError(EBoardError.eFailAddBoard);
+			return res.setError(EBoardError.FailAddBoard);
 		
 		DbAppManager.getInst().addBoardContent(ss.scode, boardid, data.content);	//insert content
 		DbAppManager.getInst().addBoardCount(ss.scode, boardid);
-		return res.setError(EBoardError.eOK).setParam(boardid);
+		return res.setError(EBoardError.OK).setParam(boardid);
 	}
 
 }

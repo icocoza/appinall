@@ -171,7 +171,7 @@ public class DeliveryCommandAction extends CommonAction {
 		List<RecAddress> addrList = DbAppManager.getInst().getAddressList(data.getScode(), addrids);
 		//[TODO]진행상태 추가 필요
 		session.setUserType(EUserType.sender);
-		return res.setData(this.getOrderSearchData(orderList, addrList)).setError(EDeliveryError.ok);
+		return res.setParam("data", this.getOrderSearchData(orderList, addrList)).setError(EDeliveryError.ok);
 	};
 	
 	ICommandFunction<AuthSession, ResponseData<EDeliveryError>, JsonNode> doOrderDetail = (AuthSession session, ResponseData<EDeliveryError> res, JsonNode jnode) -> {
@@ -191,7 +191,7 @@ public class DeliveryCommandAction extends CommonAction {
 		ArrayNode deliverPhotos = mapper.valueToTree(photoList.stream().filter(x-> x.usertype == EUserType.deliver).map(y->y.fileid).collect(Collectors.toList()));
 		objNode.putArray("senderphotos").addAll(senderPhotos);
 		objNode.putArray("deliverphotos").addAll(deliverPhotos);
-		return res.setData(objNode).setError(EDeliveryError.ok);
+		return res.setParam("data", objNode).setError(EDeliveryError.ok);
 	};
 	
 /*	ICommandFunction<AuthSession, ResponseData<EDeliveryError>, JsonNode> doDeliverSelectBySender = (AuthSession session, ResponseData<EDeliveryError> res, JsonNode jnode) -> {
@@ -260,7 +260,7 @@ public class DeliveryCommandAction extends CommonAction {
 		List<String> addrids = orderList.stream().map(x -> x.getBuildIds()).flatMap(Collection::stream).collect(Collectors.toList()); 
 		List<RecAddress> addrList = DbAppManager.getInst().getAddressList(data.getScode(), addrids);
 		session.setUserType(EUserType.deliver);
-		return res.setData(this.getOrderSearchData(orderList, addrList)).setError(EDeliveryError.ok);
+		return res.setParam("data", this.getOrderSearchData(orderList, addrList)).setError(EDeliveryError.ok);
 	};
 	
 	//Deliver가 Order 선택 
@@ -510,7 +510,7 @@ public class DeliveryCommandAction extends CommonAction {
 			node.put("status", EDeliveryStatus.none.getValue());
 		else
 			node.put("status", status.status.getValue());
-		return res.setData(node).setError(EDeliveryError.ok);
+		return res.setParam("data", node).setError(EDeliveryError.ok);
 	};
 	
 	ICommandFunction<AuthSession, ResponseData<EDeliveryError>, JsonNode> doOrderCancelBySender = (AuthSession session, ResponseData<EDeliveryError> res, JsonNode jnode) -> {
@@ -608,7 +608,7 @@ public class DeliveryCommandAction extends CommonAction {
 		
 		DbAppManager.getInst().addRouteHistory(data.getScode(), session.getUserId(), data.getRouteList(), orderList.size());
 		
-		return res.setData(this.getOrderSearchData(orderList, addrList)).setError(EDeliveryError.ok);
+		return res.setParam("data", this.getOrderSearchData(orderList, addrList)).setError(EDeliveryError.ok);
 	};
 	
 	private ArrayNode copySearshResultToResponse(ArrayNode arrNode) {

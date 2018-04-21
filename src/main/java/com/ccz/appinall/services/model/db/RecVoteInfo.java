@@ -47,8 +47,8 @@ public class RecVoteInfo extends DbRecord {
 		return doLoad(rd, new RecVoteInfo(poolName));
 	}
 
-	public boolean insert(String boardid, String userid, long expiretime, boolean isclosed) {
-		String sql = String.format("INSERT INTO %s (boardid, userid, expiretime, isclosed) "
+	public boolean insert(String boardid, String userid, long expiretime) {
+		String sql = String.format("INSERT INTO %s (boardid, userid, expiretime) "
 				+ "VALUES('%s', '%s', %d, %b)", RecVoteInfo.TBL_NAME,  
 				boardid, userid, expiretime, isclosed);
 		return super.insert(sql);
