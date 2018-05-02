@@ -1,0 +1,97 @@
+# Redis
+spring:
+  http:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+  redis:
+    host: 127.0.0.1
+    port: 6379
+    pool:
+      max-active: 16
+      max-idle: 8
+ 
+logging:
+  level:
+    com:
+      ccz:
+        appinall: debug
+    
+# MongoDB
+mongodb:
+  url: localhost
+  port: 27017
+  
+address:
+  mongodb: 
+    database: address
+    collection: korea
+    
+# ElasticSearch
+elastic:
+  cluster-name: oyw-cluster
+  cluster-node: oyw-node-1
+  url: localhost
+  port: 9300
+  index_db: address
+  type_table: southkorea
+  client: 
+    transport:
+      sniff: false
+  
+#AppInAll Websocket Server
+websocket:
+  port: 8081
+  path: /wss
+  
+so:
+  keepalive: true
+  backlog: 1000
+  reuseaddr: true
+  linger: 0
+  
+#mysql for admin
+admin: 
+  mysql: 
+    url: 127.0.0.1
+    option: zeroDateTimeBehavior=convertToNull&useUnicode=yes&characterEncoding=UTF-8&connectTimeout=2000&autoReconnect=true&serverTimezone=UTC&useSSL=false
+    user: aptapp
+    pw: pwaptapp
+    poolname: admindbpool
+    dbname: adminapps
+  
+#file upload
+fileupload:
+  dir: ./fileupload
+  maxsize: 10485760
+  ip: 45.76.220.83
+  port: 8081
+  
+filedown:
+  port: 8080
+  
+#keystroke
+keystore:
+  path: 
+  password: 
+  
+#fcm push
+fcm:
+  poolname: owypush
+  senderid: 711848409637
+  senderkey: AAAApb14uiU:APA91bESnMNuD0vvmSs3ywZwqWFwIr9rDnXrrMOsZJ12HvTWScM5Bg0UF06YOFbza9vkC42grEdoqPjCRcxV-w8JCpaMJEBOz5HwoZtJSdu8ifF7b4dOwmEB74PadnZ1fgQL0VQJ4iCR
+  url: fcm-xmpp.googleapis.com
+  port: 5235
+  initcount: 2
+  maxcount: 4
+  
+#redis queue
+redisqueue:
+  maxcount: 4
+  
+#boundary search, km
+geo:
+  search:
+    first: 2
+    next: 1
+  
