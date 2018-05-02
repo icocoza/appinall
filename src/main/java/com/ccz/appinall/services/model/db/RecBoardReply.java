@@ -75,11 +75,11 @@ public class RecBoardReply extends DbRecord {
 		return doLoad(rd, new RecBoardReply(poolName));
 	}
 
-	public boolean insert(String boardid, String parentid, String userid, String username, short depth, String msg) {
+	public int insert(String boardid, String parentid, String userid, String username, short depth, String msg) {
 		String sql = String.format("INSERT INTO %s (parentid, boardid, userid, username, depth, msg) "
 				 + "VALUES(%d, '%s', '%s', '%s', %d, '%s')", RecBoardReply.TBL_NAME,   
 				 Long.parseLong(parentid), boardid, userid, username, depth, msg);
-		return super.insert(sql);
+		return super.insertAndGetKey(sql);
 	}
 	
 	public boolean delete() {

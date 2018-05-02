@@ -54,7 +54,8 @@ public class RecPushToken extends DbRecord {
 		this.userid = userid;
 		this.epid = epid;
 		
-		String sql = String.format("INSERT INTO %s (devuuid, userid, epid) VALUES('%s', '%s', '%s')", RecPushToken.TBL_NAME, devuuid, userid, epid);
+		String sql = String.format("INSERT INTO %s (devuuid, userid, epid) VALUES('%s', '%s', '%s') "
+				+ "ON DUPLICATE KEY UPDATE userid='%s', epid='%s'", RecPushToken.TBL_NAME, devuuid, userid, epid, userid, epid);
 		return super.insert(sql) ? this : DbRecord.Empty;
 	}
 	

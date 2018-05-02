@@ -44,6 +44,10 @@ public class ResponseData<T> {
 		mapParam.put("data", p);
 		return this;
 	}
+	public ResponseData<T> setParam(int p) {
+		mapParam.put("data", p);
+		return this;
+	}
 	
 	@SuppressWarnings("resource")
 	public ResponseData<T> setParamFormat(String format, Object... args) {
@@ -61,6 +65,12 @@ public class ResponseData<T> {
 			return (String)mapParam.get("data");
 		return "";
 	}
+	public String getDataParam(String key) {
+		if(mapParam.containsKey(key))
+			return (String)mapParam.get(key);
+		return "";
+	}
+
 	public Map<String, Object> getParams() {
 		return mapParam;
 	}

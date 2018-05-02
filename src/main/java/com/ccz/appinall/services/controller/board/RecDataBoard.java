@@ -117,7 +117,8 @@ public class RecDataBoard {
 			category = jObj.get("category").asText();
 			offset = jObj.get("offset").asInt(); 
 			count = jObj.get("count").asInt(); 
-			userid = jObj.get("userid").asText();
+			if(jObj.has("userid"))
+				userid = jObj.get("userid").asText();
 		}
 	}
 	public class BoardContent extends DelBoard{
@@ -148,7 +149,7 @@ public class RecDataBoard {
 
 	}
 	public class AddReply {
-		public String boardid, parentrepid;
+		public String boardid, parentrepid = "0";
 		public int depth;
 		public String msg;
 		
@@ -207,7 +208,7 @@ public class RecDataBoard {
 			board = new AddBoard(jObj);
 			expiretime = jObj.get("expiretime").asLong();
 			//isclose = jObj.get("isclose").asBoolean();
-			ArrayNode jArr = (ArrayNode) jObj.get("voteitem");
+			ArrayNode jArr = (ArrayNode) jObj.get("voteitems");
 			for(JsonNode jItem : jArr)
 				//itemList.add(new VoteText(jItem.get("votetext").asText(), jItem.get("voteurl").asText()));
 				itemList.add(jItem.asText());

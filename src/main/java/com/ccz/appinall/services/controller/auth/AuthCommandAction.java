@@ -67,10 +67,12 @@ public class AuthCommandAction extends CommonAction {
 		
 		ICommandFunction cmdFunc = super.getCommandFunction(cmd);
 		if(cmdFunc!=null) {
+			log.info("Command Found: " + res.getCommand());
 			res = (ResponseData<EAuthError>) cmdFunc.doAction(ch, res, jdata);
-			send(ch, res.toString());
+			send(ch, res.toJsonString());
 			return true;
 		}
+		log.info("Command Not Found: " + res.getCommand());
 		return false;
 	}
 
@@ -91,7 +93,7 @@ public class AuthCommandAction extends CommonAction {
 		
 		String userid = KeyGen.makeKeyWithSeq("us");
 		String authQuery = DbTransaction.getInst().queryInsertUID(userid, data.getUid(), data.getPw());
-		return doRegisterUser(res, userid, data.getUid(), authQuery, data);
+		return doRegisterUser(res, userid, data.getUid(), authQuery, data, false);
 	};
 	
 	ICommandFunction<Channel, ResponseData<EAuthError>, JsonNode> doRegEmail = (Channel ch, ResponseData<EAuthError> res, JsonNode jnode) -> {
@@ -107,7 +109,7 @@ public class AuthCommandAction extends CommonAction {
 		
 		String userid = KeyGen.makeKeyWithSeq("us");
 		String authQuery = DbTransaction.getInst().queryInsertEmail(userid, data.getEmail());
-		return doRegisterUser(res, userid, data.getEmail(), authQuery, data);
+		return doRegisterUser(res, userid, data.getEmail(), authQuery, data, false);
 	};
 	
 	ICommandFunction<Channel, ResponseData<EAuthError>, JsonNode> doRegPhone = (Channel ch, ResponseData<EAuthError> res, JsonNode jnode) -> {
@@ -123,7 +125,7 @@ public class AuthCommandAction extends CommonAction {
 		
 		String userid = KeyGen.makeKeyWithSeq("us");
 		String authQuery = DbTransaction.getInst().queryInsertEmail(userid, data.getPhoneno());
-		return doRegisterUser(res, userid, data.getPhoneno(), authQuery, data);
+		return doRegisterUser(res, userid, data.getPhoneno(), authQuery, data, false);
 	};
 	
 	ICommandFunction<Channel, ResponseData<EAuthError>, JsonNode> doLogin = (Channel ch, ResponseData<EAuthError> res, JsonNode jnode) -> {
@@ -318,7 +320,7 @@ public class AuthCommandAction extends CommonAction {
 		String authQuery = DbTransaction.getInst().queryInsertUID(userid, data.getUid(), data.getInappcode()); //anonymous user는 uid(client defined)와 inappcode를 pw로 사용함(즉, passcode 없음) 
 		DataRegUser regUser = new RecDataAuth().new DataRegUser(data.getUuid(), ShortUUID.next(), data);
 		
-		if(doRegisterUser(res, userid, data.getUid(), authQuery, regUser).getError() != EAuthError.ok)
+		if(doRegisterUser(res, userid, data.getUid(), authQuery, regUser, true).getError() != EAuthError.ok)
 			return res;
 
 		RecUserAuth auth = DbAppManager.getInst().getUserAuth(data.getScode(), userid);
@@ -334,14 +336,14 @@ public class AuthCommandAction extends CommonAction {
 		return res;
 	};
 	
-	private ResponseData<EAuthError> doRegisterUser(ResponseData<EAuthError> res, String userid, String regId, String authQuery, DataRegUser data) {
+	private ResponseData<EAuthError> doRegisterUser(ResponseData<EAuthError> res, String userid, String regId, String authQuery, DataRegUser data, boolean enableToken) {
 		String tokenid = StrUtil.getSha1Uuid("tid");
 		String token = Crypto.AES256Cipher.getInst().enc(regId+ASS.UNIT+data.getUuid()+ASS.UNIT+data.getAuthtype());
 		
 		List<String> queries = new ArrayList<>();
 		queries.add(authQuery);
 		queries.add(DbTransaction.getInst().queryInsertUser(userid, data.getUsername(), data.isAnonymous()));
-		queries.add(DbTransaction.getInst().queryInsertToken(userid, data.getUuid(), tokenid, token, false));
+		queries.add(DbTransaction.getInst().queryInsertToken(userid, data.getUuid(), tokenid, token, enableToken));
 		if(DbTransaction.getInst().transactionQuery(data.getScode(), queries)==false)
 			return res.setError(EAuthError.failed_register);
 		

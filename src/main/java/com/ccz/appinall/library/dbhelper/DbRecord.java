@@ -109,7 +109,11 @@ public abstract class DbRecord {
 	protected boolean insert(String sql) {
 		return DbHelper.nonSelect(poolName, sql);
 	}
-	
+
+	protected int insertAndGetKey(String sql) {
+		return DbHelper.insertAndGetKey(poolName, sql);
+	}
+
 	protected boolean delete(String sql) {
 		return DbHelper.nonSelect(poolName, sql);
 	}

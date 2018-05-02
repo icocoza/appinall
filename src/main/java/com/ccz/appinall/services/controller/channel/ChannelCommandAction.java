@@ -50,7 +50,7 @@ public class ChannelCommandAction extends CommonAction{
 		ICommandFunction cmdFunc = super.getCommandFunction(cmd);
 		if(cmdFunc!=null) {
 			res = (ResponseData<EChannelError>) cmdFunc.doAction(session, res, jdata);
-			send(ch, res.toString());
+			send(ch, res.toJsonString());
 			return true;
 		}
 		return false;

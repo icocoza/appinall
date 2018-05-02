@@ -49,8 +49,8 @@ public class RecVoteInfo extends DbRecord {
 
 	public boolean insert(String boardid, String userid, long expiretime) {
 		String sql = String.format("INSERT INTO %s (boardid, userid, expiretime) "
-				+ "VALUES('%s', '%s', %d, %b)", RecVoteInfo.TBL_NAME,  
-				boardid, userid, expiretime, isclosed);
+				+ "VALUES('%s', '%s', %d)", RecVoteInfo.TBL_NAME,  
+				boardid, userid, expiretime);
 		return super.insert(sql);
 	}
 	

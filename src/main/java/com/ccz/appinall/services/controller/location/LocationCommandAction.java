@@ -53,7 +53,7 @@ public class LocationCommandAction extends CommonAction {
 		ICommandFunction cmdFunc = super.getCommandFunction(cmd);
 		if(cmdFunc!=null) {
 			res = (ResponseData<ELocationError>) cmdFunc.doAction(session, res, jdata);
-			send(ch, res.toString());
+			send(ch, res.toJsonString());
 			return true;
 		}
 		return false;

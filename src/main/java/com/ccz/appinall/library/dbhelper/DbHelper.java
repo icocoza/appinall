@@ -120,6 +120,26 @@ public class DbHelper {
         }
     }
     
+    static public int insertAndGetKey(String poolName, String sql) {
+		DbConnection conn = null;
+        try
+        {
+        	conn = DbConnMgr.getInst().getConnection(poolName);
+        	PreparedStatement pstmt = conn.connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+        	pstmt.executeUpdate();
+        	ResultSet rs = pstmt.getGeneratedKeys();
+        	if(rs.next())
+        		return rs.getInt(1);
+		    return 0;
+        }
+        catch (Exception e) {
+	        	e.printStackTrace();
+	        	if(conn!=null)
+	        		DbConnMgr.getInst().freeConnection(poolName, conn);
+	        return -1;
+        }
+    }
+    
     /*insert, update, delete only*/
     static public boolean multiQuery(String poolName, String[] sqls)
     {

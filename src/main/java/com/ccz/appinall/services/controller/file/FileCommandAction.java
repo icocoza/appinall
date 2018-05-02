@@ -54,7 +54,7 @@ public class FileCommandAction extends CommonAction {
 		ICommandFunction cmdFunc = super.getCommandFunction(cmd);
 		if(cmdFunc!=null) {
 			res = (ResponseData<EFileError>) cmdFunc.doAction(EFileCmd.getType(cmd).isAuth()?session : ch, res, jdata);
-			send(ch, res.toString());
+			send(ch, res.toJsonString());
 			return true;
 		}
 		return false;

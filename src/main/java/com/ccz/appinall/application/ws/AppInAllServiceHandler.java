@@ -151,6 +151,7 @@ public class AppInAllServiceHandler  implements IServiceHandler {
 			if(process.processCommand(ch, jdata) == true)
 				return true;
 		}
+		log.info("No Command");
 		return false;
 	}
 }

@@ -409,7 +409,7 @@ public class DbAppManager {
 	}
 	
 	//for board reply
-	public boolean addReply(String scode, String boardid, String parentid, String userid, String username, short depth, String msg) {
+	public int addReply(String scode, String boardid, String parentid, String userid, String username, short depth, String msg) {
 		incBoardReply(scode, boardid);
 		return new RecBoardReply(scode).insert(boardid, parentid, userid, username, depth, msg);
 	}

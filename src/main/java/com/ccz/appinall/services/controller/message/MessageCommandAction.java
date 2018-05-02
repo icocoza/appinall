@@ -47,7 +47,7 @@ public class MessageCommandAction extends CommonAction {
 		ICommandFunction cmdFunc = super.getCommandFunction(cmd);
 		if(cmdFunc!=null) {
 			res = (ResponseData<EMessageError>) cmdFunc.doAction(session, res, jdata);
-			send(ch, res.toString());
+			send(ch, res.toJsonString());
 			return true;
 		}
 		return false;

@@ -25,7 +25,7 @@ public class RecUser extends DbRecord {
 	public boolean createTable() {
 		String sql = String.format("CREATE TABLE IF NOT EXISTS %s (userid VARCHAR(64) NOT NULL PRIMARY KEY, "
 				+ "username VARCHAR(64) NOT NULL, anonymous BOOLEAN DEFAULT false, ostype VARCHAR(16), osversion VARCHAR(8), appversion VARCHAR(8), "
-				+ "inappcode VARCHAR(8), jointime DATETIME DEFAULT now(), leavetime DATETIME, lasttime DATETIME, likes INTEGER DEFAULT 0, dislikes INTEGER DEFAULT 0) ", RecUser.TBL_NAME);
+				+ "inappcode VARCHAR(16), jointime DATETIME DEFAULT now(), leavetime DATETIME, lasttime DATETIME, likes INTEGER DEFAULT 0, dislikes INTEGER DEFAULT 0) ", RecUser.TBL_NAME);
 		
 		return super.createTable(sql);
 	}

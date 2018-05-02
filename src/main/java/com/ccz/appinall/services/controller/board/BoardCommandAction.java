@@ -43,13 +43,13 @@ public class BoardCommandAction extends CommonAction {
 		super.setCommandFunction(EBoardCmd.updatecategory.getValue(), doUpdateBoardCategory);//O
 		super.setCommandFunction(EBoardCmd.updateboard.getValue(), doUpdateBoard);//O
 		super.setCommandFunction(EBoardCmd.boardlist.getValue(), doGetBoardList);//O
-		super.setCommandFunction(EBoardCmd.boardcontent.getValue(), doGetBoardContent);//O
+		super.setCommandFunction(EBoardCmd.getcontent.getValue(), doGetBoardContent);//O
 		super.setCommandFunction(EBoardCmd.like.getValue(), incBoardLike);//O
 		super.setCommandFunction(EBoardCmd.dislike.getValue(), incBoardDislike);//O
 		super.setCommandFunction(EBoardCmd.addreply.getValue(), addReply); //O
 		super.setCommandFunction(EBoardCmd.delreply.getValue(), delReply);//O
 		super.setCommandFunction(EBoardCmd.replylist.getValue(), getReplyList);//O
-		super.setCommandFunction(EBoardCmd.vote.getValue(), addVote);//O
+		super.setCommandFunction(EBoardCmd.addvote.getValue(), addVote);//O
 		super.setCommandFunction(EBoardCmd.voteitemlist.getValue(), getVoteItemList);//O
 		super.setCommandFunction(EBoardCmd.selvote.getValue(), selectVoteItem);//O
 		super.setCommandFunction(EBoardCmd.voteupdate.getValue(), updateVote);//O
@@ -66,7 +66,7 @@ public class BoardCommandAction extends CommonAction {
 		ICommandFunction cmdFunc = super.getCommandFunction(cmd);
 		if(cmdFunc!=null) {
 			res = (ResponseData<EBoardError>) cmdFunc.doAction(session, res, jdata);
-			send(ch, res.toString());
+			send(ch, res.toJsonString());
 			return true;
 		}
 		return false;
@@ -268,9 +268,10 @@ public class BoardCommandAction extends CommonAction {
 		AddReply data = new RecDataBoard().new AddReply(jnode);
 		if(ss==null)
 			return res.setError(EBoardError.NoSession);
-		if(DbAppManager.getInst().addReply(ss.scode, data.boardid, data.parentrepid, ss.getUserId(), ss.getUsername(), (short)data.depth, data.msg)==false)
+		int replyId = DbAppManager.getInst().addReply(ss.scode, data.boardid, data.parentrepid, ss.getUserId(), ss.getUsername(), (short)data.depth, data.msg);
+		if(replyId < 1)
 			return res.setError(EBoardError.FailAddReply);
-		return res.setError(EBoardError.OK);
+		return res.setError(EBoardError.OK).setParam("replyid", replyId);
 	};
 	
 	/** 
@@ -322,7 +323,7 @@ public class BoardCommandAction extends CommonAction {
 		if( (res = addBoard(ss, res, data.board)).getError() != EBoardError.OK)	//1. board info of vote
 			return res;
 		
-		String newBoardid = res.getDataParam();
+		String newBoardid = res.getDataParam("boardid");
 		if( DbAppManager.getInst().addVoteInfo(ss.scode, newBoardid, ss.getUserId(), data.expiretime) == false ) {
 			DbAppManager.getInst().delBoard(ss.scode, ss.getUserId(), newBoardid);
 			return res.setError(EBoardError.InvalidParameter);
@@ -336,7 +337,7 @@ public class BoardCommandAction extends CommonAction {
 			String voteitemid = StrUtil.getSha1Uuid("vid");
 			DbAppManager.getInst().addVote(ss.scode, newBoardid, voteitemid, votetext);
 		}
-		return res.setError(EBoardError.OK);
+		return res.setError(EBoardError.OK).setParam("boardid", newBoardid);
 	};
 	
 	/** 
@@ -440,9 +441,7 @@ public class BoardCommandAction extends CommonAction {
 		if(vinfolist.size()<1)
 			return res.setError(EBoardError.NoListData);
 
-		String param = vinfolist.stream().map(e->String.format("%s%s%d%s%b", 
-				   e.boardid, ASS.UNIT, e.expiretime, ASS.UNIT, e.isclosed)).collect(Collectors.joining(ASS.RECORD));
-		return res.setError(EBoardError.OK).setParam(param);
+		return res.setError(EBoardError.OK).setParam("data", vinfolist);
 	};
 	
 	
@@ -454,7 +453,7 @@ public class BoardCommandAction extends CommonAction {
 		
 		DbAppManager.getInst().addBoardContent(ss.scode, boardid, data.content);	//insert content
 		DbAppManager.getInst().addBoardCount(ss.scode, boardid);
-		return res.setError(EBoardError.OK).setParam(boardid);
+		return res.setError(EBoardError.OK).setParam("boardid", boardid);
 	}
 
 }

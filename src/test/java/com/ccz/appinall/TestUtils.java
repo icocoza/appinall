@@ -13,6 +13,7 @@ import com.ccz.appinall.library.util.StrUtil;
 public class TestUtils {
 
 	@Test
+	@Ignore
 	public void testUtils() {
 		System.out.println(StrUtil.isFileName("testfile.png"));
 		System.out.println(StrUtil.isFileName("1testfile.png"));

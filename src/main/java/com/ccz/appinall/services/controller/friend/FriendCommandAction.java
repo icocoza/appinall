@@ -55,7 +55,7 @@ public class FriendCommandAction extends CommonAction {
 		ICommandFunction cmdFunc = super.getCommandFunction(cmd);
 		if(cmdFunc!=null) {
 			res = (ResponseData<EFriendError>) cmdFunc.doAction(session, res, jdata);
-			send(ch, res.toString());
+			send(ch, res.toJsonString());
 			return true;
 		}
 		return false;
