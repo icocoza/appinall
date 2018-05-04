@@ -573,6 +573,8 @@ public class DeliveryCommandAction extends CommonAction {
 		Point checkPoint = routeArray[0];
 		double distance = servicesConfig.getGeoSearchNext() * 0.0075;	//re-calculate distance
 		
+		//[TODO] 가까운 거리의 배송물에 대해 검색되지 않음. 수정 필요
+		
 		for(int i=1; i<routeArray.length; i++) {
 			if(Math.hypot(routeArray[i].getX() - checkPoint.getX(), routeArray[i].getY() - checkPoint.getY()) >= distance) {
 				checkPoint = routeArray[i];

@@ -112,20 +112,15 @@ public class ServicesConfig {
 
 	@Value("${websocket.port}")
     private int websocketPort;
-
     @Value("${websocket.path}")
     private String websocketPath;
-
-    @Value("${so.keepalive}")
+    @Value("${websocket.so.keepalive}")
     private boolean keepAlive;
-    
-    @Value("${so.backlog}")
+    @Value("${websocket.so.backlog}")
     private int backlog;
-
-    @Value("${so.reuseaddr}")
+    @Value("${websocket.so.reuseaddr}")
     private boolean reuseAddr;
-    
-    @Value("${so.linger}")
+    @Value("${websocket.so.linger}")
     private int linger;
 
     @Value("${fileupload.dir}")

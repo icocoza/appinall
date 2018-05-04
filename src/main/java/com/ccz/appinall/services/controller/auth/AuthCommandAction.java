@@ -45,6 +45,7 @@ public class AuthCommandAction extends CommonAction {
 	ChAttributeKey chAttributeKey;
 	
 	public AuthCommandAction() {
+		super.setCommandFunction(EAuthCmd.find_id.getValue(), doFindId);
 		super.setCommandFunction(EAuthCmd.reg_idpw.getValue(), doRegIdPw);
 		super.setCommandFunction(EAuthCmd.reg_email.getValue(), doRegEmail);
 		super.setCommandFunction(EAuthCmd.reg_phone.getValue(), doRegPhone);
@@ -75,6 +76,17 @@ public class AuthCommandAction extends CommonAction {
 		log.info("Command Not Found: " + res.getCommand());
 		return false;
 	}
+	
+	ICommandFunction<Channel, ResponseData<EAuthError>, JsonNode> doFindId = (Channel ch, ResponseData<EAuthError> res, JsonNode jnode) -> {
+		DataUserId data = new RecDataAuth().new DataUserId(jnode);
+		if(data.getUid().length()<8)
+			return res.setError(EAuthError.userid_more_than_8);
+		if(StrUtil.isAlphaNumeric(data.getUid())==false)
+			return res.setError(EAuthError.userid_alphabet_and_digit);
+		if( DbAppManager.getInst().findUid(data.getScode(), data.getUid()) == true )
+			return res.setError(EAuthError.already_exist_userid);
+		return res.setError(EAuthError.ok);
+	};
 
 	ICommandFunction<Channel, ResponseData<EAuthError>, JsonNode> doRegIdPw = (Channel ch, ResponseData<EAuthError> res, JsonNode jnode) -> {
 		DataRegIdPw data = new RecDataAuth().new DataRegIdPw(jnode);

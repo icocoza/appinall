@@ -12,6 +12,16 @@ import lombok.Setter;
 public class RecDataAuth {
 	
 	@Getter
+	public class DataUserId extends RecDataCommon {
+		public String uid;
+		
+		public DataUserId(JsonNode jnode) {
+			super(jnode);
+			this.uid = jnode.get("uid").asText();
+		}
+	}
+	
+	@Getter
 	public class DataRegUser extends RecDataCommon {
 		private String uuid, username;
 		protected EUserAuthType authtype = EUserAuthType.none;
