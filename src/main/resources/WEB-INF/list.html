@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity3">
+    <head>
+        <title>AppInAll Homepage</title>
+        <meta charset="utf-8" />
+        <link rel="stylesheet" href="css/home.css" th:href="@{/css/home.css}" />
+    </head>
+    <body>
+    	  <div id="table-page">	
+    	  	<h1>AppInAll's Admin Page</h1>
+    	  	<h2>You can register your apps freely.</h2>
+    		<div class="newapp-btn clearfix">
+			<a class="" th:href="@{/view}">Add New App</a>
+		</div>
+		<table>
+		  <thead>
+		    <tr><!-- service code, description, version, update force, app store url, modify link, delete link, reg date -->
+		      <th>s-code</th>
+		      <th>title</th>
+		      <th>version</th>
+		      <th>update force</th>
+		      <th>app store url</th>
+		      <th>reg data</th>
+		    </tr>
+		  </thead>
+		  <tbody>
+		  	<tr th:if="${apps_empty}">
+            	  	<td colspan="4">No Service Apps.</td>
+         	</tr>
+         	<tr th:each="app : ${apps}">
+         		<td><a href="view.html" th:href="@{'/details?appid=' + ${app.appid}}" th:text="${app.scode}">service code</a></td>
+            		<td th:text="${app.title}">title</td>
+            		<td th:text="${app.version}">version</td>
+            		<td th:text="${app.updateforce}">false</td>
+            		<td th:text="${app.storeurl}">stored url</td>
+            		<td th:text="${#calendars.format(app.regtime)}">jan 7, 2018 2:04:16 PM CDT</td>
+         	</tr>
+		  </tbody>
+		</table>
+	  </div>
+    </body>
+    
+</html>

@@ -1,6 +1,7 @@
 package com.ccz.appinall.application.http;
 
 import org.springframework.beans.BeansException;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Bean;
@@ -18,6 +19,7 @@ import org.thymeleaf.templatemode.TemplateMode;
 @Configuration
 @EnableWebMvc
 @ComponentScan
+@EnableAutoConfiguration
 public class SpringWebConfig extends WebMvcConfigurerAdapter implements ApplicationContextAware {
 
 
@@ -55,12 +57,12 @@ public class SpringWebConfig extends WebMvcConfigurerAdapter implements Applicat
     public SpringResourceTemplateResolver templateResolver(){
         SpringResourceTemplateResolver templateResolver = new SpringResourceTemplateResolver();
         templateResolver.setApplicationContext(this.applicationContext);
-        templateResolver.setPrefix("/WEB-INF/");
+        templateResolver.setPrefix("classpath:/templates/");//("/WEB-INF/");
         templateResolver.setSuffix(".html");
         templateResolver.setTemplateMode(TemplateMode.HTML);
         // Template cache is true by default. Set to false if you want
         // templates to be automatically updated when modified.
-        templateResolver.setCacheable(true);
+        templateResolver.setCacheable(false);
         return templateResolver;
     }
 

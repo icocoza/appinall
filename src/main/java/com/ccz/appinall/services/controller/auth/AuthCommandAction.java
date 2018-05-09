@@ -68,12 +68,10 @@ public class AuthCommandAction extends CommonAction {
 		
 		ICommandFunction cmdFunc = super.getCommandFunction(cmd);
 		if(cmdFunc!=null) {
-			log.info("Command Found: " + res.getCommand());
 			res = (ResponseData<EAuthError>) cmdFunc.doAction(ch, res, jdata);
 			send(ch, res.toJsonString());
 			return true;
 		}
-		log.info("Command Not Found: " + res.getCommand());
 		return false;
 	}
 	
