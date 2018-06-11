@@ -13,7 +13,6 @@ import com.ccz.appinall.library.util.StrUtil;
 import com.ccz.appinall.services.controller.CommonAction;
 import com.ccz.appinall.services.controller.auth.AuthSession;
 import com.ccz.appinall.services.controller.channel.RecDataChannel.*;
-import com.ccz.appinall.services.enums.EAddrError;
 import com.ccz.appinall.services.enums.EAllCmd;
 import com.ccz.appinall.services.enums.EAllError;
 import com.ccz.appinall.services.model.db.RecChMime;

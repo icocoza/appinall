@@ -1,4 +1,4 @@
-package com.ccz.appinall.services.enums;
+package com.ccz.appinall.services.enums.unused;
 
 public enum EFriendError {
 	eOK,

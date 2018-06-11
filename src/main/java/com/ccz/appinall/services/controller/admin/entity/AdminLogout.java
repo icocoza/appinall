@@ -1,6 +1,5 @@
 package com.ccz.appinall.services.controller.admin.entity;
 
-import com.ccz.appinall.services.enums.EAdminCmd;
 import com.ccz.appinall.services.enums.EAllCmd;
 import com.fasterxml.jackson.databind.JsonNode;
 

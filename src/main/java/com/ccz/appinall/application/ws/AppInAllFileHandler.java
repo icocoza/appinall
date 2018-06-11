@@ -20,7 +20,7 @@ import com.ccz.appinall.library.util.ProtocolWriter;
 import com.ccz.appinall.library.util.StrUtil;
 import com.ccz.appinall.library.util.ProtocolWriter.WriteWebsocket;
 import com.ccz.appinall.services.controller.file.FileSession;
-import com.ccz.appinall.services.enums.EFileError;
+import com.ccz.appinall.services.enums.EAllError;
 
 import io.netty.channel.Channel;
 import io.netty.util.AttributeKey;
@@ -57,7 +57,7 @@ public class AppInAllFileHandler implements IServiceHandler {
 	public boolean process(Channel ch, IDataAccess da) {
 		FileSession fileSession = ch.attr(attrFileSessionKey).get();
 		if(fileSession==null) {
-			response(ch, fileSession, EFileError.invalid_file_session);
+			response(ch, fileSession, EAllError.invalid_file_session);
 			ch.close();
 			return false;
 		}
@@ -65,7 +65,7 @@ public class AppInAllFileHandler implements IServiceHandler {
 			fileSession.write(da.getData());
 			if(fileSession.isOverSize()) {
 				if(fileSession.commit(imageResizeWorker) == false) {
-					response(ch, fileSession, EFileError.commit_error);
+					response(ch, fileSession, EAllError.commit_error);
 					return false;
 				}
 				ch.attr(attrFileSessionKey).set(null);
@@ -77,11 +77,11 @@ public class AppInAllFileHandler implements IServiceHandler {
 				objectMap.put("hostport", servicesConfig.getFileDownPort()+"");
 				objectMap.put("fileid", fileSession.getKey());
 				objectMap.put("scode", fileSession.getScode());
-				response(ch, fileSession, EFileError.complete, objectMap);
+				response(ch, fileSession, EAllError.complete, objectMap);
 			}
 			return true;
 		} catch (IOException e) {
-			response(ch, fileSession, EFileError.exception);
+			response(ch, fileSession, EAllError.exception);
 			e.printStackTrace();
 		}
 		return false;
@@ -101,14 +101,14 @@ public class AppInAllFileHandler implements IServiceHandler {
 		}
 	}
 	
-	private void response(Channel ch, FileSession fileSession, EFileError error) {
-		ResponseData<EFileError> res = new ResponseData<EFileError>(fileSession.getScode(), "0000", "uploadfile");
+	private void response(Channel ch, FileSession fileSession, EAllError error) {
+		ResponseData<EAllError> res = new ResponseData<EAllError>(fileSession.getScode(), "0000", "uploadfile");
 		res.setError(error);
 		this.send(ch, res.toString());
 	}
 	
-	private void response(Channel ch, FileSession fileSession, EFileError error, Map<String, String> objectMap) {
-		ResponseData<EFileError> res = new ResponseData<EFileError>(fileSession.getScode(), "0000", "uploadfile");
+	private void response(Channel ch, FileSession fileSession, EAllError error, Map<String, String> objectMap) {
+		ResponseData<EAllError> res = new ResponseData<EAllError>(fileSession.getScode(), "0000", "uploadfile");
 		for(Entry<String, String> entry : objectMap.entrySet())
 			res.setParam(entry.getKey(), entry.getValue());
 		res.setError(error);

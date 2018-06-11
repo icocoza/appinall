@@ -3,6 +3,8 @@ package com.ccz.appinall.services.enums;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import lombok.Getter;
+
 public enum EAllCmd {
 	none("none"), addr_search("addr_search"),
 	
@@ -31,7 +33,7 @@ public enum EAllCmd {
 	confirm_complete_delivery("confirm_complete_delivery"),
 	watch_order("watch_order"), deliver_cancel_order("deliver_cancel_order"), deliver_plan("deliver_plan"), order_search_byroute("order_search_byroute"),
 	
-	fileinit("fileinit"), filesstart("filestart"), thumbnail("thumbnail"), upload("upload"),
+	fileinit("fileinit", true), filesstart("filestart", false), thumbnail("thumbnail", true), upload("upload", false),
 	
 	addfriend("addfriend"), delfriend("delfriend"), 
 	changefriendstatus("changefriendstatus"), friendids("friendids"), friendcnt("friendcnt"), friendinfos("friendinfos"), 
@@ -43,10 +45,17 @@ public enum EAllCmd {
 	
 	all("all");
 	
-	public final String value;
+	@Getter private final String value;
+	@Getter private final boolean needSession;
 	
 	private EAllCmd(String value) {
 		this.value = value;
+		this.needSession = true;
+	}
+	
+	private EAllCmd(String value, boolean needSession) {
+		this.value = value;
+		this.needSession = needSession;
 	}
 	
 	public String getValue() {

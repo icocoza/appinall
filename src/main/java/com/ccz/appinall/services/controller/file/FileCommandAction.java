@@ -6,23 +6,14 @@ import org.springframework.stereotype.Component;
 import com.ccz.appinall.common.config.ChAttributeKey;
 import com.ccz.appinall.common.config.ServicesConfig;
 import com.ccz.appinall.common.rdb.DbAppManager;
-import com.ccz.appinall.library.datastore.HttpMultipart;
-import com.ccz.appinall.library.server.session.SessionManager;
 import com.ccz.appinall.library.type.ResponseData;
 import com.ccz.appinall.library.type.WebsocketPacketData;
 import com.ccz.appinall.library.type.inf.ICommandFunction;
-import com.ccz.appinall.library.util.Crypto;
 import com.ccz.appinall.library.util.StrUtil;
 import com.ccz.appinall.services.controller.CommonAction;
-import com.ccz.appinall.services.controller.auth.AuthCommandAction;
 import com.ccz.appinall.services.controller.auth.AuthSession;
 import com.ccz.appinall.services.controller.file.RecDataFile.*;
-import com.ccz.appinall.services.enums.EAddrError;
 import com.ccz.appinall.services.enums.EAllCmd;
-import com.ccz.appinall.services.enums.EBoardCmd;
-import com.ccz.appinall.services.enums.EBoardError;
-import com.ccz.appinall.services.enums.EChannelError;
-import com.ccz.appinall.services.enums.EFileCmd;
 import com.ccz.appinall.services.enums.EAllError;
 import com.ccz.appinall.services.model.db.RecFile;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -54,7 +45,7 @@ public class FileCommandAction extends CommonAction {
 		
 		ICommandFunction cmdFunc = super.getCommandFunction(cmd);
 		if(cmdFunc!=null) {
-			res = (ResponseData<EAllError>) cmdFunc.doAction(EFileCmd.getType(cmd).isAuth()?session : ch, res, jdata);
+			res = (ResponseData<EAllError>) cmdFunc.doAction(EAllCmd.getType(cmd).isNeedSession() == true ? session : ch, res, jdata);
 			send(ch, res.toJsonString());
 			return true;
 		}

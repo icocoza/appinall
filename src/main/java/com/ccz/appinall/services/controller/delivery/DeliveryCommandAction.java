@@ -26,7 +26,6 @@ import com.ccz.appinall.services.controller.address.Location;
 import com.ccz.appinall.services.controller.address.RecDataAddr;
 import com.ccz.appinall.services.controller.address.RecDataAddr.*;
 import com.ccz.appinall.services.controller.auth.AuthSession;
-import com.ccz.appinall.services.enums.EAddrError;
 import com.ccz.appinall.services.enums.EAllCmd;
 import com.ccz.appinall.services.enums.EAllError;
 import com.ccz.appinall.services.enums.EDeliveryStatus;

@@ -1,4 +1,4 @@
-package com.ccz.appinall.services.enums;
+package com.ccz.appinall.services.enums.unused;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

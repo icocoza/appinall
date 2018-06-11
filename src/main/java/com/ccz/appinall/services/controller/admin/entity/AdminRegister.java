@@ -3,7 +3,6 @@ package com.ccz.appinall.services.controller.admin.entity;
 import java.util.Date;
 
 import com.ccz.appinall.library.util.AsciiSplitter.ASS;
-import com.ccz.appinall.services.enums.EAdminCmd;
 import com.ccz.appinall.services.enums.EAdminStatus;
 import com.ccz.appinall.services.enums.EAllCmd;
 import com.ccz.appinall.services.enums.EUserRole;

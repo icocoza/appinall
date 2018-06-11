@@ -1,13 +1,8 @@
-package com.ccz.appinall.services.enums;
+package com.ccz.appinall.services.enums.unused;
 
-public enum EAddrError {
+public enum EDeliveryError {
 	ok,
-	
-	failed_search,
-	invalid_search,
-	empty_search,
 	no_search_result,
-	
 	invalid_from_addressid,
 	invalid_to_addressid,
 	
@@ -60,4 +55,5 @@ public enum EAddrError {
 	not_exist_deliver,
 	
 	unknown_error
+
 }

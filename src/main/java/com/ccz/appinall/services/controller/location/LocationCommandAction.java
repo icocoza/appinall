@@ -6,14 +6,12 @@ import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.ccz.appinall.common.config.ChAttributeKey;
 import com.ccz.appinall.common.rdb.DbAppManager;
 import com.ccz.appinall.library.type.ResponseData;
 import com.ccz.appinall.library.type.inf.ICommandFunction;
 import com.ccz.appinall.services.controller.CommonAction;
 import com.ccz.appinall.services.controller.auth.AuthSession;
 import com.ccz.appinall.services.controller.location.RecDataLocation.*;
-import com.ccz.appinall.services.enums.EAddrError;
 import com.ccz.appinall.services.enums.EAllCmd;
 import com.ccz.appinall.services.enums.EAllError;
 import com.ccz.appinall.services.model.db.RecDeliveryApply;
