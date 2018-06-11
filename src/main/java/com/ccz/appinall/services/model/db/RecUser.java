@@ -12,7 +12,7 @@ public class RecUser extends DbRecord {
 	public String username;
 	public boolean anonymous;
 	public String ostype, osversion, appversion;
-	public String inappcode; //optional
+	public String appcode; //optional
 	public Boolean enabledtoken;
 	public Timestamp   jointime, leavetime, lasttime;
 	public int likes, dislikes;
@@ -25,7 +25,7 @@ public class RecUser extends DbRecord {
 	public boolean createTable() {
 		String sql = String.format("CREATE TABLE IF NOT EXISTS %s (userid VARCHAR(64) NOT NULL PRIMARY KEY, "
 				+ "username VARCHAR(64) NOT NULL, anonymous BOOLEAN DEFAULT false, ostype VARCHAR(16), osversion VARCHAR(8), appversion VARCHAR(8), "
-				+ "inappcode VARCHAR(16), jointime DATETIME DEFAULT now(), leavetime DATETIME, lasttime DATETIME, likes INTEGER DEFAULT 0, dislikes INTEGER DEFAULT 0) ", RecUser.TBL_NAME);
+				+ "appcode VARCHAR(32), jointime DATETIME DEFAULT now(), leavetime DATETIME, lasttime DATETIME, likes INTEGER DEFAULT 0, dislikes INTEGER DEFAULT 0) ", RecUser.TBL_NAME);
 		
 		return super.createTable(sql);
 	}
@@ -39,7 +39,7 @@ public class RecUser extends DbRecord {
 		rec.ostype = rd.getString("ostype");
 		rec.osversion = rd.getString("osversion");
 		rec.appversion = rd.getString("appversion");
-		rec.inappcode = rd.getString("inappcode");
+		rec.appcode = rd.getString("appcode");
 		rec.jointime = rd.getDate("jointime");
 		rec.leavetime = rd.getDate("leavetime");
 		rec.lasttime = rd.getDate("lasttime");
@@ -94,8 +94,8 @@ public class RecUser extends DbRecord {
 		return (RecUser) super.getOne(sql);
 	}
 
-	public boolean updateAppCode(String userid, String inappcode) {
-		String sql = String.format("UPDATE %s SET inappcode='%s' WHERE userid='%s'", RecUser.TBL_NAME, inappcode, userid);
+	public boolean updateAppCode(String userid, String appcode) {
+		String sql = String.format("UPDATE %s SET appcode='%s' WHERE userid='%s'", RecUser.TBL_NAME, appcode, userid);
 		return super.update(sql);
 	}
 
@@ -119,8 +119,8 @@ public class RecUser extends DbRecord {
 		return super.update(sql);
 	}
 	
-	public boolean isSameApt(String inappcode) {
-		return this.inappcode!=null && inappcode.equals(inappcode);
+	public boolean isSameAppCode(String appcode) {
+		return this.appcode!=null && appcode.equals(appcode);
 	}
 	
 	public boolean updateUserLike(String userid, boolean likes, boolean cancel) {

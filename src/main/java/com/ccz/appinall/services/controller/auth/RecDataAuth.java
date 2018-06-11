@@ -79,7 +79,7 @@ public class RecDataAuth {
 	
 	public class DataLogin extends DataSignIn {
 		@Getter private String uid, pw;
-		@Getter private String usertype, ostype, osversion, appversion, inappcode;
+		@Getter private String usertype, ostype, osversion, appversion;
 		@Getter private String epid;
 		
 		public DataLogin(JsonNode jnode) {
@@ -91,7 +91,6 @@ public class RecDataAuth {
 			this.ostype = jnode.get("ostype").asText();
 			this.osversion = jnode.get("osversion").asText();
 			this.appversion = jnode.get("appversion").asText();
-			this.inappcode = jnode.get("inappcode").asText();
 			this.epid = jnode.get("epid").asText();
 		}
 		
@@ -110,7 +109,20 @@ public class RecDataAuth {
 			this.uuid = jnode.get("uuid").asText();
 		}
 	} 
-	
+
+	public class DataAnonyLoginGps extends DataAnonyLogin {
+		@Getter private String buildid;
+		@Getter private double lon;
+		@Getter private double lat;
+		
+		public DataAnonyLoginGps(JsonNode jnode) {
+			super(jnode);
+			this.buildid = jnode.get("buildid").asText();
+			this.lon = jnode.get("lon").asDouble();
+			this.lat = jnode.get("lat").asDouble();
+		}
+	} 
+
 	public class DataSignIn extends RecDataCommon {
 		private String regtoken;
 		
@@ -166,7 +178,7 @@ public class RecDataAuth {
 	
 	@Getter
 	private class DataUpdateUser extends RecDataCommon {
-		protected String uuid, ostype, osversion, appversion, inappcode;
+		protected String uuid, ostype, osversion, appversion;
 		protected EUserAuthType authtype = EUserAuthType.none;
 		
 		public DataUpdateUser(JsonNode jnode) {
@@ -175,7 +187,7 @@ public class RecDataAuth {
 			this.ostype = jnode.get("ostype").asText();
 			this.osversion = jnode.get("osversion").asText();
 			this.appversion = jnode.get("appversion").asText();
-			this.inappcode = jnode.get("inappcode").asText();
+//			this.inappcode = jnode.get("inappcode").asText();
 		}
 	}
 	

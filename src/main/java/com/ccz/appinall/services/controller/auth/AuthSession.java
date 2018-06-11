@@ -20,6 +20,9 @@ public class AuthSession extends SessionItem<RecUser> {
 	
 	@Getter List<String> cleanUpIds = new ArrayList<>();
 	
+	public AuthSession(Channel ch) {
+		super(ch, 0);
+	}
 	public AuthSession(Channel ch, int methodType) {
 		super(ch, methodType);
 	}

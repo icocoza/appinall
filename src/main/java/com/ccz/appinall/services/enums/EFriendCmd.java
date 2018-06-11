@@ -4,9 +4,9 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public enum EFriendCmd {
-	none("none"), addfriend("addfriend"), delfriend("delfriend"), 
-	changefriendstatus("changefriendstatus"), friendids("friendids"), friendcnt("friendcnt"), friendinfos("friendinfos"), 
-	appendme("appendme"), blockme("blockme"), appendmecnt("appendmecnt"), blockmecnt("blockmecnt");
+	none("none");//, addfriend("addfriend"), delfriend("delfriend"), 
+//	changefriendstatus("changefriendstatus"), friendids("friendids"), friendcnt("friendcnt"), friendinfos("friendinfos"), 
+//	appendme("appendme"), blockme("blockme"), appendmecnt("appendmecnt"), blockmecnt("blockmecnt");
 	
 	
 	public final String value;

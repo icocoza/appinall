@@ -22,6 +22,8 @@ public class ResponseData<T> {
 	
 	@Getter @Setter
 	String token;
+	@Getter @Setter
+	String userid;
 	
 	Map<String, Object> mapParam = new HashMap<>();
 	
@@ -80,6 +82,7 @@ public class ResponseData<T> {
 		ObjectNode objNode = (ObjectNode) objectMapper.convertValue(mapParam, JsonNode.class);
 		objNode.put("service", serviceCode);
 		objNode.put("cmd", cmd);
+		objNode.put("rcode", code);
 		objNode.put("result", error.toString());
 		//if(jsonData != null)
 		//	objNode.set("data", jsonData);

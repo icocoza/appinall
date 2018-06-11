@@ -4,8 +4,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public enum EChannelCmd {
-	none("none"), chcreate("chcreate"), chexit("chexit"), chenter("chenter"), chinvite("chinvite"), 
-	chmime("chmime"), chcount("chcount"), chlastmsg("chlastmsg"), chinfo("chinfo");
+	none("none");//, chcreate("chcreate"), chexit("chexit"), chenter("chenter"), chinvite("chinvite"), 
+	//chmime("chmime"), chcount("chcount"), chlastmsg("chlastmsg"), chinfo("chinfo");
 	
 	
 	public final String value;

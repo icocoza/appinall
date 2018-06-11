@@ -1,103 +1,115 @@
 package com.ccz.appinall.library.util;
 
+import org.springframework.data.geo.Point;
+
 public class Coordination {
-    public void convertUTM2WGS(double d, double e)
+	
+	static public double transferGrs80TmCoordY(double wgs84X, double wgs84Y)
+	   {
+	    	double CS_LON_RAD = wgs84Y * 0.0174532925199433;
+	       double CS_LAT_RAD = wgs84X * 0.0174532925199433;
+	       double CS_V = 6378137.0 / Math.pow(1.0 - 0.00669438 * Math.pow(Math.sin(CS_LAT_RAD), 2.0), 0.5);
+	       double CS_T = Math.pow(Math.tan(CS_LAT_RAD), 2.0);
+	       double CS_C = 0.00674 * Math.pow(Math.cos(CS_LAT_RAD), 2.0);
+	       double CS_A = (CS_LON_RAD - 2.2165681500327987) * Math.cos(CS_LAT_RAD);
+	       double CS_M = 6378137.0 * ((0.998326405 - 3.0 * Math.pow(0.00669438, 2.0) / 64.0 - 5.0 * Math.pow(0.00669438, 3.0) / 256.0) * CS_LAT_RAD - (0.0025103925 + 3.0 * Math.pow(0.00669438, 2.0) / 32.0 + 45.0 * Math.pow(0.00669438, 3.0) / 1024.0) * Math.sin(2.0 * CS_LAT_RAD) + (15.0 * Math.pow(0.00669438, 2.0) / 256.0 + 45.0 * Math.pow(0.00669438, 3.0) / 1024.0) * Math.sin(4.0 * CS_LAT_RAD) - 35.0 * Math.pow(0.00669438, 3.0) / 3072.0 * Math.sin(6.0 * CS_LAT_RAD));
+	       wgs84Y = 200000.0 + 1.0 * CS_V * (CS_A + (1.0 - CS_T + CS_C) * Math.pow(CS_A, 3.0) / 6.0 + (5.0 - 18.0 * CS_T + Math.pow(CS_T, 2.0) + 72.0 * CS_C - 0.39092000000000005) * Math.pow(CS_A, 5.0) / 120.0);
+	       wgs84X = 500000.0 + 1.0 * (CS_M - 4207498.01915032 + CS_V * Math.tan(CS_LAT_RAD) * (Math.pow(CS_A, 2.0) / 2.0 + (5.0 - CS_T + 9.0 * CS_C + 4.0 * Math.pow(CS_C, 2.0)) * Math.pow(CS_A, 4.0) / 24.0 + (61.0 - 58.0 * CS_T + Math.pow(CS_T, 2.0) + 600.0 * CS_C - 2.2242) * Math.pow(CS_A, 6.0) / 720.0));
+	       return wgs84X;
+	  }
+	  
+
+	static public double transferGrs80TmCoordX(double wgs84X, double wgs84Y){
+	    double CS_LON_RAD = wgs84Y * 0.0174532925199433;
+	       double CS_LAT_RAD = wgs84X * 0.0174532925199433;
+	       double CS_V = 6378137.0 / Math.pow(1.0 - 0.00669438 * Math.pow(Math.sin(CS_LAT_RAD), 2.0), 0.5);
+	       double CS_T = Math.pow(Math.tan(CS_LAT_RAD), 2.0);
+	       double CS_C = 0.00674 * Math.pow(Math.cos(CS_LAT_RAD), 2.0);
+	       double CS_A = (CS_LON_RAD - 2.2165681500327987) * Math.cos(CS_LAT_RAD);
+	       double CS_M = 6378137.0 * ((0.998326405 - 3.0 * Math.pow(0.00669438, 2.0) / 64.0 - 5.0 * Math.pow(0.00669438, 3.0) / 256.0) * CS_LAT_RAD - (0.0025103925 + 3.0 * Math.pow(0.00669438, 2.0) / 32.0 + 45.0 * Math.pow(0.00669438, 3.0) / 1024.0) * Math.sin(2.0 * CS_LAT_RAD) + (15.0 * Math.pow(0.00669438, 2.0) / 256.0 + 45.0 * Math.pow(0.00669438, 3.0) / 1024.0) * Math.sin(4.0 * CS_LAT_RAD) - 35.0 * Math.pow(0.00669438, 3.0) / 3072.0 * Math.sin(6.0 * CS_LAT_RAD));
+	       wgs84Y = 200000.0 + 1.0 * CS_V * (CS_A + (1.0 - CS_T + CS_C) * Math.pow(CS_A, 3.0) / 6.0 + (5.0 - 18.0 * CS_T + Math.pow(CS_T, 2.0) + 72.0 * CS_C - 0.39092000000000005) * Math.pow(CS_A, 5.0) / 120.0);
+	       wgs84X = 500000.0 + 1.0 * (CS_M - 4207498.01915032 + CS_V * Math.tan(CS_LAT_RAD) * (Math.pow(CS_A, 2.0) / 2.0 + (5.0 - CS_T + 9.0 * CS_C + 4.0 * Math.pow(CS_C, 2.0)) * Math.pow(CS_A, 4.0) / 24.0 + (61.0 - 58.0 * CS_T + Math.pow(CS_T, 2.0) + 600.0 * CS_C - 2.2242) * Math.pow(CS_A, 6.0) / 720.0));
+	       return wgs84Y;
+	  }
+/*	function transferGrs80TmCoordY(wgs84X, wgs84Y)
+	   {
+	    double CS_LON_RAD = parseFloat(wgs84Y) * 0.0174532925199433;
+	       double CS_LAT_RAD = parseFloat(wgs84X) * 0.0174532925199433;
+	       double CS_V = 6378137.0 / Math.pow(1.0 - 0.00669438 * Math.pow(Math.sin(CS_LAT_RAD), 2.0), 0.5);
+	       double CS_T = Math.pow(Math.tan(CS_LAT_RAD), 2.0);
+	       double CS_C = 0.00674 * Math.pow(Math.cos(CS_LAT_RAD), 2.0);
+	       double CS_A = (CS_LON_RAD - 2.2165681500327987) * Math.cos(CS_LAT_RAD);
+	       double CS_M = 6378137.0 * ((0.998326405 - 3.0 * Math.pow(0.00669438, 2.0) / 64.0 - 5.0 * Math.pow(0.00669438, 3.0) / 256.0) * CS_LAT_RAD - (0.0025103925 + 3.0 * Math.pow(0.00669438, 2.0) / 32.0 + 45.0 * Math.pow(0.00669438, 3.0) / 1024.0) * Math.sin(2.0 * CS_LAT_RAD) + (15.0 * Math.pow(0.00669438, 2.0) / 256.0 + 45.0 * Math.pow(0.00669438, 3.0) / 1024.0) * Math.sin(4.0 * CS_LAT_RAD) - 35.0 * Math.pow(0.00669438, 3.0) / 3072.0 * Math.sin(6.0 * CS_LAT_RAD));
+	       wgs84Y = 200000.0 + 1.0 * CS_V * (CS_A + (1.0 - CS_T + CS_C) * Math.pow(CS_A, 3.0) / 6.0 + (5.0 - 18.0 * CS_T + Math.pow(CS_T, 2.0) + 72.0 * CS_C - 0.39092000000000005) * Math.pow(CS_A, 5.0) / 120.0);
+	       wgs84X = 500000.0 + 1.0 * (CS_M - 4207498.01915032 + CS_V * Math.tan(CS_LAT_RAD) * (Math.pow(CS_A, 2.0) / 2.0 + (5.0 - CS_T + 9.0 * CS_C + 4.0 * Math.pow(CS_C, 2.0)) * Math.pow(CS_A, 4.0) / 24.0 + (61.0 - 58.0 * CS_T + Math.pow(CS_T, 2.0) + 600.0 * CS_C - 2.2242) * Math.pow(CS_A, 6.0) / 720.0));
+	       return wgs84X;
+	  }
+	  
+
+	function transferGrs80TmCoordX(wgs84X, wgs84Y){
+	    double CS_LON_RAD = parseFloat(wgs84Y) * 0.0174532925199433;
+	       double CS_LAT_RAD = parseFloat(wgs84X) * 0.0174532925199433;
+	       double CS_V = 6378137.0 / Math.pow(1.0 - 0.00669438 * Math.pow(Math.sin(CS_LAT_RAD), 2.0), 0.5);
+	       double CS_T = Math.pow(Math.tan(CS_LAT_RAD), 2.0);
+	       double CS_C = 0.00674 * Math.pow(Math.cos(CS_LAT_RAD), 2.0);
+	       double CS_A = (CS_LON_RAD - 2.2165681500327987) * Math.cos(CS_LAT_RAD);
+	       double CS_M = 6378137.0 * ((0.998326405 - 3.0 * Math.pow(0.00669438, 2.0) / 64.0 - 5.0 * Math.pow(0.00669438, 3.0) / 256.0) * CS_LAT_RAD - (0.0025103925 + 3.0 * Math.pow(0.00669438, 2.0) / 32.0 + 45.0 * Math.pow(0.00669438, 3.0) / 1024.0) * Math.sin(2.0 * CS_LAT_RAD) + (15.0 * Math.pow(0.00669438, 2.0) / 256.0 + 45.0 * Math.pow(0.00669438, 3.0) / 1024.0) * Math.sin(4.0 * CS_LAT_RAD) - 35.0 * Math.pow(0.00669438, 3.0) / 3072.0 * Math.sin(6.0 * CS_LAT_RAD));
+	       wgs84Y = 200000.0 + 1.0 * CS_V * (CS_A + (1.0 - CS_T + CS_C) * Math.pow(CS_A, 3.0) / 6.0 + (5.0 - 18.0 * CS_T + Math.pow(CS_T, 2.0) + 72.0 * CS_C - 0.39092000000000005) * Math.pow(CS_A, 5.0) / 120.0);
+	       wgs84X = 500000.0 + 1.0 * (CS_M - 4207498.01915032 + CS_V * Math.tan(CS_LAT_RAD) * (Math.pow(CS_A, 2.0) / 2.0 + (5.0 - CS_T + 9.0 * CS_C + 4.0 * Math.pow(CS_C, 2.0)) * Math.pow(CS_A, 4.0) / 24.0 + (61.0 - 58.0 * CS_T + Math.pow(CS_T, 2.0) + 600.0 * CS_C - 2.2242) * Math.pow(CS_A, 6.0) / 720.0));
+	       return wgs84Y;
+	  }*/
+
+    static public Point convertUTM2WGS(double zone, double easting, double northing, boolean northernHemisphere)
     {
-        setParameter(115.8D, -474.99000000000001D, -674.11000000000001D, 1.1599999999999999D, -2.3100000000000001D, -1.6299999999999999D, -6.4299999999999997D, 1.0D);
-        TM2GP(6378137D, 0.0033528106647474805D, 0.0D, 500000D, 0.99960000000000004D, e, d);
+    	    if(northernHemisphere == false)
+    	        northing = 10000000 - northing;
+
+    	    double a = 6378137;
+    	    double e = 0.081819191;
+    	    double e1sq = 0.006739497;
+    	    double k0 = 0.9996;
+
+    	    double arc = northing / k0;
+    	    double mu = arc / (a * (1f - Math.pow(e, 2f) / 4.0 - 3f * Math.pow(e, 4f) / 64.0 - 5f * Math.pow(e, 6f) / 256.0));
+
+    	    double ei = (1f - Math.pow((1f - e * e), (1f / 2.0))) / (1f + Math.pow((1f - e * e), (1f / 2.0)));
+
+    	    double ca = 3f * ei / 2f - 27f * Math.pow(ei, 3f) / 32.0;
+
+    	    double cb = 21f * Math.pow(ei, 2f) / 16f - 55f * Math.pow(ei, 4f) / 32f;
+    	    double cc = 151f * Math.pow(ei, 3f) / 96f;
+    	    double cd = 1097f * Math.pow(ei, 4f) / 512f;
+    	    double phi1 = mu + ca * Math.sin(2f * mu) + cb * Math.sin(4f * mu) + cc * Math.sin(6f * mu) + cd * Math.sin(8f * mu);
+
+    	    double n0 = a / Math.pow((1f - Math.pow((e * Math.sin(phi1)), 2f)), (1f / 2.0));
+
+    	    double r0 = a * (1f - e * e) / Math.pow((1f - Math.pow((e * Math.sin(phi1)), 2f)), (3f / 2.0));
+    	    double fact1 = n0 * Math.tan(phi1) / r0;
+
+    	    double _a1 = 500000f - easting;
+    	    double dd0 = _a1 / (n0 * k0);
+    	    double fact2 = dd0 * dd0 / 2f;
+
+    	    double t0 = Math.pow(Math.tan(phi1), 2f);
+    	    double Q0 = e1sq * Math.pow(Math.cos(phi1), 2f);
+    	    double fact3 = (5f + 3f * t0 + 10f * Q0 - 4f * Q0 * Q0 - 9f * e1sq) * Math.pow(dd0, 4f) / 24f;
+
+    	    double fact4 = (61f + 90f * t0 + 298f * Q0 + 45f * t0 * t0 - 252f * e1sq - 3f * Q0 * Q0) * Math.pow(dd0, 6f) / 720f;
+
+    	    double lof1 = _a1 / (n0 * k0);
+    	    double lof2 = (1f + 2f * t0 + Q0) * Math.pow(dd0, 3f) / 6.0;
+    	    double lof3 = (5f - 2f * Q0 + 28f * t0 - 3f * Math.pow(Q0, 2f) + 8f * e1sq + 24f * Math.pow(t0, 2f)) * Math.pow(dd0, 5f) / 120f;
+    	    double _a2 = (lof1 - lof2 + lof3) / Math.cos(phi1);
+    	    double _a3 = _a2 * 180f / Math.PI;
+
+    	    double latitude = 180f * (phi1 - fact1 * (fact2 + fact3 + fact4)) / Math.PI;
+
+    	    if(northernHemisphere == false)
+    	        latitude = -latitude;
+
+    	    double longitude = ((zone > 0f) ? 6f * zone - 183.0 : 3.0) - _a3;
+
+    	    return new Point(latitude, longitude);
     }
     
-    public double x;
-    public double y;
-    private double m_imode;
-    private double m_ds;
-    private double m_kappa;
-    private double m_phi;
-    private double m_omega;
-    private double m_dz;
-    private double m_dy;
-    private double m_dx;
-    
-    private void setParameter(double a, double b, double d, double e, double h, double g, double j,
-            double l)
-    {
-        double m = Math.atan(1.0D) / 45D;
-        m_dx = a;
-        m_dy = b;
-        m_dz = d;
-        m_omega = (e / 3600D) * m;
-        m_phi = (h / 3600D) * m;
-        m_kappa = (g / 3600D) * m;
-        m_ds = j * 9.9999999999999995E-007D;
-        m_imode = l;
-    }
-
-    private void TM2GP(double d, double e, double h, double g, double j, double l, double m)
-    {
-        double u = e;
-        double A = 0.0D;
-        double w = 0.0D;
-        double o = 0.0D;
-        double D = 0.0D;
-        double B = 0.0D;
-        double z = 0.0D;
-        double G = 0.0D;
-        double E = 0.0D;
-        double I = 0.0D;
-        double J = 0.0D;
-        double L = 0.0D;
-        double M = 0.0D;
-        double H = 0.0D;
-        double a = y;
-        double b = x;
-        if(u > 1.0D)
-            u = 1.0D / u;
-        A = g;
-        w = Math.atan(1.0D) / 45D;
-        o = l * w;
-        D = m * w;
-        u = 1.0D / u;
-        B = (d * (u - 1.0D)) / u;
-        z = (Math.pow(d, 2D) - Math.pow(B, 2D)) / Math.pow(d, 2D);
-        u = (Math.pow(d, 2D) - Math.pow(B, 2D)) / Math.pow(B, 2D);
-        B = (d - B) / (d + B);
-        G = d * ((1.0D - B) + (5D * (Math.pow(B, 2D) - Math.pow(B, 3D))) / 4D + (81D * (Math.pow(B, 4D) - Math.pow(B, 5D))) / 64D);
-        E = (3D * d * ((B - Math.pow(B, 2D)) + (7D * (Math.pow(B, 3D) - Math.pow(B, 4D))) / 8D + (55D * Math.pow(B, 5D)) / 64D)) / 2D;
-        I = (15D * d * ((Math.pow(B, 2D) - Math.pow(B, 3D)) + (3D * (Math.pow(B, 4D) - Math.pow(B, 5D))) / 4D)) / 16D;
-        J = (35D * d * ((Math.pow(B, 3D) - Math.pow(B, 4D)) + (11D * Math.pow(B, 5D)) / 16D)) / 48D;
-        L = (315D * d * (Math.pow(B, 4D) - Math.pow(B, 5D))) / 512D;
-        o = (((G * o - E * Math.sin(2D * o)) + I * Math.sin(4D * o)) - J * Math.sin(6D * o)) + L * Math.sin(8D * o);
-        o *= j;
-        o = (a + o) - h;
-        M = o / j;
-        H = (d * (1.0D - z)) / Math.pow(Math.sqrt(1.0D - z * Math.pow(Math.sin(0.0D), 2D)), 3D);
-        o = M / H;
-        for(a = 1.0D; a <= 5D; a++)
-        {
-            B = (((G * o - E * Math.sin(2D * o)) + I * Math.sin(4D * o)) - J * Math.sin(6D * o)) + L * Math.sin(8D * o);
-            H = (d * (1.0D - z)) / Math.pow(Math.sqrt(1.0D - z * Math.pow(Math.sin(o), 2D)), 3D);
-            o += (M - B) / H;
-        }
-
-        H = (d * (1.0D - z)) / Math.pow(Math.sqrt(1.0D - z * Math.pow(Math.sin(o), 2D)), 3D);
-        G = d / Math.sqrt(1.0D - z * Math.pow(Math.sin(o), 2D));
-        B = Math.sin(o);
-        z = Math.cos(o);
-        E = B / z;
-        u *= Math.pow(z, 2D);
-        A = b - A;
-        B = E / (2D * H * G * Math.pow(j, 2D));
-        I = (E * ((5D + 3D * Math.pow(E, 2D) + u) - 4D * Math.pow(u, 2D) - 9D * Math.pow(E, 2D) * u)) / (24D * H * Math.pow(G, 3D) * Math.pow(j, 4D));
-        J = (E * ((((((61D + 90D * Math.pow(E, 2D) + 46D * u + 45D * Math.pow(E, 4D)) - 252D * Math.pow(E, 2D) * u - 3D * Math.pow(u, 2D)) + 100D * Math.pow(u, 3D)) - 66D * Math.pow(E, 2D) * Math.pow(u, 2D) - 90D * Math.pow(E, 4D) * u) + 88D * Math.pow(u, 4D) + 225D * Math.pow(E, 4D) * Math.pow(u, 2D) + 84D * Math.pow(E, 2D) * Math.pow(u, 3D)) - 192D * Math.pow(E, 2D) * Math.pow(u, 4D))) / (720D * H * Math.pow(G, 5D) * Math.pow(j, 6D));
-        H = (E * (1385D + 3633D * Math.pow(E, 2D) + 4095D * Math.pow(E, 4D) + 1575D * Math.pow(E, 6D))) / (40320D * H * Math.pow(G, 7D) * Math.pow(j, 8D));
-        o = (((o - Math.pow(A, 2D) * B) + Math.pow(A, 4D) * I) - Math.pow(A, 6D) * J) + Math.pow(A, 8D) * H;
-        B = 1.0D / (G * z * j);
-        H = (1.0D + 2D * Math.pow(E, 2D) + u) / (6D * Math.pow(G, 3D) * z * Math.pow(j, 3D));
-        u = (((((5D + 6D * u + 28D * Math.pow(E, 2D)) - 3D * Math.pow(u, 2D)) + 8D * Math.pow(E, 2D) * u + 24D * Math.pow(E, 4D)) - 4D * Math.pow(u, 3D)) + 4D * Math.pow(E, 2D) * Math.pow(u, 2D) + 24D * Math.pow(E, 2D) * Math.pow(u, 3D)) / (120D * Math.pow(G, 5D) * z * Math.pow(j, 5D));
-        z = (61D + 662D * Math.pow(E, 2D) + 1320D * Math.pow(E, 4D) + 720D * Math.pow(E, 6D)) / (5040D * Math.pow(G, 7D) * z * Math.pow(j, 7D));
-        A = ((A * B - Math.pow(A, 3D) * H) + Math.pow(A, 5D) * u) - Math.pow(A, 7D) * z;
-        D += A;
-        x = D / w;
-        y = o / w;
-    }
 }

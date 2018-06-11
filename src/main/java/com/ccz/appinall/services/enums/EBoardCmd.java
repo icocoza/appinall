@@ -4,12 +4,12 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public enum EBoardCmd {
-	none("none"), addboard("addboard"), delboard("delboard"), 
-	updatetitle("updatetitle"), updatecontent("updatecontent"), updatecategory("updatecategory"), updateboard("updateboard"), boardlist("boardlist"), getcontent("getcontent"), 
-	like("like"), dislike("dislike"),
-	addreply("addreply"), delreply("delreply"), replylist("replylist"),
-	addvote("addvote"), selvote("selvote"), voteitemlist("voteitemlist"), voteupdate("voteupdate"), changeselection("changeselection"), 
-	voteinfolist("voteinfolist");
+	none("none");//, addboard("addboard"), delboard("delboard"), 
+	//updatetitle("updatetitle"), updatecontent("updatecontent"), updatecategory("updatecategory"), updateboard("updateboard"), boardlist("boardlist"), getcontent("getcontent"), 
+	//like("like"), dislike("dislike"),
+	//addreply("addreply"), delreply("delreply"), replylist("replylist"),
+	//addvote("addvote"), selvote("selvote"), voteitemlist("voteitemlist"), voteupdate("voteupdate"), changeselection("changeselection"), 
+	//voteinfolist("voteinfolist");
 	
 	public final String value;
 	

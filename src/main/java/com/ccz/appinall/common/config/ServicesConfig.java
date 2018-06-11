@@ -122,6 +122,11 @@ public class ServicesConfig {
     private boolean reuseAddr;
     @Value("${websocket.so.linger}")
     private int linger;
+    
+    @Getter @Value("${websocket.keystore.path}")
+    private String keystorePath;
+    @Getter @Value("${websocket.keystore.password}")
+    private String keystorePassword;
 
     @Value("${fileupload.dir}")
     private String fileUploadDir;

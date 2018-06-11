@@ -5,6 +5,7 @@ import java.util.Date;
 import com.ccz.appinall.library.util.AsciiSplitter.ASS;
 import com.ccz.appinall.services.enums.EAdminCmd;
 import com.ccz.appinall.services.enums.EAdminStatus;
+import com.ccz.appinall.services.enums.EAllCmd;
 import com.ccz.appinall.services.enums.EUserRole;
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -38,7 +39,7 @@ public class AdminRegister extends AdminCommon {
 		sex = jObj.get("sex").asInt();
 	}
 	@Override
-	public EAdminCmd getCommand() {
-		return EAdminCmd.adminregister;
+	public EAllCmd getCommand() {
+		return EAllCmd.adminregister;
 	}
 }

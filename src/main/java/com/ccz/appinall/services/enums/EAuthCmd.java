@@ -4,9 +4,9 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public enum EAuthCmd {
-	none("none"), reg_idpw("reg_idpw"), reg_email("reg_email"), reg_phone("reg_phone"), login("login"), signin("signin"), 
-	change_pw("change_pw"), reissue_email("reissue_email"), reissue_phone("reissue_phone"), verify_email("verify_email"), verify_sms("verify_sms"),
-	anony_login("anony_login"), anony_signin("anony_signin"), find_id("find_id");
+	none("none");//, reg_idpw("reg_idpw"), reg_email("reg_email"), reg_phone("reg_phone"), login("login"), signin("signin"), 
+	//change_pw("change_pw"), reissue_email("reissue_email"), reissue_phone("reissue_phone"), verify_email("verify_email"), verify_sms("verify_sms"),
+	//anony_login("anony_login"), anony_login_gps("anony_login_gps"), anony_signin("anony_signin"), find_id("find_id");
 	
 	public final String value;
 	

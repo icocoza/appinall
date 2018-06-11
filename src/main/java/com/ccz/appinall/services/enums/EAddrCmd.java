@@ -4,7 +4,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public enum EAddrCmd {
-	none("none"), addr_search("addr_search"); 
+	none("none");//, addr_search("addr_search"); 
 	
 	public final String value;
 	

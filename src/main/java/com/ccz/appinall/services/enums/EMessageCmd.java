@@ -4,9 +4,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public enum EMessageCmd {
-	none("none"), msg("msg"), syncmsg("syncmsg"), rcvmsg("rcvmsg"), readmsg("readmsg"), delmsg("delmsg"),
-	
-	online("online"), push("push");
+	none("none");//, msg("msg"), syncmsg("syncmsg"), rcvmsg("rcvmsg"), readmsg("readmsg"), delmsg("delmsg"),
+//	online("online"), push("push");
 	
 	public final String value;
 	

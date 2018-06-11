@@ -28,8 +28,9 @@ import com.ccz.appinall.services.controller.admin.entity.AdminCommon;
 import com.ccz.appinall.services.controller.admin.entity.AdminRegister;
 import com.ccz.appinall.services.controller.admin.entity.ModifyApp;
 import com.ccz.appinall.services.enums.EAdminAppStatus;
-import com.ccz.appinall.services.enums.EAdminError;
+import com.ccz.appinall.services.enums.EAllError;
 import com.ccz.appinall.services.enums.EAdminStatus;
+import com.ccz.appinall.services.enums.EAllError;
 import com.ccz.appinall.services.enums.EUserRole;
 import com.ccz.appinall.services.model.db.RecAdminApp;
 
@@ -110,7 +111,7 @@ public class AdminController {
 		model.addAttribute("logo", resourceLoaderService.loadText("/static/logo.txt"));
 		
 		if(record.passwd.length()<8) {
-			model.addAttribute("error_message", EAdminError.short_password_length_than_8);
+			model.addAttribute("error_message", EAllError.short_password_length_than_8);
             return "login";	
 		}
 		record.setPasswd(passwordEncoder.encode(record.passwd));
@@ -118,8 +119,8 @@ public class AdminController {
 		record.adminstatus = EAdminStatus.normal;
 		record.userrole = EUserRole.adminuser;
 		
-		ResponseData<EAdminError> res = adminCommandAction.processWebData(record);
-		if(res.getError() != EAdminError.ok) {
+		ResponseData<EAllError> res = adminCommandAction.processWebData(record);
+		if(res.getError() != EAllError.ok) {
             model.addAttribute("error_message", res.getError().toString());
             return "login";
 		}
@@ -131,8 +132,8 @@ public class AdminController {
 	public String savenew(AddApp record, Model model, HttpServletRequest request) {
 		updateCookieToEntity(record, request.getCookies());
 		
-		ResponseData<EAdminError> res = adminCommandAction.processWebData(record);
-		if( res.getError() != EAdminError.ok) {
+		ResponseData<EAllError> res = adminCommandAction.processWebData(record);
+		if( res.getError() != EAllError.ok) {
 			model.addAttribute("error_message", res.getError().toString());
 			model.addAttribute("app", record);
 			return "view";
@@ -143,8 +144,8 @@ public class AdminController {
 	@RequestMapping(value="/updateapp", method = RequestMethod.POST)
 	public String updateapp(ModifyApp record, Model model, HttpServletRequest request) {
 		updateCookieToEntity(record, request.getCookies());
-		ResponseData<EAdminError> res = adminCommandAction.processWebData(record);
-		if( res.getError() != EAdminError.ok) {
+		ResponseData<EAllError> res = adminCommandAction.processWebData(record);
+		if( res.getError() != EAllError.ok) {
 			model.addAttribute("error_message", res.getError().toString());
 			model.addAttribute("app", record);
 			model.addAttribute("disabled", true);

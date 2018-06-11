@@ -10,6 +10,7 @@ import com.ccz.appinall.common.config.ChAttributeKey;
 import com.ccz.appinall.library.type.inf.ICommandFunction;
 import com.ccz.appinall.library.type.inf.ICommandProcess;
 import com.ccz.appinall.library.util.ProtocolWriter.IWriteProtocol;
+import com.ccz.appinall.services.enums.EAllCmd;
 
 import io.netty.channel.Channel;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +22,7 @@ public abstract class CommonAction implements ICommandProcess {
 	@Autowired
 	protected ChAttributeKey chAttributeKey;
 	
-	private Map<String, ICommandFunction> cmdFuncMap = new ConcurrentHashMap<>();
+	private Map<EAllCmd, ICommandFunction> cmdFuncMap = new ConcurrentHashMap<>();
 	
 	public void send(Channel ch, String data) {
 		log.info(data);
@@ -29,7 +30,7 @@ public abstract class CommonAction implements ICommandProcess {
 		wp.write(ch, data);
 	}
 	
-	public Map<String, ICommandFunction> getCommandFunctions() {
+	public Map<EAllCmd, ICommandFunction> getCommandFunctions() {
 		return cmdFuncMap;
 	}
 
@@ -37,7 +38,7 @@ public abstract class CommonAction implements ICommandProcess {
 		return cmdFuncMap.get(cmd);
 	}
 	
-	public void setCommandFunction(String cmd, ICommandFunction func) {
+	public void setCommandFunction(EAllCmd cmd, ICommandFunction func) {
 		cmdFuncMap.put(cmd, func);
 	}
 }

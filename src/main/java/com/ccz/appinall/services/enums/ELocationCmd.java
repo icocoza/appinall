@@ -5,7 +5,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public enum ELocationCmd {
 
-	none("none"), geoloc("geoloc"), joinchannel("joinchannel"), leavechannel("leavechannel");
+	none("none");//, geoloc("geoloc"), joinchannel("joinchannel"), leavechannel("leavechannel");
 	
 	public final String value;
 	

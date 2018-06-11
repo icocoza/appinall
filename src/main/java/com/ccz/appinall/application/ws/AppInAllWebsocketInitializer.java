@@ -28,6 +28,7 @@ public class AppInAllWebsocketInitializer extends ChannelInitializer<SocketChann
 	private String websocketPath;
 	
 	@Autowired ServiceSelectionWebsocketDataHandler serviceSelectionWebsocketDataHandler;
+	
 	public AppInAllWebsocketInitializer() {
 	}
 	

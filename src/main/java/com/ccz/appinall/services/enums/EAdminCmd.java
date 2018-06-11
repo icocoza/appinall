@@ -4,8 +4,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public enum EAdminCmd {
-	none("none"), adminregister("adminregister"), adminlogin("adminlogin"), adminlogout("adminlogout"),
-	addapp("addapp"), delapp("delapp"), applist("applist"), modifyapp("modifyapp"), appcount("appcount"), stopapp("stopapp"), runapp("runapp"), readyapp("readyapp");
+	none("none");//, adminregister("adminregister"), adminlogin("adminlogin"), adminlogout("adminlogout"),
+	//addapp("addapp"), delapp("delapp"), applist("applist"), modifyapp("modifyapp"), appcount("appcount"), stopapp("stopapp"), runapp("runapp"), readyapp("readyapp");
 	
 	public final String value;
 	

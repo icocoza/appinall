@@ -16,6 +16,7 @@ import io.netty.handler.ssl.SslHandler;
 public class WebsocketSecureInitializer extends WebsocketInitializer {
 	
 	@Autowired ServicesConfig servicesConfig;
+	@Autowired SSLUtil sslUtil;
 	
 	public WebsocketSecureInitializer() {
 	}
@@ -23,7 +24,7 @@ public class WebsocketSecureInitializer extends WebsocketInitializer {
 	@Override
 	protected void initChannel(SocketChannel channel) throws Exception {
 		ChannelPipeline pipeline = channel.pipeline();
-		SSLEngine engine = SSLUtil.getInst().makeSSL("", "").createSSLEngine();
+		SSLEngine engine = sslUtil.makeSSL().createSSLEngine();
 		engine.setUseClientMode(false);
 		engine.setNeedClientAuth(false);		
 		pipeline.addFirst(new SslHandler(engine));

@@ -6,7 +6,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import lombok.Getter;
 
 public enum EFileCmd {
-	none("none", false), fileinit("fileinit", true), filesstart("filestart", false), thumbnail("thumbnail", true), upload("upload", false);
+	none("none", false);//, fileinit("fileinit", true), filesstart("filestart", false), thumbnail("thumbnail", true), upload("upload", false);
 	
 	public final String value;
 	@Getter private final boolean auth;

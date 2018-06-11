@@ -18,8 +18,8 @@ import com.ccz.appinall.services.controller.file.FileCommandAction;
 import com.ccz.appinall.services.controller.friend.RecDataFriend.*;
 import com.ccz.appinall.services.enums.EAddrError;
 import com.ccz.appinall.services.enums.EFileError;
-import com.ccz.appinall.services.enums.EFriendCmd;
-import com.ccz.appinall.services.enums.EFriendError;
+import com.ccz.appinall.services.enums.EAllCmd;
+import com.ccz.appinall.services.enums.EAllError;
 import com.ccz.appinall.services.enums.EFriendStatus;
 import com.ccz.appinall.services.model.db.RecFriend;
 import com.ccz.appinall.services.model.db.RecFriend.RecFriendInfo;
@@ -34,27 +34,27 @@ public class FriendCommandAction extends CommonAction {
 	@Autowired
 	ChAttributeKey chAttributeKey;
 	public FriendCommandAction() {
-		super.setCommandFunction(EFriendCmd.addfriend.getValue(), addFriend); //O
-		super.setCommandFunction(EFriendCmd.delfriend.getValue(), delFriend);
-		super.setCommandFunction(EFriendCmd.changefriendstatus.getValue(),changeFriendStatus); //O
-		super.setCommandFunction(EFriendCmd.friendids.getValue(), friendsIdList); //O
-		super.setCommandFunction(EFriendCmd.friendcnt.getValue(), friendsCount); //O
-		super.setCommandFunction(EFriendCmd.friendinfos.getValue(), friendsInfo); //O
-		super.setCommandFunction(EFriendCmd.appendme.getValue(), friendMeUser); //O
-		super.setCommandFunction(EFriendCmd.blockme.getValue(), friendMeUser); //O
-		super.setCommandFunction(EFriendCmd.appendmecnt.getValue(), appendMeCount); //O
-		super.setCommandFunction(EFriendCmd.blockmecnt.getValue(), blockMeCount); //O
+		super.setCommandFunction(EAllCmd.addfriend, addFriend); //O
+		super.setCommandFunction(EAllCmd.delfriend, delFriend);
+		super.setCommandFunction(EAllCmd.changefriendstatus,changeFriendStatus); //O
+		super.setCommandFunction(EAllCmd.friendids, friendsIdList); //O
+		super.setCommandFunction(EAllCmd.friendcnt, friendsCount); //O
+		super.setCommandFunction(EAllCmd.friendinfos, friendsInfo); //O
+		super.setCommandFunction(EAllCmd.appendme, friendMeUser); //O
+		super.setCommandFunction(EAllCmd.blockme, friendMeUser); //O
+		super.setCommandFunction(EAllCmd.appendmecnt, appendMeCount); //O
+		super.setCommandFunction(EAllCmd.blockmecnt, blockMeCount); //O
 	}
 	
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public boolean processCommand(Channel ch, JsonNode jdata) {
 		String cmd = jdata.get("cmd").asText();
-		ResponseData<EFriendError> res = new ResponseData<EFriendError>(jdata.get("scode").asText(), jdata.get("rcode").asText(), cmd);
+		ResponseData<EAllError> res = new ResponseData<EAllError>(jdata.get("scode").asText(), jdata.get("rcode").asText(), cmd);
 		AuthSession session = (AuthSession) ch.attr(chAttributeKey.getAuthSessionKey()).get();
 		
 		ICommandFunction cmdFunc = super.getCommandFunction(cmd);
 		if(cmdFunc!=null) {
-			res = (ResponseData<EFriendError>) cmdFunc.doAction(session, res, jdata);
+			res = (ResponseData<EAllError>) cmdFunc.doAction(session, res, jdata);
 			send(ch, res.toJsonString());
 			return true;
 		}
@@ -70,7 +70,7 @@ public class FriendCommandAction extends CommonAction {
 	 * 		  user type=> 'u' means user
 	 * @return added userid list delimited by RECORD
 	 */
-	ICommandFunction<AuthSession, ResponseData<EFriendError>, JsonNode> addFriend = (AuthSession ss, ResponseData<EFriendError> res, JsonNode jnode) -> {
+	ICommandFunction<AuthSession, ResponseData<EAllError>, JsonNode> addFriend = (AuthSession ss, ResponseData<EAllError> res, JsonNode jnode) -> {
 		AddFriend data = new RecDataFriend().new AddFriend(jnode);
 		List<String> addedFriend = new ArrayList<>();
 		for(IdName friend : data.friendlist) {
@@ -78,7 +78,7 @@ public class FriendCommandAction extends CommonAction {
 				addedFriend.add(friend.userid+ASS.UNIT+friend.username);
 		}
 		String param = addedFriend.stream().collect(Collectors.joining(ASS.RECORD));
-		return res.setError(EFriendError.eOK).setParam(param);
+		return res.setError(EAllError.ok).setParam(param);
 	};
 	/** 
 	 * del friend
@@ -87,14 +87,14 @@ public class FriendCommandAction extends CommonAction {
 	 * @param userData, { userid / .. }
 	 * @return deleted userid list delimited by RECORD
 	 */
-	ICommandFunction<AuthSession, ResponseData<EFriendError>, JsonNode> delFriend = (AuthSession ss, ResponseData<EFriendError> res, JsonNode jnode) -> {
+	ICommandFunction<AuthSession, ResponseData<EAllError>, JsonNode> delFriend = (AuthSession ss, ResponseData<EAllError> res, JsonNode jnode) -> {
 		DelFriend data = new RecDataFriend().new DelFriend(jnode);
 		List<String> deletedFriend = new ArrayList<>();
 		for(String friend : data.friendids)
 			if(DbAppManager.getInst().delFriend(ss.scode, ss.getUserId(), friend)==true)
 				deletedFriend.add(friend);
 		String param = deletedFriend.stream().collect(Collectors.joining(ASS.RECORD));
-		return res.setError(EFriendError.eOK).setParam(param);
+		return res.setError(EAllError.ok).setParam(param);
 	};
 
 	/** 
@@ -105,7 +105,7 @@ public class FriendCommandAction extends CommonAction {
 	 * 		  status => 0 normal, 1 block, 2 blacklist
 	 * @return updated userid list delimited by RECORD
 	 */
-	ICommandFunction<AuthSession, ResponseData<EFriendError>, JsonNode> changeFriendStatus = (AuthSession ss, ResponseData<EFriendError> res, JsonNode jnode) -> {
+	ICommandFunction<AuthSession, ResponseData<EAllError>, JsonNode> changeFriendStatus = (AuthSession ss, ResponseData<EAllError> res, JsonNode jnode) -> {
 		ChangeFriendStatus data = new RecDataFriend().new ChangeFriendStatus(jnode);
 		List<String> updatedFriend = new ArrayList<>();
 		for(IdStatus friend : data.friendstatus) {
@@ -113,7 +113,7 @@ public class FriendCommandAction extends CommonAction {
 				updatedFriend.add(friend.userid);
 		}
 		String param = updatedFriend.stream().collect(Collectors.joining(ASS.RECORD));
-		return res.setError(EFriendError.eOK).setParam(param);
+		return res.setError(EAllError.ok).setParam(param);
 	};
 	
 	/** 
@@ -124,16 +124,16 @@ public class FriendCommandAction extends CommonAction {
 	 * 		  status => 0 normal, 1 block, 2 blacklist, 9 all user
 	 * @return {[friend id][friend name][friend status][friend type]/...}
 	 */
-	ICommandFunction<AuthSession, ResponseData<EFriendError>, JsonNode> friendsIdList = (AuthSession ss, ResponseData<EFriendError> res, JsonNode jnode) -> {
+	ICommandFunction<AuthSession, ResponseData<EAllError>, JsonNode> friendsIdList = (AuthSession ss, ResponseData<EAllError> res, JsonNode jnode) -> {
 		Friendids data = new RecDataFriend().new Friendids(jnode);
 		List<RecFriend> friendList = DbAppManager.getInst().getFriendList(ss.scode, ss.getUserId(), data.estatus, data.offset, data.count);
 		if(friendList.size()<1)
-			return res.setError(EFriendError.eNoListData);
+			return res.setError(EAllError.eNoListData);
 		
 		String param = friendList.stream()
-				.map(e->String.format("%s%s%s%s%d%s%s", e.friendid, ASS.UNIT, e.friendname, ASS.UNIT, e.friendstatus.getValue(), ASS.UNIT, e.friendtype))
+				.map(e->String.format("%s%s%s%s%d%s%s", e.friendid, ASS.UNIT, e.friendname, ASS.UNIT, e.friendstatus, ASS.UNIT, e.friendtype))
 				.collect(Collectors.joining(ASS.RECORD));
-		return res.setError(EFriendError.eOK).setParam(param);
+		return res.setError(EAllError.ok).setParam(param);
 	};
 	
 	/** 
@@ -144,11 +144,11 @@ public class FriendCommandAction extends CommonAction {
 	 * 		  status => 0 normal, 1 block, 2 blacklist, 9 all user
 	 * @return [status][count]
 	 */
-	ICommandFunction<AuthSession, ResponseData<EFriendError>, JsonNode> friendsCount = (AuthSession ss, ResponseData<EFriendError> res, JsonNode jnode) -> {
+	ICommandFunction<AuthSession, ResponseData<EAllError>, JsonNode> friendsCount = (AuthSession ss, ResponseData<EAllError> res, JsonNode jnode) -> {
 		FriendCount data = new RecDataFriend().new FriendCount(jnode);
 		int count = DbAppManager.getInst().getFriendCount(ss.scode, ss.getUserId(), data.estatus);
-		String param = String.format("%d%s%d", data.estatus.getValue(), ASS.UNIT, count);
-		return res.setError(EFriendError.eOK).setParam(param);
+		String param = String.format("%d%s%d", data.estatus, ASS.UNIT, count);
+		return res.setError(EAllError.ok).setParam(param);
 	};
 	
 	/** 
@@ -159,15 +159,15 @@ public class FriendCommandAction extends CommonAction {
 	 * 		  user type => u , ..
 	 * @return {[friend id][friend name][friend status][friend type]/...}
 	 */
-	ICommandFunction<AuthSession, ResponseData<EFriendError>, JsonNode> friendsInfo = (AuthSession ss, ResponseData<EFriendError> res, JsonNode jnode) -> {
+	ICommandFunction<AuthSession, ResponseData<EAllError>, JsonNode> friendsInfo = (AuthSession ss, ResponseData<EAllError> res, JsonNode jnode) -> {
 		FriendInfos data = new RecDataFriend().new FriendInfos(jnode);
 		List<RecFriend> friendList = DbAppManager.getInst().getFriendInfoList(ss.scode, ss.getUserId(), data.friendids);
 		if(friendList.size()<1)
-			return res.setError(EFriendError.eNoListData);
+			return res.setError(EAllError.eNoListData);
 		String param = friendList.stream()
-				.map(e->String.format("%s%s%s%s%d%s%s", e.friendid, ASS.UNIT, e.friendname, ASS.UNIT, e.friendstatus.getValue(), ASS.UNIT, e.friendtype))
+				.map(e->String.format("%s%s%s%s%d%s%s", e.friendid, ASS.UNIT, e.friendname, ASS.UNIT, e.friendstatus, ASS.UNIT, e.friendtype))
 				.collect(Collectors.joining(ASS.RECORD));
-		return res.setError(EFriendError.eOK).setParam(param);
+		return res.setError(EAllError.ok).setParam(param);
 	};
 	
 	/** 
@@ -177,16 +177,16 @@ public class FriendCommandAction extends CommonAction {
 	 * @param userData, [offset] [count]
 	 * @return { [user id][user name[[user type][email]/ ... }
 	 */
-	ICommandFunction<AuthSession, ResponseData<EFriendError>, JsonNode> friendMeUser = (AuthSession ss, ResponseData<EFriendError> res, JsonNode jnode) -> {
+	ICommandFunction<AuthSession, ResponseData<EAllError>, JsonNode> friendMeUser = (AuthSession ss, ResponseData<EAllError> res, JsonNode jnode) -> {
 		AppendMe data = new RecDataFriend().new AppendMe(jnode);
 		List<RecFriendInfo> infoList = DbAppManager.getInst().getFriendMeList(ss.scode, ss.getUserId(), 
 									   data.estatus, data.offset, data.count);
 		if(infoList.size()<1)
-			return res.setError(EFriendError.eNoListData);
+			return res.setError(EAllError.eNoListData);
 		String param = infoList.stream()
 				.map(e->String.format("%s%s%s%s%s%s%s", e.userid, ASS.UNIT, e.username, ASS.UNIT, e.usertype, ASS.UNIT, e.email))
 				.collect(Collectors.joining(ASS.RECORD));
-		return res.setError(EFriendError.eOK).setParam(param);
+		return res.setError(EAllError.ok).setParam(param);
 	};
 
 	/** 
@@ -196,9 +196,9 @@ public class FriendCommandAction extends CommonAction {
 	 * @param userData, 
 	 * @return  count
 	 */
-	ICommandFunction<AuthSession, ResponseData<EFriendError>, JsonNode> appendMeCount = (AuthSession ss, ResponseData<EFriendError> res, JsonNode jnode) -> {
+	ICommandFunction<AuthSession, ResponseData<EAllError>, JsonNode> appendMeCount = (AuthSession ss, ResponseData<EAllError> res, JsonNode jnode) -> {
 		int count = DbAppManager.getInst().getFriendMeCount(ss.scode, ss.getUserId(), EFriendStatus.friend);
-		return res.setError(EFriendError.eOK).setParam(""+count);
+		return res.setError(EAllError.ok).setParam(""+count);
 	};
 
 	/** 
@@ -208,9 +208,9 @@ public class FriendCommandAction extends CommonAction {
 	 * @param userData, 
 	 * @return count
 	 */
-	ICommandFunction<AuthSession, ResponseData<EFriendError>, JsonNode> blockMeCount = (AuthSession ss, ResponseData<EFriendError> res, JsonNode jnode) -> {
+	ICommandFunction<AuthSession, ResponseData<EAllError>, JsonNode> blockMeCount = (AuthSession ss, ResponseData<EAllError> res, JsonNode jnode) -> {
 		int count = DbAppManager.getInst().getFriendMeCount(ss.scode, ss.getUserId(), EFriendStatus.block);
-		return res.setError(EFriendError.eOK).setParam(""+count);
+		return res.setError(EAllError.ok).setParam(""+count);
 	};
 
 }

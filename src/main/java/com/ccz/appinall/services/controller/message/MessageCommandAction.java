@@ -14,9 +14,8 @@ import com.ccz.appinall.library.util.StrUtil;
 import com.ccz.appinall.services.controller.CommonAction;
 import com.ccz.appinall.services.controller.auth.AuthSession;
 import com.ccz.appinall.services.controller.message.RecDataMessage.*;
-import com.ccz.appinall.services.enums.EAddrError;
-import com.ccz.appinall.services.enums.EMessageCmd;
-import com.ccz.appinall.services.enums.EMessageError;
+import com.ccz.appinall.services.enums.EAllCmd;
+import com.ccz.appinall.services.enums.EAllError;
 import com.ccz.appinall.services.model.db.*;
 import com.ccz.appinall.services.model.db.RecMessageDel.RecDelId;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -30,23 +29,23 @@ import lombok.extern.slf4j.Slf4j;
 public class MessageCommandAction extends CommonAction {
 	
 	public MessageCommandAction() {
-		super.setCommandFunction(EMessageCmd.msg.getValue(), message); //O
-		super.setCommandFunction(EMessageCmd.syncmsg.getValue(), syncMessage); //O
-		super.setCommandFunction(EMessageCmd.readmsg.getValue(), readMessage);
-		super.setCommandFunction(EMessageCmd.delmsg.getValue(), delMessage); //O
-		super.setCommandFunction(EMessageCmd.online.getValue(), onlineOnlyMessage);
-		super.setCommandFunction(EMessageCmd.push.getValue(), pushOnlyMessage);
+		super.setCommandFunction(EAllCmd.msg, message); //O
+		super.setCommandFunction(EAllCmd.syncmsg, syncMessage); //O
+		super.setCommandFunction(EAllCmd.readmsg, readMessage);
+		super.setCommandFunction(EAllCmd.delmsg, delMessage); //O
+		super.setCommandFunction(EAllCmd.online, onlineOnlyMessage);
+		super.setCommandFunction(EAllCmd.push, pushOnlyMessage);
 	}
 	
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public boolean processCommand(Channel ch, JsonNode jdata) {
 		String cmd = jdata.get("cmd").asText();
-		ResponseData<EMessageError> res = new ResponseData<EMessageError>(jdata.get("scode").asText(), jdata.get("rcode").asText(), cmd);
+		ResponseData<EAllError> res = new ResponseData<EAllError>(jdata.get("scode").asText(), jdata.get("rcode").asText(), cmd);
 		AuthSession session = (AuthSession) ch.attr(chAttributeKey.getAuthSessionKey()).get();
 		
 		ICommandFunction cmdFunc = super.getCommandFunction(cmd);
 		if(cmdFunc!=null) {
-			res = (ResponseData<EMessageError>) cmdFunc.doAction(session, res, jdata);
+			res = (ResponseData<EAllError>) cmdFunc.doAction(session, res, jdata);
 			send(ch, res.toJsonString());
 			return true;
 		}
@@ -69,15 +68,15 @@ public class MessageCommandAction extends CommonAction {
 	 * @param userData, [channel id][msg type][message]
 	 * @return [message id][message]
 	 */
-	ICommandFunction<AuthSession, ResponseData<EMessageError>, JsonNode> message = (AuthSession ss, ResponseData<EMessageError> res, JsonNode jnode) -> {
+	ICommandFunction<AuthSession, ResponseData<EAllError>, JsonNode> message = (AuthSession ss, ResponseData<EAllError> res, JsonNode jnode) -> {
 		Msg data = new RecDataMessage().new Msg(jnode);
 		String msgid = getMessageId();
 		if(DbAppManager.getInst().addMessage(ss.scode, msgid, data.chid, ss.getUserId(), data.eMsgType, data.msg)==false)
-			return res.setError(EMessageError.eFailToSaveMessage);
+			return res.setError(EAllError.eFailToSaveMessage);
 		if(DbAppManager.getInst().updateLastMsgAndTime(ss.scode, data.chid, obtainShortcut(data.msg))==false)
-			return res.setError(EMessageError.eFailToUpdateChannel);
+			return res.setError(EAllError.eFailToUpdateChannel);
 		//[TODO] Send Message to Others in the same channel
-		return res.setError(EMessageError.eOK).setParam(msgid + ASS.UNIT + data.msg);
+		return res.setError(EAllError.ok).setParam(msgid + ASS.UNIT + data.msg);
 	};
 
 	private String obtainShortcut(String msg) {	//content if json, else cut 32
@@ -99,11 +98,11 @@ public class MessageCommandAction extends CommonAction {
 	 * @param userData, [channel id][offset][count]
 	 * @return chid | { [message id][sender id][msg type][create time][read count][message] / ... }
 	 */
-	ICommandFunction<AuthSession, ResponseData<EMessageError>, JsonNode> syncMessage = (AuthSession ss, ResponseData<EMessageError> res, JsonNode jnode) -> {
+	ICommandFunction<AuthSession, ResponseData<EAllError>, JsonNode> syncMessage = (AuthSession ss, ResponseData<EAllError> res, JsonNode jnode) -> {
 		SyncMsg data = new RecDataMessage().new SyncMsg(jnode);
 		RecChMime ch = DbAppManager.getInst().getMyChannel(ss.scode, ss.getUserId(), data.chid);
 		if(ch==RecChMime.Empty)
-			return res.setError(EMessageError.eNoChannel);
+			return res.setError(EAllError.eNoChannel);
 
 		List<RecDelId> delList = DbAppManager.getInst().getDelMessageIdList(ss.scode, data.chid, ss.getUserId(), ch.addtime);
 		List<RecMessage> msgList = null;
@@ -113,9 +112,9 @@ public class MessageCommandAction extends CommonAction {
 			String delIds = delList.stream().map(e->"'"+e.msgid+"'").collect(Collectors.joining(","));
 			msgList = DbAppManager.getInst().getMessageListWithoutDeletion(ss.scode, data.chid, ch.addtime, delIds, data.offset, data.count);
 		}
-		String param = msgList.stream().map(e-> String.format("%s%s%s%s%d%s%d%s%d%s%s", e.msgid, ASS.UNIT, e.senderid, ASS.UNIT, e.msgtype.getValue(), 
+		String param = msgList.stream().map(e-> String.format("%s%s%s%s%d%s%d%s%d%s%s", e.msgid, ASS.UNIT, e.senderid, ASS.UNIT, e.msgtype, 
 				ASS.UNIT, e.createtime.getTime(), ASS.UNIT, e.readcnt, ASS.UNIT, e.message)).collect(Collectors.joining(ASS.RECORD));
-		return res.setError(EMessageError.eOK).setParam(data.chid + ASS.GROUP + param);
+		return res.setError(EAllError.ok).setParam(data.chid + ASS.GROUP + param);
 	};
 	/** 
 	 * send message to only online user in a channel
@@ -124,8 +123,8 @@ public class MessageCommandAction extends CommonAction {
 	 * @param userData
 	 * @return
 	 */
-	ICommandFunction<AuthSession, ResponseData<EMessageError>, JsonNode> onlineOnlyMessage = (AuthSession ss, ResponseData<EMessageError> res, JsonNode jnode) -> {
-		return res.setError(EMessageError.eNoServiceCommand);
+	ICommandFunction<AuthSession, ResponseData<EAllError>, JsonNode> onlineOnlyMessage = (AuthSession ss, ResponseData<EAllError> res, JsonNode jnode) -> {
+		return res.setError(EAllError.eNoServiceCommand);
 	};
 	/** 
 	 * send message to other by push in a channel
@@ -134,8 +133,8 @@ public class MessageCommandAction extends CommonAction {
 	 * @param userData
 	 * @return
 	 */
-	ICommandFunction<AuthSession, ResponseData<EMessageError>, JsonNode> pushOnlyMessage = (AuthSession ss, ResponseData<EMessageError> res, JsonNode jnode) -> {
-		return res.setError(EMessageError.eNoServiceCommand);
+	ICommandFunction<AuthSession, ResponseData<EAllError>, JsonNode> pushOnlyMessage = (AuthSession ss, ResponseData<EAllError> res, JsonNode jnode) -> {
+		return res.setError(EAllError.eNoServiceCommand);
 	};
 	/** 
 	 * notify read message
@@ -144,18 +143,18 @@ public class MessageCommandAction extends CommonAction {
 	 * @param userData, [channel id][message id]
 	 * @return [channel id][message id]
 	 */
-	ICommandFunction<AuthSession, ResponseData<EMessageError>, JsonNode> readMessage = (AuthSession ss, ResponseData<EMessageError> res, JsonNode jnode) -> {
+	ICommandFunction<AuthSession, ResponseData<EAllError>, JsonNode> readMessage = (AuthSession ss, ResponseData<EAllError> res, JsonNode jnode) -> {
 		ReadMsg data = new RecDataMessage().new ReadMsg(jnode);
 		RecChannel ch = DbAppManager.getInst().getChannel(ss.scode, data.chid);
 		if(ch==RecChannel.Empty)
-			return res.setError(EMessageError.eNoChannel);
+			return res.setError(EAllError.eNoChannel);
 		RecMessage msg = DbAppManager.getInst().getMessage(ss.scode, data.chid, data.msgid);
 		if(msg==RecMessage.Empty)
-			return res.setError(EMessageError.eNoMessage);
+			return res.setError(EAllError.eNoMessage);
 		if(DbAppManager.getInst().addReadMsg(ss.scode, data.chid, ss.getUserId(), data.msgid)==false)
-			return res.setError(EMessageError.eAlreadyReadMessage);
+			return res.setError(EAllError.eAlreadyReadMessage);
 		DbAppManager.getInst().incReadCount(ss.scode, data.msgid);
-		return res.setError(EMessageError.eOK).setParam(data.chid+ASS.UNIT+data.msgid);
+		return res.setError(EAllError.ok).setParam(data.chid+ASS.UNIT+data.msgid);
 	};
 	/** 
 	 * request to delete a message of the session user id
@@ -164,7 +163,7 @@ public class MessageCommandAction extends CommonAction {
 	 * @param userData, [channel id] | {[message id] / ...}
 	 * @return
 	 */
-	ICommandFunction<AuthSession, ResponseData<EMessageError>, JsonNode> delMessage = (AuthSession ss, ResponseData<EMessageError> res, JsonNode jnode) -> {
+	ICommandFunction<AuthSession, ResponseData<EAllError>, JsonNode> delMessage = (AuthSession ss, ResponseData<EAllError> res, JsonNode jnode) -> {
 		DelMsg data = new RecDataMessage().new DelMsg(jnode);
 		List<String> delmsglist = new ArrayList<>();
 		for(String msgid : data.msgids) {
@@ -172,8 +171,8 @@ public class MessageCommandAction extends CommonAction {
 				delmsglist.add(msgid);
 		}
 		if(delmsglist.size()<1)
-			return res.setError(EMessageError.eFailToDeleteMessage);
+			return res.setError(EAllError.eFailToDeleteMessage);
 		String param = delmsglist.stream().collect(Collectors.joining(ASS.RECORD));
-		return res.setError(EMessageError.eOK).setParam(data.chid + ASS.GROUP + param);
+		return res.setError(EAllError.ok).setParam(data.chid + ASS.GROUP + param);
 	};
 }

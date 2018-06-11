@@ -29,6 +29,8 @@ public enum EAuthError {
 	mismatch_token,
 	not_exist_user,
 	not_exist_userinfo,
+	not_exist_building,
+	
 	invalid_or_expired_token,
 	unauthorized_userid,
 	invalid_user,

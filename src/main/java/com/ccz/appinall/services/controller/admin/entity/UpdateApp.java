@@ -1,7 +1,7 @@
 package com.ccz.appinall.services.controller.admin.entity;
 
 import com.ccz.appinall.services.enums.EAdminAppStatus;
-import com.ccz.appinall.services.enums.EAdminCmd;
+import com.ccz.appinall.services.enums.EAllCmd;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import lombok.Setter;
@@ -27,13 +27,13 @@ public class UpdateApp extends ModifyApp {
 	}
 	
 	@Override
-	public EAdminCmd getCommand() {
+	public EAllCmd getCommand() {
 		if(EAdminAppStatus.ready == status)
-			return EAdminCmd.readyapp;
+			return EAllCmd.readyapp;
 		else if(EAdminAppStatus.run == status)
-			return EAdminCmd.runapp;
+			return EAllCmd.runapp;
 		else if(EAdminAppStatus.stop == status)
-			return EAdminCmd.stopapp;
-		return EAdminCmd.none;
+			return EAllCmd.stopapp;
+		return EAllCmd.none;
 	}
 }

@@ -9,8 +9,8 @@ import com.ccz.appinall.library.type.inf.ICommandFunction;
 import com.ccz.appinall.services.controller.CommonAction;
 import com.ccz.appinall.services.controller.address.RecDataAddr.*;
 import com.ccz.appinall.services.controller.auth.AuthSession;
-import com.ccz.appinall.services.enums.EAddrCmd;
-import com.ccz.appinall.services.enums.EAddrError;
+import com.ccz.appinall.services.enums.EAllCmd;
+import com.ccz.appinall.services.enums.EAllError;
 import com.ccz.appinall.services.repository.redis.OrderGeoRepository;
 import com.ccz.appinall.services.service.SendMessageManager;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -27,7 +27,7 @@ public class AddressCommandAction extends CommonAction {
 	
 	final int MAX_LIST_COUNT = 20;
 	
-	public ResponseData<EAddrError> result;
+	public ResponseData<EAllError> result;
 	
 	@Autowired
 	OrderGeoRepository geoRepository;
@@ -37,18 +37,18 @@ public class AddressCommandAction extends CommonAction {
 	SendMessageManager sendMessageManager;
 	
 	public AddressCommandAction() {
-		super.setCommandFunction(EAddrCmd.addr_search.getValue(), doSearch);
+		super.setCommandFunction(EAllCmd.addr_search, doSearch);
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public boolean processCommand(Channel ch, JsonNode jdata) {
 		String cmd = jdata.get("cmd").asText();
-		ResponseData<EAddrError> res = new ResponseData<EAddrError>(jdata.get("scode").asText(), jdata.get("rcode").asText(), cmd);
+		ResponseData<EAllError> res = new ResponseData<EAllError>(jdata.get("scode").asText(), jdata.get("rcode").asText(), cmd);
 		AuthSession session = (AuthSession) ch.attr(chAttributeKey.getAuthSessionKey()).get();
 		
 		ICommandFunction cmdFunc = super.getCommandFunction(cmd);
 		if(cmdFunc!=null) {
-			res = (ResponseData<EAddrError>) cmdFunc.doAction(session, res, jdata);
+			res = (ResponseData<EAllError>) cmdFunc.doAction(session, res, jdata);
 			send(ch, res.toJsonString());
 			return true;
 		}
@@ -58,7 +58,7 @@ public class AddressCommandAction extends CommonAction {
 	 * 1. fail 된 검색어를 별도로 모아두어야 함
 	 * 2. 한 사용자에 의해 반복적으로 검색어가 들어 올 경우 모아 두어야 함 
 	 * */
-	ICommandFunction<AuthSession, ResponseData<EAddrError>, JsonNode> doSearch = (AuthSession session, ResponseData<EAddrError> res, JsonNode jnode) -> {
+	ICommandFunction<AuthSession, ResponseData<EAllError>, JsonNode> doSearch = (AuthSession session, ResponseData<EAllError> res, JsonNode jnode) -> {
 		DataSearchAddr data = new RecDataAddr().new DataSearchAddr(jnode);
 		JsonNode jsonNode =  null;
 		AddressInference ai = new AddressInference(data.getSearch());
@@ -66,19 +66,19 @@ public class AddressCommandAction extends CommonAction {
 			jsonNode = AddressElasticSearch.getInst().searchAddresByRestJson(ai);
 		} catch (Exception e) {
 			e.printStackTrace();
-			return res.setError(EAddrError.failed_search);
+			return res.setError(EAllError.failed_search);
 		}
 		if(jsonNode == NullNode.instance)
-			return res.setError(EAddrError.invalid_search);
+			return res.setError(EAllError.invalid_search);
 		JsonNode hitsNode = jsonNode.get("hits");
 		if(hitsNode == null )
-			return res.setError(EAddrError.empty_search);
+			return res.setError(EAllError.empty_search);
 		JsonNode totalNode = hitsNode.get("total");
 		if(totalNode==null || totalNode.asInt() == 0)
-			return res.setError(EAddrError.no_search_result);
+			return res.setError(EAllError.no_search_result);
 		
 		ArrayNode arrNode = copySearshResultToResponse((ArrayNode) hitsNode.get("hits"));
-		return res.setParam("data", arrNode).setError(EAddrError.ok);
+		return res.setParam("data", arrNode).setError(EAllError.ok);
 	};
 	
 

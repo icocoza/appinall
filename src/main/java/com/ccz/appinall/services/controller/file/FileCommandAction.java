@@ -18,11 +18,12 @@ import com.ccz.appinall.services.controller.auth.AuthCommandAction;
 import com.ccz.appinall.services.controller.auth.AuthSession;
 import com.ccz.appinall.services.controller.file.RecDataFile.*;
 import com.ccz.appinall.services.enums.EAddrError;
+import com.ccz.appinall.services.enums.EAllCmd;
 import com.ccz.appinall.services.enums.EBoardCmd;
 import com.ccz.appinall.services.enums.EBoardError;
 import com.ccz.appinall.services.enums.EChannelError;
 import com.ccz.appinall.services.enums.EFileCmd;
-import com.ccz.appinall.services.enums.EFileError;
+import com.ccz.appinall.services.enums.EAllError;
 import com.ccz.appinall.services.model.db.RecFile;
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -41,19 +42,19 @@ public class FileCommandAction extends CommonAction {
 	@Autowired	ChAttributeKey chAttributeKey;
 	
 	public FileCommandAction() {
-		super.setCommandFunction(EFileCmd.fileinit.getValue(), doFileInit);
-		super.setCommandFunction(EFileCmd.filesstart.getValue(), doFileStart);
+		super.setCommandFunction(EAllCmd.fileinit, doFileInit);
+		super.setCommandFunction(EAllCmd.filesstart, doFileStart);
 	}
 	
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public boolean processCommand(Channel ch, JsonNode jdata) {
 		String cmd = jdata.get("cmd").asText();
-		ResponseData<EFileError> res = new ResponseData<EFileError>(jdata.get("scode").asText(), jdata.get("rcode").asText(), cmd);
+		ResponseData<EAllError> res = new ResponseData<EAllError>(jdata.get("scode").asText(), jdata.get("rcode").asText(), cmd);
 		AuthSession session = (AuthSession) ch.attr(chAttributeKey.getAuthSessionKey()).get();
 		
 		ICommandFunction cmdFunc = super.getCommandFunction(cmd);
 		if(cmdFunc!=null) {
-			res = (ResponseData<EFileError>) cmdFunc.doAction(EFileCmd.getType(cmd).isAuth()?session : ch, res, jdata);
+			res = (ResponseData<EAllError>) cmdFunc.doAction(EFileCmd.getType(cmd).isAuth()?session : ch, res, jdata);
 			send(ch, res.toJsonString());
 			return true;
 		}
@@ -61,40 +62,40 @@ public class FileCommandAction extends CommonAction {
 	}
 
 	
-	ICommandFunction<AuthSession, ResponseData<EFileError>, JsonNode> doFileInit = (AuthSession ss, ResponseData<EFileError> res, JsonNode jnode) -> {
+	ICommandFunction<AuthSession, ResponseData<EAllError>, JsonNode> doFileInit = (AuthSession ss, ResponseData<EAllError> res, JsonNode jnode) -> {
 		FileInit data = new RecDataFile().new FileInit(jnode);
 		if(data.getFilesize() < 1)
-			return res.setError(EFileError.invalid_file_size);
+			return res.setError(EAllError.invalid_file_size);
 		if(data.getFilesize() > servicesConfig.getFileUploadMax())
-			return res.setError(EFileError.too_large_file);
+			return res.setError(EAllError.too_large_file);
 		if(StrUtil.isFileName(data.getFilename())==false)
-			return res.setError(EFileError.invalid_file_name);
+			return res.setError(EAllError.invalid_file_name);
 		
 		String fileid = StrUtil.getUuid("file");//Crypto.AES256Cipher.getInst().enc(data.getScode()+"/"+session.getUserId()+"/"+System.currentTimeMillis()+"/"+seq);
 		
 		if(DbAppManager.getInst().addFileInit(data.getScode(), fileid, ss.getUserId(), data.getFilename(), data.getFiletype(), data.getFilesize()) == false)
-			return res.setError(EFileError.fail_to_uploadfile);
+			return res.setError(EAllError.fail_to_uploadfile);
 		
-		return res.setError(EFileError.ok).setParam("fileid", fileid).setParam("ip", servicesConfig.getFileUploadIp()).setParam("port", servicesConfig.getFileUploadPort()+"");
+		return res.setError(EAllError.ok).setParam("fileid", fileid).setParam("ip", servicesConfig.getFileUploadIp()).setParam("port", servicesConfig.getFileUploadPort()+"");
 	};
 	
-	ICommandFunction<Channel, ResponseData<EFileError>, JsonNode> doFileStart = (Channel ch, ResponseData<EFileError> res, JsonNode jnode) -> {
+	ICommandFunction<Channel, ResponseData<EAllError>, JsonNode> doFileStart = (Channel ch, ResponseData<EAllError> res, JsonNode jnode) -> {
 		FileStart data = new RecDataFile().new FileStart(jnode);
 		if(data.getFileid()==null || data.getFileid().length()<1)
-			return res.setError(EFileError.invalid_fileid);
+			return res.setError(EAllError.invalid_fileid);
 		RecFile recfile = DbAppManager.getInst().getFileInfo(data.getScode(), data.getFileid());
 		if(recfile==null)
-			return res.setError(EFileError.not_exist_fileinfo);
+			return res.setError(EAllError.not_exist_fileinfo);
 		
 		UploadFile uploadFile = new UploadFile(recfile);
 		if(uploadFile.open(data.getScode(), StrUtil.getHostIp(), servicesConfig.getFileUploadDir())==false)
-			return res.setError(EFileError.fail_to_createfile);
+			return res.setError(EAllError.fail_to_createfile);
 		
 		FileSession session = new FileSession(ch, 2).putSession(uploadFile, data.getScode());	//consider the sessionid to find instance when close
 		ch.attr(chAttributeKey.getFileSessionKey()).set(session);
 		ch.attr(attrWebsocketData).get().setFilemode(true);
 		
-		return res.setError(EFileError.ok);
+		return res.setError(EAllError.ok);
 	};
 
 }

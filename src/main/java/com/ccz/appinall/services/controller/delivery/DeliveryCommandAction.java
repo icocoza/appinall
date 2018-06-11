@@ -27,8 +27,8 @@ import com.ccz.appinall.services.controller.address.RecDataAddr;
 import com.ccz.appinall.services.controller.address.RecDataAddr.*;
 import com.ccz.appinall.services.controller.auth.AuthSession;
 import com.ccz.appinall.services.enums.EAddrError;
-import com.ccz.appinall.services.enums.EDeliveryCmd;
-import com.ccz.appinall.services.enums.EDeliveryError;
+import com.ccz.appinall.services.enums.EAllCmd;
+import com.ccz.appinall.services.enums.EAllError;
 import com.ccz.appinall.services.enums.EDeliveryStatus;
 import com.ccz.appinall.services.enums.EGoodsSize;
 import com.ccz.appinall.services.enums.EGoodsType;
@@ -59,7 +59,7 @@ import lombok.extern.slf4j.Slf4j;
 public class DeliveryCommandAction extends CommonAction {
 	final int MAX_LIST_COUNT = 20;
 	
-	public ResponseData<EDeliveryError> result;
+	public ResponseData<EAllError> result;
 	
 	@Autowired
 	OrderGeoRepository geoRepository;
@@ -69,41 +69,41 @@ public class DeliveryCommandAction extends CommonAction {
 	SendMessageManager sendMessageManager;
 	
 	public DeliveryCommandAction() {
-		super.setCommandFunction(EDeliveryCmd.order_add.getValue(), doOrderRequest);
-		super.setCommandFunction(EDeliveryCmd.order_list.getValue(), doOrderList);
-		super.setCommandFunction(EDeliveryCmd.order_detail.getValue(), doOrderDetail);
-		super.setCommandFunction(EDeliveryCmd.order_search.getValue(), doOrderSearch);
-		super.setCommandFunction(EDeliveryCmd.select_order.getValue(), doOrderSelectByDeliver);
-		super.setCommandFunction(EDeliveryCmd.moving_order.getValue(), doDeliverMoving);
-		super.setCommandFunction(EDeliveryCmd.before_gotcha.getValue(), doDeliverBeforeGotcha);
-		super.setCommandFunction(EDeliveryCmd.gotcha_order.getValue(), doDeliverGotchaOrder);
-		super.setCommandFunction(EDeliveryCmd.delivering_order.getValue(), doDeliverDeliveringOrder);
-		super.setCommandFunction(EDeliveryCmd.before_arrival.getValue(), doDeliveryBeforeComplete);
-		super.setCommandFunction(EDeliveryCmd.arrival_in_order.getValue(), doDeliverArriveInOrder);
-		super.setCommandFunction(EDeliveryCmd.complete_delivery.getValue(), doDeliveryComplete);
-		super.setCommandFunction(EDeliveryCmd.confirm_complete_delivery.getValue(), doSenderDeliveryConfirm);
-		super.setCommandFunction(EDeliveryCmd.sender_cancel_order.getValue(), doOrderCancelBySender);
-		super.setCommandFunction(EDeliveryCmd.deliver_cancel_order.getValue(), doOrderCancelByDeliver);
-		super.setCommandFunction(EDeliveryCmd.deliver_plan.getValue(), doDeliverPlan);
-		super.setCommandFunction(EDeliveryCmd.order_search_byroute.getValue(), doGetOrderByRoute);
+		super.setCommandFunction(EAllCmd.order_add, doOrderRequest);
+		super.setCommandFunction(EAllCmd.order_list, doOrderList);
+		super.setCommandFunction(EAllCmd.order_detail, doOrderDetail);
+		super.setCommandFunction(EAllCmd.order_search, doOrderSearch);
+		super.setCommandFunction(EAllCmd.select_order, doOrderSelectByDeliver);
+		super.setCommandFunction(EAllCmd.moving_order, doDeliverMoving);
+		super.setCommandFunction(EAllCmd.before_gotcha, doDeliverBeforeGotcha);
+		super.setCommandFunction(EAllCmd.gotcha_order, doDeliverGotchaOrder);
+		super.setCommandFunction(EAllCmd.delivering_order, doDeliverDeliveringOrder);
+		super.setCommandFunction(EAllCmd.before_arrival, doDeliveryBeforeComplete);
+		super.setCommandFunction(EAllCmd.arrival_in_order, doDeliverArriveInOrder);
+		super.setCommandFunction(EAllCmd.complete_delivery, doDeliveryComplete);
+		super.setCommandFunction(EAllCmd.confirm_complete_delivery, doSenderDeliveryConfirm);
+		super.setCommandFunction(EAllCmd.sender_cancel_order, doOrderCancelBySender);
+		super.setCommandFunction(EAllCmd.deliver_cancel_order, doOrderCancelByDeliver);
+		super.setCommandFunction(EAllCmd.deliver_plan, doDeliverPlan);
+		super.setCommandFunction(EAllCmd.order_search_byroute, doGetOrderByRoute);
 
 		
-//		super.setCommandFunction(EDeliveryCmd.select_deliver.getValue(), doDeliverSelectBySender);
-//		super.setCommandFunction(EDeliveryCmd.cancel_deliver.getValue(), doDeliverCancelBySender);
-//		super.setCommandFunction(EDeliveryCmd.watch_order.getValue(), doWatchOrderByDeliver);
-//		super.setCommandFunction(EDeliveryCmd.checkin_order.getValue(), doOrderCheckInByDeliver);
+//		super.setCommandFunction(EAllCmd.select_deliver, doDeliverSelectBySender);
+//		super.setCommandFunction(EAllCmd.cancel_deliver, doDeliverCancelBySender);
+//		super.setCommandFunction(EAllCmd.watch_order, doWatchOrderByDeliver);
+//		super.setCommandFunction(EAllCmd.checkin_order, doOrderCheckInByDeliver);
 
 	}
 	
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public boolean processCommand(Channel ch, JsonNode jdata) {
 		String cmd = jdata.get("cmd").asText();
-		ResponseData<EDeliveryError> res = new ResponseData<EDeliveryError>(jdata.get("scode").asText(), jdata.get("rcode").asText(), cmd);
+		ResponseData<EAllError> res = new ResponseData<EAllError>(jdata.get("scode").asText(), jdata.get("rcode").asText(), cmd);
 		AuthSession session = (AuthSession) ch.attr(chAttributeKey.getAuthSessionKey()).get();
 		
 		ICommandFunction cmdFunc = super.getCommandFunction(cmd);
 		if(cmdFunc!=null) {
-			res = (ResponseData<EDeliveryError>) cmdFunc.doAction(session, res, jdata);
+			res = (ResponseData<EAllError>) cmdFunc.doAction(session, res, jdata);
 			send(ch, res.toJsonString());
 			return true;
 		}
@@ -111,21 +111,21 @@ public class DeliveryCommandAction extends CommonAction {
 	}
 
 	
-	ICommandFunction<AuthSession, ResponseData<EDeliveryError>, JsonNode> doOrderRequest = (AuthSession session, ResponseData<EDeliveryError> res, JsonNode jnode) -> {
+	ICommandFunction<AuthSession, ResponseData<EAllError>, JsonNode> doOrderRequest = (AuthSession session, ResponseData<EAllError> res, JsonNode jnode) -> {
 		DataOrderRequest data = new RecDataAddr().new DataOrderRequest(jnode);
 		RecAddress from, to;
 		if( (from = DbAppManager.getInst().getAddress(data.getScode(), data.getFrom_addrid())) == null)
-			return res.setError(EDeliveryError.invalid_from_addressid);
+			return res.setError(EAllError.invalid_from_addressid);
 		if( (to = DbAppManager.getInst().getAddress(data.getScode(), data.getTo_addrid()))==null)
-			return res.setError(EDeliveryError.invalid_to_addressid);
-		if(checkOrderData(res, data).getError() != EDeliveryError.ok)
+			return res.setError(EAllError.invalid_to_addressid);
+		if(checkOrderData(res, data).getError() != EAllError.ok)
 			return res;
 		String orderid = KeyGen.makeKeyWithDate("order");
 		
 		if(DbAppManager.getInst().addOrder(data.getScode(), orderid, session.getUserId(), data.getFrom_addrid(), data.getTo_addrid(), 
 				data.getName(), data.getNotice(), data.getSize(), data.getWeight(), data.getType(), 
 				data.getPrice(), data.getBegintime(), data.getEndtime(), data.getPhotourl()) == false)
-			return res.setError(EDeliveryError.failed_to_saveorder);
+			return res.setError(EAllError.failed_to_saveorder);
 		geoRepository.addLocation(orderid, from.lon, from.lat, to.lon, to.lat);
 		
 		DbAppManager.getInst().updateFilesEnabled(data.getScode(), data.getFileids(), true);	//업로딩된 파일을 enabled 시킴. enabled=false은 주기적으로 삭제 필요
@@ -143,16 +143,16 @@ public class DeliveryCommandAction extends CommonAction {
 		
 		//[TODO] 우선 지정 Deliver가 있을 경우, 들어온 배송을 우선적으로 배정할 수 있도록 함
 		session.setUserType(EUserType.sender);
-		return res.setParam("orderid", orderid).setError(EDeliveryError.ok);		//param : orderid
+		return res.setParam("orderid", orderid).setError(EAllError.ok);		//param : orderid
 	};
 	
-	ICommandFunction<AuthSession, ResponseData<EDeliveryError>, JsonNode> doOrderList = (AuthSession session, ResponseData<EDeliveryError> res, JsonNode jnode) -> {
+	ICommandFunction<AuthSession, ResponseData<EAllError>, JsonNode> doOrderList = (AuthSession session, ResponseData<EAllError> res, JsonNode jnode) -> {
 		DataOrderList data = new RecDataAddr().new DataOrderList(jnode);
 		if(data.getOffset() < 0 || data.getCount() < 1)
-			return res.setError(EDeliveryError.invalid_offset_count);
+			return res.setError(EAllError.invalid_offset_count);
 		List<RecDeliveryOrder> orderList = DbAppManager.getInst().getOrderList(data.getScode(), session.getUserId(), data.getOffset(), data.getCount());
 		if(orderList.size() < 1)
-			return res.setError(EDeliveryError.empty_order_list);
+			return res.setError(EAllError.empty_order_list);
 		List<String> orderids = orderList.stream().map(x -> x.orderid).collect(Collectors.toList());
 		Map<String, Integer> deliverCountMap = DbAppManager.getInst().getDeliverCountByOrderId(data.getScode(), orderids.toArray(new String[orderids.size()]));
 		if(deliverCountMap.size()>0) {
@@ -171,14 +171,14 @@ public class DeliveryCommandAction extends CommonAction {
 		List<RecAddress> addrList = DbAppManager.getInst().getAddressList(data.getScode(), addrids);
 		//[TODO]진행상태 추가 필요
 		session.setUserType(EUserType.sender);
-		return res.setParam("data", this.getOrderSearchData(orderList, addrList)).setError(EDeliveryError.ok);
+		return res.setParam("data", this.getOrderSearchData(orderList, addrList)).setError(EAllError.ok);
 	};
 	
-	ICommandFunction<AuthSession, ResponseData<EDeliveryError>, JsonNode> doOrderDetail = (AuthSession session, ResponseData<EDeliveryError> res, JsonNode jnode) -> {
+	ICommandFunction<AuthSession, ResponseData<EAllError>, JsonNode> doOrderDetail = (AuthSession session, ResponseData<EAllError> res, JsonNode jnode) -> {
 		DataOrderDetail data = new RecDataAddr().new DataOrderDetail(jnode);
 		RecDeliveryOrder order = (RecDeliveryOrder) DbAppManager.getInst().getOrder(data.getScode(), data.getOrderid());
 		if(order == null)
-			return res.setError(EDeliveryError.no_order_data);
+			return res.setError(EAllError.no_order_data);
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode objNode = mapper.valueToTree(order);
 		
@@ -191,54 +191,54 @@ public class DeliveryCommandAction extends CommonAction {
 		ArrayNode deliverPhotos = mapper.valueToTree(photoList.stream().filter(x-> x.usertype == EUserType.deliver).map(y->y.fileid).collect(Collectors.toList()));
 		objNode.putArray("senderphotos").addAll(senderPhotos);
 		objNode.putArray("deliverphotos").addAll(deliverPhotos);
-		return res.setParam("data", objNode).setError(EDeliveryError.ok);
+		return res.setParam("data", objNode).setError(EAllError.ok);
 	};
 	
-/*	ICommandFunction<AuthSession, ResponseData<EDeliveryError>, JsonNode> doDeliverSelectBySender = (AuthSession session, ResponseData<EDeliveryError> res, JsonNode jnode) -> {
+/*	ICommandFunction<AuthSession, ResponseData<EAllError>, JsonNode> doDeliverSelectBySender = (AuthSession session, ResponseData<EAllError> res, JsonNode jnode) -> {
  * DataSelectDeliverBySender data = new RecDataAddr().new DataSelectDeliverBySender(jnode);
 		RecDeliveryOrder order = (RecDeliveryOrder) DbAppManager.getInst().getOrder(data.getScode(), data.getOrderid());
 		if(order == DbRecord.Empty)
-			return res.setError(EDeliveryError.not_exist_order);
+			return res.setError(EAllError.not_exist_order);
 		RecDeliveryStatus status =  DbAppManager.getInst().getDeliveryStatus(data.getScode(), data.getOrderid());
 		if(status != DbRecord.Empty)
-			return res.setError(EDeliveryError.already_assigned_order);
+			return res.setError(EAllError.already_assigned_order);
 		
 		if(DbAppManager.getInst().addDeliveryStatus(data.getScode(), data.getOrderid(), data.getDeliverid(), EDeliveryStatus.ready) == false)
-			return res.setError(EDeliveryError.failed_assign_deliver);
+			return res.setError(EAllError.failed_assign_deliver);
 		
 		//[TODO] Send a Push to deliver to let know the deliver be choosed
 		DeliveryPushGenerator.sendDeliveryStatus(data.getScode(), session.getUserId(), data.getDeliverid(), order.orderid, EDeliveryStatus.ready, "no msg");
-		return res.setError(EDeliveryError.ok);
+		return res.setError(EAllError.ok);
 	};
 
 	
-	ICommandFunction<AuthSession, ResponseData<EDeliveryError>, JsonNode> doDeliverCancelBySender = (AuthSession session, ResponseData<EDeliveryError> res, JsonNode jnode) -> {
+	ICommandFunction<AuthSession, ResponseData<EAllError>, JsonNode> doDeliverCancelBySender = (AuthSession session, ResponseData<EAllError> res, JsonNode jnode) -> {
 	DataCancelDeliverBySender data = new RecDataAddr().new DataCancelDeliverBySender(jnode);
 		RecDeliveryOrder order = (RecDeliveryOrder) DbAppManager.getInst().getOrder(data.getScode(), data.getOrderid());
 		if(order == DbRecord.Empty)
-			return res.setError(EDeliveryError.not_exist_order);
+			return res.setError(EAllError.not_exist_order);
 		if(order.senderid.equals(session.getUserId()) == false)
-			return res.setError(EDeliveryError.not_authorized_user);
+			return res.setError(EAllError.not_authorized_user);
 		RecDeliveryStatus status =  DbAppManager.getInst().getDeliveryStatus(data.getScode(), data.getOrderid());
 		if(status == DbRecord.Empty)
-			return res.setError(EDeliveryError.not_assigned_order);
+			return res.setError(EAllError.not_assigned_order);
 		if(status.status != EDeliveryStatus.ready)
-			return res.setError(EDeliveryError.already_starting_order);
+			return res.setError(EAllError.already_starting_order);
 		if(DbAppManager.getInst().delDeliveryStatus(data.getScode(), data.getOrderid()) == false)
-			return res.setError(EDeliveryError.failed_cancel_delivery_ready);
+			return res.setError(EAllError.failed_cancel_delivery_ready);
 		
 		//[TODO] 이전에 선택된 delivery에게 푸시나 문자 전송해야 함(취소알림)
 		DeliveryPushGenerator.sendDeliveryStatus(data.getScode(), session.getUserId(), data.getDeliverid(), order.orderid, EDeliveryStatus.cancel, "no msg");
-		return res.setError(EDeliveryError.ok);
+		return res.setError(EAllError.ok);
 	};
 */
-	ICommandFunction<AuthSession, ResponseData<EDeliveryError>, JsonNode> doOrderSearch = (AuthSession session, ResponseData<EDeliveryError> res, JsonNode jnode) -> {
+	ICommandFunction<AuthSession, ResponseData<EAllError>, JsonNode> doOrderSearch = (AuthSession session, ResponseData<EAllError> res, JsonNode jnode) -> {
 		DataOrderSearch data = new RecDataAddr().new DataOrderSearch(jnode);
 		RecAddress fromAddr, toAddr;
 		if( (fromAddr = DbAppManager.getInst().getAddress(data.getScode(), data.getFrom_addrid())) == null)
-			return res.setError(EDeliveryError.invalid_from_addressid);
+			return res.setError(EAllError.invalid_from_addressid);
 		if( (toAddr = DbAppManager.getInst().getAddress(data.getScode(), data.getTo_addrid()))==null)
-			return res.setError(EDeliveryError.invalid_to_addressid);
+			return res.setError(EAllError.invalid_to_addressid);
 		
 		Map<String, Location> fromMap = geoRepository.searchOrderFrom(fromAddr.lon, fromAddr.lat, 2000, 10, 0);
 		Map<String, Location> toMap = geoRepository.searchOrderTo(toAddr.lon, toAddr.lat, 2000, 10, 1);
@@ -252,7 +252,7 @@ public class DeliveryCommandAction extends CommonAction {
 		removeKeys.stream().forEach(x -> fromMap.remove(x));
 		
 		if(fromMap.size()<1)
-			return res.setError(EDeliveryError.no_search_result);
+			return res.setError(EAllError.no_search_result);
 		
 		String[] orderids = fromMap.keySet().toArray(new String[fromMap.size()]);
 		List<RecDeliveryOrder> orderList = DbAppManager.getInst().getOrderListByIds(data.getScode(), orderids);
@@ -260,198 +260,198 @@ public class DeliveryCommandAction extends CommonAction {
 		List<String> addrids = orderList.stream().map(x -> x.getBuildIds()).flatMap(Collection::stream).collect(Collectors.toList()); 
 		List<RecAddress> addrList = DbAppManager.getInst().getAddressList(data.getScode(), addrids);
 		session.setUserType(EUserType.deliver);
-		return res.setParam("data", this.getOrderSearchData(orderList, addrList)).setError(EDeliveryError.ok);
+		return res.setParam("data", this.getOrderSearchData(orderList, addrList)).setError(EAllError.ok);
 	};
 	
 	//Deliver가 Order 선택 
-	ICommandFunction<AuthSession, ResponseData<EDeliveryError>, JsonNode> doOrderSelectByDeliver = (AuthSession session, ResponseData<EDeliveryError> res, JsonNode jnode) -> {
+	ICommandFunction<AuthSession, ResponseData<EAllError>, JsonNode> doOrderSelectByDeliver = (AuthSession session, ResponseData<EAllError> res, JsonNode jnode) -> {
 		DataOrderSelectByDeliver data = new RecDataAddr().new DataOrderSelectByDeliver(jnode);
 		RecDeliveryOrder order = (RecDeliveryOrder) DbAppManager.getInst().getOrder(data.getScode(), data.getOrderid());
 		if(order == DbRecord.Empty)
-			return res.setError(EDeliveryError.not_exist_order);
+			return res.setError(EAllError.not_exist_order);
 		//if(order.begintime.getTime() < System.currentTimeMillis())		//[TODO] commented for test
-		//	return res.setError(EDeliveryError.late_delivery_request);
+		//	return res.setError(EAllError.late_delivery_request);
 		RecDeliveryStatus status =  DbAppManager.getInst().getDeliveryStatus(data.getScode(), data.getOrderid());
 		if(status != DbRecord.Empty)
-			return res.setError(EDeliveryError.already_occupied_order);
+			return res.setError(EAllError.already_occupied_order);
 		
 		RecUser user = DbAppManager.getInst().getUser(data.getScode(), session.getUserId()); //[TODO] commented for test
 		if(user == DbRecord.Empty)
-			return res.setError(EDeliveryError.not_exist_deliver);
+			return res.setError(EAllError.not_exist_deliver);
 		
 		/*if(DbAppManager.getInst().addDeliveryApply(data.getScode(), data.getOrderid(), session.getUserId(), user.username, 
 				data.getBegintime(), data.getEndtime(), data.getPrice(), data.getDelivertype(), data.getDeliverytype()) == false)
-			return res.setError(EDeliveryError.failed_apply_order); */
+			return res.setError(EAllError.failed_apply_order); */
 		if(DbAppManager.getInst().addDeliveryApply(data.getScode(), data.getOrderid(), session.getUserId(), user.username) == false)
-			return res.setError(EDeliveryError.failed_apply_order);
+			return res.setError(EAllError.failed_apply_order);
 		
 		if(DbAppManager.getInst().addDeliveryStatus(data.getScode(), data.getOrderid(), session.getUserId(), EDeliveryStatus.assign) == false)
-			return res.setError(EDeliveryError.failed_assign_deliver);
+			return res.setError(EAllError.failed_assign_deliver);
 		
 		sendDeliveryStatus(data.getScode(), session.getUserId(), order.senderid, order.orderid, EDeliveryStatus.assign, "Selected");
 		session.setUserType(EUserType.deliver);
-		return res.setError(EDeliveryError.ok);
+		return res.setError(EAllError.ok);
 	};
 
-/*	ICommandFunction<AuthSession, ResponseData<EDeliveryError>, JsonNode> doOrderCheckInByDeliver = (AuthSession session, ResponseData<EDeliveryError> res, JsonNode jnode) -> {
+/*	ICommandFunction<AuthSession, ResponseData<EAllError>, JsonNode> doOrderCheckInByDeliver = (AuthSession session, ResponseData<EAllError> res, JsonNode jnode) -> {
  * DataOrderCheckInByDelivers data = new RecDataAddr().new DataOrderCheckInByDelivers(jnode);
 		RecDeliveryOrder order = (RecDeliveryOrder) DbAppManager.getInst().getOrder(data.getScode(), data.getOrderid());
 		if(order == DbRecord.Empty)
-			return res.setError(EDeliveryError.not_exist_order);
+			return res.setError(EAllError.not_exist_order);
 		RecDeliveryStatus status =  DbAppManager.getInst().getDeliveryStatus(data.getScode(), data.getOrderid(), session.getUserId());
 		if(status == DbRecord.Empty)
-			return res.setError(EDeliveryError.not_allowed_order);
+			return res.setError(EAllError.not_allowed_order);
 		if(status.status == EDeliveryStatus.assign)
-			return res.setError(EDeliveryError.already_assigned_order);
+			return res.setError(EAllError.already_assigned_order);
 		//Deliver 선택과 동시에 할당되도록 정책 변경 
 //		if(DbAppManager.getInst().updateDeliveryStatus(data.getScode(), data.getOrderid(), session.getUserId(), EDeliveryStatus.assign) == false)
-//			return res.setError(EDeliveryError.failed_to_saveassign);
+//			return res.setError(EAllError.failed_to_saveassign);
 		
 		//[TODO] Seder 에게 푸시나 메시지 전송해야 함 
 		DeliveryPushGenerator.sendDeliveryStatus(data.getScode(), session.getUserId(), order.senderid, order.orderid, EDeliveryStatus.assign, "no msg");
-		return res.setError(EDeliveryError.ok);
+		return res.setError(EAllError.ok);
 	};*/
 
-	ICommandFunction<AuthSession, ResponseData<EDeliveryError>, JsonNode> doDeliverMoving = (AuthSession session, ResponseData<EDeliveryError> res, JsonNode jnode) -> {
+	ICommandFunction<AuthSession, ResponseData<EAllError>, JsonNode> doDeliverMoving = (AuthSession session, ResponseData<EAllError> res, JsonNode jnode) -> {
 		DataDeliverMoving data = new RecDataAddr().new DataDeliverMoving(jnode);
 		RecDeliveryOrder order = (RecDeliveryOrder) DbAppManager.getInst().getOrder(data.getScode(), data.getOrderid());
 		if(order == DbRecord.Empty)
-			return res.setError(EDeliveryError.not_exist_order);
+			return res.setError(EAllError.not_exist_order);
 		RecDeliveryStatus status =  DbAppManager.getInst().getDeliveryStatus(data.getScode(), data.getOrderid(), session.getUserId());
 		if(status == DbRecord.Empty)
-			return res.setError(EDeliveryError.not_allowed_order);
+			return res.setError(EAllError.not_allowed_order);
 		if(status.status != EDeliveryStatus.assign)
-			return res.setError(EDeliveryError.not_assigned_order);
+			return res.setError(EAllError.not_assigned_order);
 		
 		String randomCode = "" + (new Random().nextInt(99999-10000)+10000);
 		if(DbAppManager.getInst().updateDeliveryStartCode(data.getScode(), data.getOrderid(), session.getUserId(), EDeliveryStatus.start, randomCode) == false)
-			return res.setError(EDeliveryError.failed_to_savestartmoving);
+			return res.setError(EAllError.failed_to_savestartmoving);
 		
 		sendDeliveryStatus(data.getScode(), session.getUserId(), order.senderid, order.orderid, EDeliveryStatus.start, "Moving! Gotcha Code: " + randomCode);
 		session.setUserType(EUserType.deliver);
-		return res.setError(EDeliveryError.ok);
+		return res.setError(EAllError.ok);
 	};
 
-	ICommandFunction<AuthSession, ResponseData<EDeliveryError>, JsonNode> doDeliverBeforeGotcha = (AuthSession session, ResponseData<EDeliveryError> res, JsonNode jnode) -> {
+	ICommandFunction<AuthSession, ResponseData<EAllError>, JsonNode> doDeliverBeforeGotcha = (AuthSession session, ResponseData<EAllError> res, JsonNode jnode) -> {
 		DataDeliverBeforeGotcha data = new RecDataAddr().new DataDeliverBeforeGotcha(jnode);
 		RecDeliveryOrder order = (RecDeliveryOrder) DbAppManager.getInst().getOrder(data.getScode(), data.getOrderid());
 		if(order == DbRecord.Empty)
-			return res.setError(EDeliveryError.not_exist_order);
+			return res.setError(EAllError.not_exist_order);
 		RecDeliveryStatus status =  DbAppManager.getInst().getDeliveryStatus(data.getScode(), data.getOrderid(), session.getUserId());
 		if(status == DbRecord.Empty)
-			return res.setError(EDeliveryError.not_allowed_order);
+			return res.setError(EAllError.not_allowed_order);
 		if(status.status != EDeliveryStatus.start)
-			return res.setError(EDeliveryError.not_start_order);
+			return res.setError(EAllError.not_start_order);
 		
 		if(DbAppManager.getInst().updateDeliveryStatus(data.getScode(), data.getOrderid(), session.getUserId(), EDeliveryStatus.gotcha5min)==false)
-			return res.setError(EDeliveryError.failed_to_savebeforegotcha);
+			return res.setError(EAllError.failed_to_savebeforegotcha);
 		
 		sendDeliveryStatus(data.getScode(), session.getUserId(), order.senderid, order.orderid, EDeliveryStatus.gotcha5min, "Before Gotcha");
 		session.setUserType(EUserType.deliver);
-		return res.setError(EDeliveryError.ok);
+		return res.setError(EAllError.ok);
 	};
 
-	ICommandFunction<AuthSession, ResponseData<EDeliveryError>, JsonNode> doDeliverGotchaOrder = (AuthSession session, ResponseData<EDeliveryError> res, JsonNode jnode) -> {
+	ICommandFunction<AuthSession, ResponseData<EAllError>, JsonNode> doDeliverGotchaOrder = (AuthSession session, ResponseData<EAllError> res, JsonNode jnode) -> {
 		DataDeliverGotcha data = new RecDataAddr().new DataDeliverGotcha(jnode);
 		RecDeliveryOrder order = (RecDeliveryOrder) DbAppManager.getInst().getOrder(data.getScode(), data.getOrderid());
 		if(order == DbRecord.Empty)
-			return res.setError(EDeliveryError.not_exist_order);
+			return res.setError(EAllError.not_exist_order);
 		RecDeliveryStatus status =  DbAppManager.getInst().getDeliveryStatus(data.getScode(), data.getOrderid(), session.getUserId());
 		if(status == DbRecord.Empty)
-			return res.setError(EDeliveryError.not_allowed_order);
+			return res.setError(EAllError.not_allowed_order);
 		
 		if(status.status == EDeliveryStatus.start || status.status == EDeliveryStatus.gotcha5min) {
 			/*
 			if(status.startcode!=null && status.startcode.equals(data.getStartcode())==false)	//[TODO] start code가 있을 경우에만 체크. check what start code is mandatory or not
-				return res.setError(EDeliveryError.invalid_start_passcode);
+				return res.setError(EAllError.invalid_start_passcode);
 			*/
 			if(DbAppManager.getInst().updateDeliveryStatus(data.getScode(), data.getOrderid(), session.getUserId(), EDeliveryStatus.gotcha)==false)
-				return res.setError(EDeliveryError.failed_to_savegotcha);
+				return res.setError(EAllError.failed_to_savegotcha);
 			
 			sendDeliveryStatus(data.getScode(), session.getUserId(), order.senderid, order.orderid, EDeliveryStatus.gotcha, "Gotcha Order");
 			session.setUserType(EUserType.deliver);
-			return res.setError(EDeliveryError.ok);
+			return res.setError(EAllError.ok);
 		}
-		return res.setError(EDeliveryError.not_started_order);
+		return res.setError(EAllError.not_started_order);
 	};
 	
-	ICommandFunction<AuthSession, ResponseData<EDeliveryError>, JsonNode> doDeliverDeliveringOrder = (AuthSession session, ResponseData<EDeliveryError> res, JsonNode jnode) -> {
+	ICommandFunction<AuthSession, ResponseData<EAllError>, JsonNode> doDeliverDeliveringOrder = (AuthSession session, ResponseData<EAllError> res, JsonNode jnode) -> {
 		DataDeliverDelivering data = new RecDataAddr().new DataDeliverDelivering(jnode);
 		RecDeliveryOrder order = (RecDeliveryOrder) DbAppManager.getInst().getOrder(data.getScode(), data.getOrderid());
 		if(order == DbRecord.Empty)
-			return res.setError(EDeliveryError.not_exist_order);
+			return res.setError(EAllError.not_exist_order);
 		RecDeliveryStatus status =  DbAppManager.getInst().getDeliveryStatus(data.getScode(), data.getOrderid(), session.getUserId());
 		if(status == DbRecord.Empty)
-			return res.setError(EDeliveryError.not_allowed_order);
+			return res.setError(EAllError.not_allowed_order);
 		if(status.status != EDeliveryStatus.gotcha)
-			return res.setError(EDeliveryError.not_receipt_order);
+			return res.setError(EAllError.not_receipt_order);
 		
 		String randomCode = "" + (new Random().nextInt(99999-10000)+10000);
 		if(DbAppManager.getInst().updateDeliveryEndCode(data.getScode(), data.getOrderid(), session.getUserId(), EDeliveryStatus.delivering, randomCode)==false)
-			return res.setError(EDeliveryError.failed_to_savedelivering);
+			return res.setError(EAllError.failed_to_savedelivering);
 		
 		sendDeliveryStatus(data.getScode(), session.getUserId(), order.senderid, order.orderid, EDeliveryStatus.delivering, "Delivering Order! Take Code: " + randomCode);
 		
 		//[TODO] Send Message to Receiver
 		//sendDeliveryStatus()
 		session.setUserType(EUserType.deliver);
-		return res.setError(EDeliveryError.ok);
+		return res.setError(EAllError.ok);
 	};
 
-	ICommandFunction<AuthSession, ResponseData<EDeliveryError>, JsonNode> doDeliveryBeforeComplete = (AuthSession session, ResponseData<EDeliveryError> res, JsonNode jnode) -> {
+	ICommandFunction<AuthSession, ResponseData<EAllError>, JsonNode> doDeliveryBeforeComplete = (AuthSession session, ResponseData<EAllError> res, JsonNode jnode) -> {
 		DataDeliveryBeforeComplete data = new RecDataAddr().new DataDeliveryBeforeComplete(jnode);
 		RecDeliveryOrder order = (RecDeliveryOrder) DbAppManager.getInst().getOrder(data.getScode(), data.getOrderid());
 		if(order == DbRecord.Empty)
-			return res.setError(EDeliveryError.not_exist_order);
+			return res.setError(EAllError.not_exist_order);
 		RecDeliveryStatus status =  DbAppManager.getInst().getDeliveryStatus(data.getScode(), data.getOrderid(), session.getUserId());
 		if(status == DbRecord.Empty)
-			return res.setError(EDeliveryError.not_allowed_order);
+			return res.setError(EAllError.not_allowed_order);
 		if(status.status != EDeliveryStatus.delivering)
-			return res.setError(EDeliveryError.not_delivering_order);
+			return res.setError(EAllError.not_delivering_order);
 		
 		if(DbAppManager.getInst().updateDeliveryStatus(data.getScode(), data.getOrderid(), session.getUserId(), EDeliveryStatus.before_delivered)==false)
-			return res.setError(EDeliveryError.failed_to_savebeforedelivered);
+			return res.setError(EAllError.failed_to_savebeforedelivered);
 		
 		sendDeliveryStatus(data.getScode(), session.getUserId(), order.senderid, order.orderid, EDeliveryStatus.before_delivered, "Almost arrived the deliver.");
 		
 		//[TODO] Send Message to Receiver
 		//sendDeliveryStatus()
 		session.setUserType(EUserType.deliver);
-		return res.setError(EDeliveryError.ok);
+		return res.setError(EAllError.ok);
 	};
 	
-	ICommandFunction<AuthSession, ResponseData<EDeliveryError>, JsonNode> doDeliverArriveInOrder = (AuthSession session, ResponseData<EDeliveryError> res, JsonNode jnode) -> {
+	ICommandFunction<AuthSession, ResponseData<EAllError>, JsonNode> doDeliverArriveInOrder = (AuthSession session, ResponseData<EAllError> res, JsonNode jnode) -> {
 		DataArrivalInOrder data = new RecDataAddr().new DataArrivalInOrder(jnode);
 		RecDeliveryOrder order = (RecDeliveryOrder) DbAppManager.getInst().getOrder(data.getScode(), data.getOrderid());
 		if(order == DbRecord.Empty)
-			return res.setError(EDeliveryError.not_exist_order);
+			return res.setError(EAllError.not_exist_order);
 		RecDeliveryStatus status =  DbAppManager.getInst().getDeliveryStatus(data.getScode(), data.getOrderid(), session.getUserId());
 		if(status == DbRecord.Empty)
-			return res.setError(EDeliveryError.not_allowed_order);
+			return res.setError(EAllError.not_allowed_order);
 		
 		if(status.status == EDeliveryStatus.delivering || status.status == EDeliveryStatus.before_delivered) {
 			if(DbAppManager.getInst().updateDeliveryStatus(data.getScode(), data.getOrderid(), session.getUserId(), EDeliveryStatus.deliver_arrived)==false)
-				return res.setError(EDeliveryError.failed_to_savebeforedelivered);
+				return res.setError(EAllError.failed_to_savebeforedelivered);
 			
 			sendDeliveryStatus(data.getScode(), session.getUserId(), order.senderid, order.orderid, EDeliveryStatus.deliver_arrived, "Arrived In Receiver.");
 			//[TODO] Send Message to Receiver
 			//sendDeliveryStatus()
 			session.setUserType(EUserType.deliver);
-			return res.setError(EDeliveryError.ok);
+			return res.setError(EAllError.ok);
 		}
-		return res.setError(EDeliveryError.not_delivering_order);
+		return res.setError(EAllError.not_delivering_order);
 	};
 	
-	ICommandFunction<AuthSession, ResponseData<EDeliveryError>, JsonNode> doDeliveryComplete = (AuthSession session, ResponseData<EDeliveryError> res, JsonNode jnode) -> {
+	ICommandFunction<AuthSession, ResponseData<EAllError>, JsonNode> doDeliveryComplete = (AuthSession session, ResponseData<EAllError> res, JsonNode jnode) -> {
 		DataDeliveryCompleteByDelivers data = new RecDataAddr().new DataDeliveryCompleteByDelivers(jnode);
 		RecDeliveryOrder order = (RecDeliveryOrder) DbAppManager.getInst().getOrder(data.getScode(), data.getOrderid());
 		if(order == DbRecord.Empty)
-			return res.setError(EDeliveryError.not_exist_order);
+			return res.setError(EAllError.not_exist_order);
 		RecDeliveryStatus status =  DbAppManager.getInst().getDeliveryStatus(data.getScode(), data.getOrderid(), session.getUserId());
 		if(status == DbRecord.Empty)
-			return res.setError(EDeliveryError.not_allowed_order);
+			return res.setError(EAllError.not_allowed_order);
 		if(status.status != EDeliveryStatus.deliver_arrived)	//delivered 상태에서 passcode를 올바르게 입력하여 confirm 상태로 변경할 수 있어야 함.
-			return res.setError(EDeliveryError.not_arrived_order);
+			return res.setError(EAllError.not_arrived_order);
 		
 		if(data.getFileids().size()>0)
 			DbAppManager.getInst().updateFilesEnabled(data.getScode(), data.getFileids(), true);	//업로딩된 파일을 enabled 시킴. enabled=false은 주기적으로 삭제 필요
@@ -463,46 +463,46 @@ public class DeliveryCommandAction extends CommonAction {
 		
 		if(status.endcode.equals(data.getEndcode())==false) {
 			if(DbAppManager.getInst().updateDeliveryStatus(data.getScode(), data.getOrderid(), session.getUserId(), EDeliveryStatus.delivered)==false)
-				return res.setError(EDeliveryError.failed_to_savedelivered);
+				return res.setError(EAllError.failed_to_savedelivered);
 			else
 				sendDeliveryStatus(data.getScode(), session.getUserId(), order.senderid, order.orderid, EDeliveryStatus.delivered, "Delivery Finished.");
 		}else {
 			if(DbAppManager.getInst().updateDeliveryStatus(data.getScode(), data.getOrderid(), session.getUserId(), EDeliveryStatus.confirm)==false)
-				return res.setError(EDeliveryError.failed_to_saveconfirm);
+				return res.setError(EAllError.failed_to_saveconfirm);
 			else
 				sendDeliveryStatus(data.getScode(), session.getUserId(), order.senderid, order.orderid, EDeliveryStatus.confirm, "Delivery Completed.");
 		}
-		return res.setError(EDeliveryError.ok);
+		return res.setError(EAllError.ok);
 	};
 
-	ICommandFunction<AuthSession, ResponseData<EDeliveryError>, JsonNode> doSenderDeliveryConfirm = (AuthSession session, ResponseData<EDeliveryError> res, JsonNode jnode) -> {
+	ICommandFunction<AuthSession, ResponseData<EAllError>, JsonNode> doSenderDeliveryConfirm = (AuthSession session, ResponseData<EAllError> res, JsonNode jnode) -> {
 		DataDeliveryConfirmBySender data = new RecDataAddr().new DataDeliveryConfirmBySender(jnode);
 		RecDeliveryOrder order = (RecDeliveryOrder) DbAppManager.getInst().getOrder(data.getScode(), data.getOrderid());
 		if(order == DbRecord.Empty)
-			return res.setError(EDeliveryError.no_order_data);
+			return res.setError(EAllError.no_order_data);
 		if(order.senderid.equals(session.getUserId())==false)
-			return res.setError(EDeliveryError.no_permission);
+			return res.setError(EAllError.no_permission);
 		RecDeliveryStatus status =  DbAppManager.getInst().getDeliveryStatus(data.getScode(), data.getOrderid());
 		if(status == DbRecord.Empty)
-			return res.setError(EDeliveryError.not_allowed_order);
+			return res.setError(EAllError.not_allowed_order);
 		if(status.status != EDeliveryStatus.delivered)
-			return res.setError(EDeliveryError.not_delivered_order);
+			return res.setError(EAllError.not_delivered_order);
 		
 		if(DbAppManager.getInst().updateDeliveryStatus(data.getScode(), data.getOrderid(), data.getDeliverid(), EDeliveryStatus.confirm)==false)
-			return res.setError(EDeliveryError.failed_to_saveconfirm);
+			return res.setError(EAllError.failed_to_saveconfirm);
 			
 		//[TODO] PUSH MESSAGE TO DELIVER
 		sendDeliveryStatus(data.getScode(), session.getUserId(), data.getDeliverid(), order.orderid, EDeliveryStatus.confirm, "Confirm delivery.");
 		//[TODO] Save to db message for history
 		session.setUserType(EUserType.sender);
-		return res.setError(EDeliveryError.ok);
+		return res.setError(EAllError.ok);
 	};
 
-	ICommandFunction<AuthSession, ResponseData<EDeliveryError>, JsonNode> doWatchOrderByDeliver = (AuthSession session, ResponseData<EDeliveryError> res, JsonNode jnode) -> {
+	ICommandFunction<AuthSession, ResponseData<EAllError>, JsonNode> doWatchOrderByDeliver = (AuthSession session, ResponseData<EAllError> res, JsonNode jnode) -> {
 		DataOrderDetailByDelivers data = new RecDataAddr().new DataOrderDetailByDelivers(jnode);
 		RecDeliveryOrder order = (RecDeliveryOrder) DbAppManager.getInst().getOrder(data.getScode(), data.getOrderid());
 		if(order == null)
-			return res.setError(EDeliveryError.no_order_data);
+			return res.setError(EAllError.no_order_data);
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode node = mapper.valueToTree(order);
 		RecDeliveryStatus status =  DbAppManager.getInst().getDeliveryStatus(data.getScode(), data.getOrderid());
@@ -510,64 +510,64 @@ public class DeliveryCommandAction extends CommonAction {
 			node.put("status", EDeliveryStatus.none.getValue());
 		else
 			node.put("status", status.status.getValue());
-		return res.setParam("data", node).setError(EDeliveryError.ok);
+		return res.setParam("data", node).setError(EAllError.ok);
 	};
 	
-	ICommandFunction<AuthSession, ResponseData<EDeliveryError>, JsonNode> doOrderCancelBySender = (AuthSession session, ResponseData<EDeliveryError> res, JsonNode jnode) -> {
+	ICommandFunction<AuthSession, ResponseData<EAllError>, JsonNode> doOrderCancelBySender = (AuthSession session, ResponseData<EAllError> res, JsonNode jnode) -> {
 		DataOrderCancelBySender data = new RecDataAddr().new DataOrderCancelBySender(jnode);
 		RecDeliveryOrder order = (RecDeliveryOrder) DbAppManager.getInst().getOrder(data.getScode(), data.getOrderid());
 		if(order == null)
-			return res.setError(EDeliveryError.no_order_data);
+			return res.setError(EAllError.no_order_data);
 		RecDeliveryStatus status =  DbAppManager.getInst().getDeliveryStatus(data.getScode(), data.getOrderid());
 		if(status == DbRecord.Empty) {
 			if(DbAppManager.getInst().updateOrderDisabled(data.getScode(), data.getOrderid()) == false)
-				return res.setError(EDeliveryError.failed_to_updateordercancel);
-			return res.setError(EDeliveryError.ok);
+				return res.setError(EAllError.failed_to_updateordercancel);
+			return res.setError(EAllError.ok);
 		}
 		if(status.status != EDeliveryStatus.assign)
-			return res.setError(EDeliveryError.impossible_cancel_delivery);
+			return res.setError(EAllError.impossible_cancel_delivery);
 		
 //		if(DbAppManager.getInst().delDeliveryStatus(data.getScode(), data.getOrderid()) == false)
-//			return res.setError(EDeliveryError.failed_cancel_delivery_ready);	
+//			return res.setError(EAllError.failed_cancel_delivery_ready);	
 		if(DbAppManager.getInst().updateDeliveryStatus(data.getScode(), data.getOrderid(), status.deliverid, EDeliveryStatus.cancel_bysender)==false)
-			return res.setError(EDeliveryError.failed_to_cancelbysender);
+			return res.setError(EAllError.failed_to_cancelbysender);
 		if(DbAppManager.getInst().updateOrderDisabled(data.getScode(), data.getOrderid()) == false)
-			return res.setError(EDeliveryError.failed_to_updateordercancel);
+			return res.setError(EAllError.failed_to_updateordercancel);
 		sendDeliveryStatus(data.getScode(), order.senderid, status.deliverid, order.orderid, EDeliveryStatus.cancel_bysender, "Order Cancel by Sender.");
 		session.setUserType(EUserType.sender);
-		return res.setError(EDeliveryError.ok);
+		return res.setError(EAllError.ok);
 	};
 	
-	ICommandFunction<AuthSession, ResponseData<EDeliveryError>, JsonNode> doOrderCancelByDeliver = (AuthSession session, ResponseData<EDeliveryError> res, JsonNode jnode) -> {
+	ICommandFunction<AuthSession, ResponseData<EAllError>, JsonNode> doOrderCancelByDeliver = (AuthSession session, ResponseData<EAllError> res, JsonNode jnode) -> {
 		DataOrderCancelByDelivers data = new RecDataAddr().new DataOrderCancelByDelivers(jnode);
 		RecDeliveryOrder order = (RecDeliveryOrder) DbAppManager.getInst().getOrder(data.getScode(), data.getOrderid());
 		if(order == null)
-			return res.setError(EDeliveryError.no_order_data);
+			return res.setError(EAllError.no_order_data);
 		RecDeliveryStatus status =  DbAppManager.getInst().getDeliveryStatus(data.getScode(), data.getOrderid());
 		if(status == DbRecord.Empty)
-			return res.setError(EDeliveryError.not_assigned_order);
+			return res.setError(EAllError.not_assigned_order);
 		if(status.status != EDeliveryStatus.assign)
-			return res.setError(EDeliveryError.impossible_cancel_delivery);
+			return res.setError(EAllError.impossible_cancel_delivery);
 		
 		//[TODO] 진행중인 상태의 Delivery를 배송자가 취소할 시나리오 필요 
 		if(DbAppManager.getInst().updateDeliveryStatus(data.getScode(), data.getOrderid(), status.deliverid, EDeliveryStatus.cancel_bydeliver)==false)
-			return res.setError(EDeliveryError.failed_to_cancelbysender);
+			return res.setError(EAllError.failed_to_cancelbysender);
 		if(DbAppManager.getInst().updateOrderDisabled(data.getScode(), data.getOrderid()) == false)
-			return res.setError(EDeliveryError.failed_to_updateordercancel);
+			return res.setError(EAllError.failed_to_updateordercancel);
 		sendDeliveryStatus(data.getScode(), status.deliverid, order.senderid, order.orderid, EDeliveryStatus.cancel_bysender, "Order Cancel by Deliver.");
 		session.setUserType(EUserType.deliver);
-		return res.setError(EDeliveryError.ok);
+		return res.setError(EAllError.ok);
 	};
 
-	ICommandFunction<AuthSession, ResponseData<EDeliveryError>, JsonNode> doDeliverPlan = (AuthSession session, ResponseData<EDeliveryError> res, JsonNode jnode) -> {
+	ICommandFunction<AuthSession, ResponseData<EAllError>, JsonNode> doDeliverPlan = (AuthSession session, ResponseData<EAllError> res, JsonNode jnode) -> {
 		DataDeliverPlan data = new RecDataAddr().new DataDeliverPlan(jnode);
 		return res;
 	};
 
-	ICommandFunction<AuthSession, ResponseData<EDeliveryError>, JsonNode> doGetOrderByRoute = (AuthSession session, ResponseData<EDeliveryError> res, JsonNode jnode) -> {
+	ICommandFunction<AuthSession, ResponseData<EAllError>, JsonNode> doGetOrderByRoute = (AuthSession session, ResponseData<EAllError> res, JsonNode jnode) -> {
 		DataOrderByRoute data = new RecDataAddr().new DataOrderByRoute(jnode);;
 		if(data.getRouteList()==null || data.getRouteList().size()<1) 
-			return res.setError(EDeliveryError.empty_gpslist);
+			return res.setError(EAllError.empty_gpslist);
 		Point[] routeArray = data.getRouteArray();
 		List<Point> orderSearchPinList = new ArrayList<>();
 		Point checkPoint = routeArray[0];
@@ -600,7 +600,7 @@ public class DeliveryCommandAction extends CommonAction {
 		}
 		
 		if(fromMap.size()<1)
-			return res.setError(EDeliveryError.no_search_result);
+			return res.setError(EAllError.no_search_result);
 		
 		String[] orderids = fromMap.keySet().toArray(new String[fromMap.size()]);
 		List<RecDeliveryOrder> orderList = DbAppManager.getInst().getOrderListByIds(data.getScode(), orderids);
@@ -610,7 +610,7 @@ public class DeliveryCommandAction extends CommonAction {
 		
 		DbAppManager.getInst().addRouteHistory(data.getScode(), session.getUserId(), data.getRouteList(), orderList.size());
 		
-		return res.setParam("data", this.getOrderSearchData(orderList, addrList)).setError(EDeliveryError.ok);
+		return res.setParam("data", this.getOrderSearchData(orderList, addrList)).setError(EAllError.ok);
 	};
 	
 	private ArrayNode copySearshResultToResponse(ArrayNode arrNode) {
@@ -626,15 +626,15 @@ public class DeliveryCommandAction extends CommonAction {
 		return copyArrNode;
 	}
 	
-	private ResponseData<EDeliveryError> checkOrderData(ResponseData<EDeliveryError> res, DataOrderRequest data) {
-		if(data.getName() == null || data.getName().length()<1) return res.setError(EDeliveryError.empty_goods_name);
-		if(data.getSize() == EGoodsSize.none) return res.setError(EDeliveryError.empty_goods_size);
-		if(data.getWeight() == EGoodsWeight.none) return res.setError(EDeliveryError.empty_goods_weight);
-		if(data.getType() == EGoodsType.none) return res.setError(EDeliveryError.empty_goods_type);
-		if(data.getPrice() < 1) return res.setError(EDeliveryError.empty_goods_price);
-		if(data.getBegintime() < 1) return res.setError(EDeliveryError.empty_order_begintime);
-		if(data.getEndtime() < 1) return res.setError(EDeliveryError.empty_order_endtime);
-		return res.setError(EDeliveryError.ok); 
+	private ResponseData<EAllError> checkOrderData(ResponseData<EAllError> res, DataOrderRequest data) {
+		if(data.getName() == null || data.getName().length()<1) return res.setError(EAllError.empty_goods_name);
+		if(data.getSize() == EGoodsSize.none) return res.setError(EAllError.empty_goods_size);
+		if(data.getWeight() == EGoodsWeight.none) return res.setError(EAllError.empty_goods_weight);
+		if(data.getType() == EGoodsType.none) return res.setError(EAllError.empty_goods_type);
+		if(data.getPrice() < 1) return res.setError(EAllError.empty_goods_price);
+		if(data.getBegintime() < 1) return res.setError(EAllError.empty_order_begintime);
+		if(data.getEndtime() < 1) return res.setError(EAllError.empty_order_endtime);
+		return res.setError(EAllError.ok); 
 	}
 	
 	private JsonNode getOrderSearchData(List<RecDeliveryOrder> orderList, List<RecAddress> addrList) {

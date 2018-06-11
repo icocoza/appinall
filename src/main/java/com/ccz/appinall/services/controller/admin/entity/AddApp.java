@@ -4,6 +4,7 @@ import com.ccz.appinall.library.util.AsciiSplitter.ASS;
 import com.ccz.appinall.services.controller.admin.entity.AdminLogout;
 import com.ccz.appinall.services.enums.EAdminAppStatus;
 import com.ccz.appinall.services.enums.EAdminCmd;
+import com.ccz.appinall.services.enums.EAllCmd;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import lombok.Setter;
@@ -57,8 +58,9 @@ public class AddApp extends AdminCommon {
 	public boolean isUpdateNow() {
 		return Boolean.parseBoolean(updateforce);
 	}
+	
 	@Override
-	public EAdminCmd getCommand() {
-		return EAdminCmd.addapp;
+	public EAllCmd getCommand() {
+		return EAllCmd.addapp;
 	}
 }

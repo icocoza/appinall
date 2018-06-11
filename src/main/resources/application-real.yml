@@ -42,8 +42,15 @@ elastic:
 #AppInAll Websocket Server
 websocket:
   port: 8081
-  path: /wss
-  
+  path: /wss  
+  so:
+    keepalive: true
+    backlog: 1000
+    reuseaddr: true
+    linger: 0
+  keystore:
+    path: /jks_file_path
+    password: jks_file_password  
 so:
   keepalive: true
   backlog: 1000

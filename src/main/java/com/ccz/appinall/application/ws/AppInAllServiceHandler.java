@@ -2,6 +2,8 @@ package com.ccz.appinall.application.ws;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -14,7 +16,9 @@ import com.ccz.appinall.library.module.redisqueue.RedisQueueKeyController;
 import com.ccz.appinall.library.module.redisqueue.RedisQueueManager;
 import com.ccz.appinall.library.module.redisqueue.RedisQueueRepository;
 import com.ccz.appinall.library.server.session.SessionManager;
+import com.ccz.appinall.library.type.ResponseData;
 import com.ccz.appinall.library.type.WebsocketPacketData;
+import com.ccz.appinall.library.type.inf.ICommandFunction;
 import com.ccz.appinall.library.type.inf.ICommandProcess;
 import com.ccz.appinall.library.type.inf.IDataAccess;
 import com.ccz.appinall.library.type.inf.IServiceHandler;
@@ -32,6 +36,8 @@ import com.ccz.appinall.services.controller.file.FileSession;
 import com.ccz.appinall.services.controller.friend.FriendCommandAction;
 import com.ccz.appinall.services.controller.location.LocationCommandAction;
 import com.ccz.appinall.services.controller.message.MessageCommandAction;
+import com.ccz.appinall.services.enums.EAllCmd;
+import com.ccz.appinall.services.enums.EAllError;
 import com.ccz.appinall.services.enums.ERedisQueueCmd;
 import com.ccz.appinall.services.repository.redis.DeliverChannelRepository;
 import com.ccz.appinall.services.repository.redis.OrderGeoRepository;
@@ -50,7 +56,8 @@ import lombok.extern.slf4j.Slf4j;
 public class AppInAllServiceHandler  implements IServiceHandler {
 	
 	private final String serviceCode = "appserver";
-	private List<ICommandProcess> cmdProcess = new ArrayList<>();
+	//private List<ICommandProcess> cmdProcess = new ArrayList<>();
+	private Map<EAllCmd, ICommandFunction> cmdFuncMap = new ConcurrentHashMap<>();
 	//private CommonAction fileCmd = new CommonAction(attrAuthSessionKey);
 	
 	@Autowired
@@ -85,17 +92,17 @@ public class AppInAllServiceHandler  implements IServiceHandler {
 	@Autowired
 	public IServiceHandler init() {
 		
-		if(cmdProcess.size()<1) {
-			cmdProcess.add(adminCommandAction);
-			cmdProcess.add(authCommandAction);
-			cmdProcess.add(deliveryCommandAction);
-			cmdProcess.add(boardCommandAction);
-			cmdProcess.add(channelCommandAction);
-			cmdProcess.add(friendCommandAction);
-			cmdProcess.add(messageCommandAction);
-			cmdProcess.add(addressCommandAction);// AddressCommandAction(attrAuthSessionKey));
-			cmdProcess.add(locationCommandAction);
-			cmdProcess.add(fileCommandAction);
+		if(cmdFuncMap.size() < 1) {
+			cmdFuncMap.putAll(adminCommandAction.getCommandFunctions());
+			cmdFuncMap.putAll(authCommandAction.getCommandFunctions());
+			cmdFuncMap.putAll(deliveryCommandAction.getCommandFunctions());
+			cmdFuncMap.putAll(boardCommandAction.getCommandFunctions());
+			cmdFuncMap.putAll(channelCommandAction.getCommandFunctions());
+			cmdFuncMap.putAll(friendCommandAction.getCommandFunctions());
+			cmdFuncMap.putAll(messageCommandAction.getCommandFunctions());
+			cmdFuncMap.putAll(addressCommandAction.getCommandFunctions());// AddressCommandAction(attrAuthSessionKey));
+			cmdFuncMap.putAll(locationCommandAction.getCommandFunctions());
+			cmdFuncMap.putAll(fileCommandAction.getCommandFunctions());
 		}
 		//between server
 		RedisQueueKeyController<ERedisQueueCmd> interServerQueueKeyController = new RedisQueueKeyController<ERedisQueueCmd>(RedisQueueRepository.INTER_SERVER_KEY + StrUtil.getHostIp(), servicesConfig.getRedisQueueCount());
@@ -145,13 +152,30 @@ public class AppInAllServiceHandler  implements IServiceHandler {
 		ch.attr(chAttributeKey.getAuthSessionKey()).set(null);
 	}
 	
+	@SuppressWarnings("unchecked")
 	private boolean processJsonData(Channel ch, JsonNode jdata) {
-		log.info("[Req]" + jdata.toString());
-		for(ICommandProcess process : cmdProcess) {
-			if(process.processCommand(ch, jdata) == true)
-				return true;
+		String cmd = jdata.get("cmd").asText();
+		ResponseData<EAllError> res = new ResponseData<EAllError>(jdata.get("scode").asText(), jdata.get("rcode").asText(), cmd);
+		
+		AuthSession session = (AuthSession)ch.attr(chAttributeKey.getAuthSessionKey()).get();
+		if(session == null) {
+			/*if(cmd.isNeedSession()) {
+				log.info("[SESSION] WrongSession");
+				send(ch, res.setError(ETaxiError.WRONG_SESSION).toJsonString());
+				res.clear();
+				return;
+			}*/
+			session = new AuthSession(ch);
 		}
-		log.info("No Command");
-		return false;
+
+		@SuppressWarnings({ "rawtypes", "unlikely-arg-type" })
+		ICommandFunction cmdFunc = cmdFuncMap.get(cmd);
+		if(cmdFunc == null)
+			return false;
+
+		res = (ResponseData<EAllError>) cmdFunc.doAction(session, res, jdata);
+		this.send(ch, res.toJsonString());
+		return true;
 	}
+	
 }

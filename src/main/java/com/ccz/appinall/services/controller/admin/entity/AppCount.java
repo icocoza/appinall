@@ -3,6 +3,7 @@ package com.ccz.appinall.services.controller.admin.entity;
 import com.ccz.appinall.library.util.AsciiSplitter.ASS;
 import com.ccz.appinall.services.enums.EAdminAppStatus;
 import com.ccz.appinall.services.enums.EAdminCmd;
+import com.ccz.appinall.services.enums.EAllCmd;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import lombok.Setter;
@@ -23,7 +24,7 @@ public class AppCount extends AdminCommon {
 		status = EAdminAppStatus.getType(jObj.get("status").asText());
 	}
 	@Override
-	public EAdminCmd getCommand() {
-		return EAdminCmd.appcount;
+	public EAllCmd getCommand() {
+		return EAllCmd.appcount;
 	}
 }
