@@ -93,23 +93,7 @@ public class DeliveryCommandAction extends CommonAction {
 //		super.setCommandFunction(EAllCmd.checkin_order, doOrderCheckInByDeliver);
 
 	}
-	
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public boolean processCommand(Channel ch, JsonNode jdata) {
-		String cmd = jdata.get("cmd").asText();
-		ResponseData<EAllError> res = new ResponseData<EAllError>(jdata.get("scode").asText(), jdata.get("rcode").asText(), cmd);
-		AuthSession session = (AuthSession) ch.attr(chAttributeKey.getAuthSessionKey()).get();
 		
-		ICommandFunction cmdFunc = super.getCommandFunction(cmd);
-		if(cmdFunc!=null) {
-			res = (ResponseData<EAllError>) cmdFunc.doAction(session, res, jdata);
-			send(ch, res.toJsonString());
-			return true;
-		}
-		return false;
-	}
-
-	
 	ICommandFunction<AuthSession, ResponseData<EAllError>, JsonNode> doOrderRequest = (AuthSession session, ResponseData<EAllError> res, JsonNode jnode) -> {
 		DataOrderRequest data = new RecDataAddr().new DataOrderRequest(jnode);
 		RecAddress from, to;

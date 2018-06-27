@@ -36,23 +36,7 @@ public class FileCommandAction extends CommonAction {
 		super.setCommandFunction(EAllCmd.fileinit, doFileInit);
 		super.setCommandFunction(EAllCmd.filesstart, doFileStart);
 	}
-	
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public boolean processCommand(Channel ch, JsonNode jdata) {
-		String cmd = jdata.get("cmd").asText();
-		ResponseData<EAllError> res = new ResponseData<EAllError>(jdata.get("scode").asText(), jdata.get("rcode").asText(), cmd);
-		AuthSession session = (AuthSession) ch.attr(chAttributeKey.getAuthSessionKey()).get();
 		
-		ICommandFunction cmdFunc = super.getCommandFunction(cmd);
-		if(cmdFunc!=null) {
-			res = (ResponseData<EAllError>) cmdFunc.doAction(EAllCmd.getType(cmd).isNeedSession() == true ? session : ch, res, jdata);
-			send(ch, res.toJsonString());
-			return true;
-		}
-		return false;
-	}
-
-	
 	ICommandFunction<AuthSession, ResponseData<EAllError>, JsonNode> doFileInit = (AuthSession ss, ResponseData<EAllError> res, JsonNode jnode) -> {
 		FileInit data = new RecDataFile().new FileInit(jnode);
 		if(data.getFilesize() < 1)

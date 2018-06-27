@@ -766,6 +766,7 @@ public class DbAppManager {
 	public List<RecDeliveryPhoto> getDeliveryPhotoList(String scode, String orderid) {
 		return new RecDeliveryPhoto(scode).getDeliveryPhotoList(orderid);
 	}
+	
 	public List<RecDeliveryPhoto> getDeliveryPhotoList(String scode, String orderid, EUserType usertype) {
 		return new RecDeliveryPhoto(scode).getDeliveryPhotoList(orderid, usertype);
 	}
@@ -773,4 +774,9 @@ public class DbAppManager {
 	public RecZipGeo getGeoPoi(String scode, String buildid) {
 		return new RecZipGeo(scode).getPoi(buildid); 
 	}
+	
+	public List<RecZipGeo> getPoiByGps(String scode, double longitude, double latitude) {
+		return new RecZipGeo(scode).getPoiByGps(longitude, latitude); 
+	}
+
 }

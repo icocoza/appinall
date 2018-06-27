@@ -54,8 +54,8 @@ public class RecZipGeo extends DbRecord {
 		return (RecZipGeo) super.getOne(sql);
 	}
 	
-	public List<RecZipGeo> getPoiByGps(long longitude, long latitude) {
-		String sql = String.format("SELECT buildid, ST_AsText(geo) as geotext FROM %s WHERE ST_Distance_Sphere(geo, POINT(%d, %d) < 0.004", RecZipGeo.TBL_NAME, latitude, longitude);
+	public List<RecZipGeo> getPoiByGps(double longitude, double latitude) {
+		String sql = String.format("SELECT buildid, ST_AsText(geo) as geotext FROM %s WHERE ST_Distance_Sphere(geo, POINT(%f, %f)) < 0.004", RecZipGeo.TBL_NAME, latitude, longitude);
 		return super.getList(sql).stream().map(e->(RecZipGeo)e).collect(Collectors.toList());
 	}
 	/*

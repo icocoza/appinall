@@ -9,6 +9,9 @@ import java.util.List;
 
 import com.ccz.appinall.services.model.db.RecDeliveryOrder;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class DbHelper {
 	static int CURSOR_TYPE = ResultSet.TYPE_SCROLL_INSENSITIVE;
 	
@@ -46,6 +49,7 @@ public class DbHelper {
     
     static public DbReader select(String poolName, String sql, int resultSetType)
     {
+    	log.info(sql);
     		DbConnection conn = null;
         try
         {
@@ -56,7 +60,7 @@ public class DbHelper {
         }
         catch (Exception e)
         {
-	        	e.printStackTrace();
+        	log.info(e.getMessage());
 	        	if(conn!=null)
 	        		DbConnMgr.getInst().freeConnection(poolName, conn);
             return DbReader.Empty;
@@ -64,6 +68,7 @@ public class DbHelper {
     }
     
     static public DbReader preparedSelect(String poolName, String sql, String[] ids) {
+    	log.info(sql);
 		DbConnection conn = null;
         try
         {
@@ -75,7 +80,7 @@ public class DbHelper {
 		    return new DbReader(poolName, conn, stmt, rs);
         }
         catch (Exception e) {
-	        	e.printStackTrace();
+        	log.info(e.getMessage());
 	        	if(conn!=null)
 	        		DbConnMgr.getInst().freeConnection(poolName, conn);
 	        return DbReader.Empty;
@@ -92,7 +97,7 @@ public class DbHelper {
         }
         catch (Exception e)
         {
-        		e.printStackTrace();
+        	log.info(e.getMessage());
 	        	if(conn!=null)
 	        		DbConnMgr.getInst().freeConnection(poolName, conn);
 	            return DbReader.Empty;
@@ -105,6 +110,7 @@ public class DbHelper {
     		Statement stmt = null;
         try
         {
+        	log.info(sql);
 	        	conn = DbConnMgr.getInst().getConnection(poolName);
 	        	stmt = conn.getConn(true).createStatement();
 	        	boolean bok = (stmt.executeUpdate(sql)>0 ? true : false);
@@ -112,7 +118,7 @@ public class DbHelper {
 	        	return bok;
         }
         catch (Exception e) {
-        		e.printStackTrace();
+        	log.info(e.getMessage());
 	        return false;
         }finally {
 	        	if(conn != null)
@@ -133,7 +139,7 @@ public class DbHelper {
 		    return 0;
         }
         catch (Exception e) {
-	        	e.printStackTrace();
+        	log.info(e.getMessage());
 	        	if(conn!=null)
 	        		DbConnMgr.getInst().freeConnection(poolName, conn);
 	        return -1;
@@ -162,7 +168,7 @@ public class DbHelper {
         }
         catch (Exception e)
         {
-        		e.printStackTrace();
+        	log.info(e.getMessage());
             return false;
         }finally {
 	        	if(conn != null)
@@ -176,6 +182,7 @@ public class DbHelper {
 	    	DbConnection conn = null;
         try
         {
+        	log.info(sql);
 	        	conn = DbConnMgr.getInst().getConnection(poolName);
 	        	Statement stmt = conn.getConn(true).createStatement();
 	        	ResultSet result = stmt.executeQuery(sql);
@@ -187,7 +194,7 @@ public class DbHelper {
         }
         catch (Exception e)
         {
-        		e.printStackTrace();
+        	log.info(e.getMessage());
             return -1;
         }finally {
 	        	if(conn!=null)
@@ -210,7 +217,7 @@ public class DbHelper {
         }
         catch (Exception e)
         {
-        		e.printStackTrace();
+        	log.info(e.getMessage());
             return false;
         }finally {
 	        	if(conn!=null)

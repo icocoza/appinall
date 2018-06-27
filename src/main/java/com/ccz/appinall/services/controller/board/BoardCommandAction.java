@@ -52,21 +52,6 @@ public class BoardCommandAction extends CommonAction {
 		super.setCommandFunction(EAllCmd.voteinfolist, getVoteInfoList);//O
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public boolean processCommand(Channel ch, JsonNode jdata) {
-		String cmd = jdata.get("cmd").asText();
-		ResponseData<EAllError> res = new ResponseData<EAllError>(jdata.get("scode").asText(), jdata.get("rcode").asText(), cmd);
-		AuthSession session = (AuthSession) ch.attr(chAttributeKey.getAuthSessionKey()).get();
-		
-		ICommandFunction cmdFunc = super.getCommandFunction(cmd);
-		if(cmdFunc!=null) {
-			res = (ResponseData<EAllError>) cmdFunc.doAction(session, res, jdata);
-			send(ch, res.toJsonString());
-			return true;
-		}
-		return false;
-	}
-
 	/** 
 	 * add new article
 	 * @param ch

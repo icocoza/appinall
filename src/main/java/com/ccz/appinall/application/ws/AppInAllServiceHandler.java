@@ -89,7 +89,6 @@ public class AppInAllServiceHandler  implements IServiceHandler {
 	
 	public AppInAllServiceHandler() { }
 	
-	@Autowired
 	public IServiceHandler init() {
 		
 		if(cmdFuncMap.size() < 1) {
@@ -132,11 +131,13 @@ public class AppInAllServiceHandler  implements IServiceHandler {
 
 	@Override
 	public boolean process(Channel ch, IDataAccess da) {
+		log.info(da.getStringData());
 		return processJsonData(ch, da.getJsonData());
 	}
 
 	@Override
 	public void send(Channel ch, String data) {
+		log.info("[RESPONSE]" + data);
 		IWriteProtocol wp = ch.attr(chAttributeKey.getWriteKey()).get();
 		wp.write(ch, data);
 	}
@@ -157,7 +158,7 @@ public class AppInAllServiceHandler  implements IServiceHandler {
 		String cmd = jdata.get("cmd").asText();
 		ResponseData<EAllError> res = new ResponseData<EAllError>(jdata.get("scode").asText(), jdata.get("rcode").asText(), cmd);
 		
-		AuthSession session = (AuthSession)ch.attr(chAttributeKey.getAuthSessionKey()).get();
+		AuthSession session = ch.attr(chAttributeKey.getAuthSessionKey()).get();
 		if(session == null) {
 			/*if(cmd.isNeedSession()) {
 				log.info("[SESSION] WrongSession");
@@ -169,10 +170,12 @@ public class AppInAllServiceHandler  implements IServiceHandler {
 		}
 
 		@SuppressWarnings({ "rawtypes", "unlikely-arg-type" })
-		ICommandFunction cmdFunc = cmdFuncMap.get(cmd);
-		if(cmdFunc == null)
+		ICommandFunction cmdFunc = cmdFuncMap.get(EAllCmd.getType(cmd));
+		if(cmdFunc == null) {
+			log.info("Unknown Command");
 			return false;
-
+		}
+		
 		res = (ResponseData<EAllError>) cmdFunc.doAction(session, res, jdata);
 		this.send(ch, res.toJsonString());
 		return true;

@@ -46,12 +46,6 @@ public class AdminCommandAction extends CommonAction {
 	}
 	
 
-	@Override
-	public boolean processCommand(Channel ch, JsonNode jdata) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
 	public ResponseData<EAllError> processWebData(AdminCommon rec) {
 		ResponseData<EAllError> res = new ResponseData<EAllError>("", "", rec.getCommand().getValue());
 		

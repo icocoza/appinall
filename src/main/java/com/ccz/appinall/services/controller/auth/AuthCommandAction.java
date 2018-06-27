@@ -59,23 +59,8 @@ public class AuthCommandAction extends CommonAction {
 		//super.setCommandFunction(EAllCmd.verify_email, null);
 		super.setCommandFunction(EAllCmd.verify_sms, doVerifyPhoneNo);
 	}
-
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public boolean processCommand(Channel ch, JsonNode jdata) {
-		String cmd = jdata.get("cmd").asText();
-		ResponseData<EAllError> res = new ResponseData<EAllError>(jdata.get("scode").asText(), jdata.get("rcode").asText(), cmd);
-		//AuthSession session = (AuthSession) ch.attr(chAttributeKey.getAuthSessionKey()).get();
-		
-		ICommandFunction cmdFunc = super.getCommandFunction(cmd);
-		if(cmdFunc!=null) {
-			res = (ResponseData<EAllError>) cmdFunc.doAction(ch, res, jdata);
-			send(ch, res.toJsonString());
-			return true;
-		}
-		return false;
-	}
 	
-	ICommandFunction<Channel, ResponseData<EAllError>, JsonNode> doFindId = (Channel ch, ResponseData<EAllError> res, JsonNode jnode) -> {
+	ICommandFunction<AuthSession, ResponseData<EAllError>, JsonNode> doFindId = (AuthSession authSession, ResponseData<EAllError> res, JsonNode jnode) -> {
 		DataUserId data = new RecDataAuth().new DataUserId(jnode);
 		if(data.getUid().length()<8)
 			return res.setError(EAllError.userid_more_than_8);
@@ -86,7 +71,7 @@ public class AuthCommandAction extends CommonAction {
 		return res.setError(EAllError.ok);
 	};
 
-	ICommandFunction<Channel, ResponseData<EAllError>, JsonNode> doRegIdPw = (Channel ch, ResponseData<EAllError> res, JsonNode jnode) -> {
+	ICommandFunction<AuthSession, ResponseData<EAllError>, JsonNode> doRegIdPw = (AuthSession authSession, ResponseData<EAllError> res, JsonNode jnode) -> {
 		DataRegIdPw data = new RecDataAuth().new DataRegIdPw(jnode);
 		RecAdminApp app = DbAppManager.getInst().getApp(data.getTokenAppId());	
 		if(app == DbRecord.Empty)
@@ -106,7 +91,7 @@ public class AuthCommandAction extends CommonAction {
 		return doRegisterUser(res, userid, data.getUid(), authQuery, data, false);
 	};
 	
-	ICommandFunction<Channel, ResponseData<EAllError>, JsonNode> doRegEmail = (Channel ch, ResponseData<EAllError> res, JsonNode jnode) -> {
+	ICommandFunction<AuthSession, ResponseData<EAllError>, JsonNode> doRegEmail = (AuthSession authSession, ResponseData<EAllError> res, JsonNode jnode) -> {
 		DataRegEmail data = new RecDataAuth().new DataRegEmail(jnode);
 		RecAdminApp app = DbAppManager.getInst().getApp(data.getTokenAppId());	
 		if(app == DbRecord.Empty)
@@ -122,7 +107,7 @@ public class AuthCommandAction extends CommonAction {
 		return doRegisterUser(res, userid, data.getEmail(), authQuery, data, false);
 	};
 	
-	ICommandFunction<Channel, ResponseData<EAllError>, JsonNode> doRegPhone = (Channel ch, ResponseData<EAllError> res, JsonNode jnode) -> {
+	ICommandFunction<AuthSession, ResponseData<EAllError>, JsonNode> doRegPhone = (AuthSession authSession, ResponseData<EAllError> res, JsonNode jnode) -> {
 		DataRegPhone data = new RecDataAuth().new DataRegPhone(jnode);
 		RecAdminApp app = DbAppManager.getInst().getApp(data.getTokenAppId());	
 		if(app == DbRecord.Empty)
@@ -138,7 +123,7 @@ public class AuthCommandAction extends CommonAction {
 		return doRegisterUser(res, userid, data.getPhoneno(), authQuery, data, false);
 	};
 	
-	ICommandFunction<Channel, ResponseData<EAllError>, JsonNode> doLogin = (Channel ch, ResponseData<EAllError> res, JsonNode jnode) -> {
+	ICommandFunction<AuthSession, ResponseData<EAllError>, JsonNode> doLogin = (AuthSession authSession, ResponseData<EAllError> res, JsonNode jnode) -> {
 		DataLogin data = new RecDataAuth().new DataLogin(jnode);
 		if(data.isValidAppToken()==false)
 			return res.setError(EAllError.invalid_app_token);
@@ -158,7 +143,7 @@ public class AuthCommandAction extends CommonAction {
 	 * 			token => AES256([userid][uuid][authtype])
 	 * @return the lasttime which is last joined time
 	 */
-	ICommandFunction<Channel, ResponseData<EAllError>, JsonNode> doSignin = (Channel ch, ResponseData<EAllError> res, JsonNode jnode) -> {
+	ICommandFunction<AuthSession, ResponseData<EAllError>, JsonNode> doSignin = (AuthSession authSession, ResponseData<EAllError> res, JsonNode jnode) -> {
 		DataSignIn data = new RecDataAuth().new DataSignIn(jnode);
 		if(data.isValidAppToken()==false)
 			return res.setError(EAllError.invalid_app_token);
@@ -188,15 +173,16 @@ public class AuthCommandAction extends CommonAction {
 		//	DbAppManager.getInst().updateAppCode(data.getScode(), token.userid, data.getScode());	//update apt code
 		//user.inappcode = data.getTokenAppId();
 		
-		AuthSession session = new AuthSession(ch, 1).putSession(user, data.getScode());	//consider the sessionid to find instance when close
-		session.setSessionData(sessionService.addUserSession(token.userid, StrUtil.getHostIp()));	//save to redis
-		ch.attr(chAttributeKey.getAuthSessionKey()).set(session);
-		sessionManager.put(session);
+		authSession.putSession(user, data.getScode());	//consider the sessionid to find instance when close
+		
+		authSession.setSessionData(sessionService.addUserSession(token.userid, StrUtil.getHostIp()));	//save to redis
+		authSession.getCh().attr(chAttributeKey.getAuthSessionKey()).set(authSession);
+		sessionManager.put(authSession);
 		
 		return res.setError(EAllError.ok).setParam(""+user.lasttime);
 	};
 
-	ICommandFunction<Channel, ResponseData<EAllError>, JsonNode> doUpdatePW = (Channel ch, ResponseData<EAllError> res, JsonNode jnode) -> {
+	ICommandFunction<AuthSession, ResponseData<EAllError>, JsonNode> doUpdatePW = (AuthSession authSession, ResponseData<EAllError> res, JsonNode jnode) -> {
 		DataUpdateIdUser data = new RecDataAuth().new DataUpdateIdUser(jnode);
 		if(data.isValidAppToken()==false)
 			return res.setError(EAllError.invalid_app_token);
@@ -225,7 +211,7 @@ public class AuthCommandAction extends CommonAction {
 		return res.setParam("tid", tokenid).setParam("token", token).setError(EAllError.ok);
 	};
 	
-	ICommandFunction<Channel, ResponseData<EAllError>, JsonNode> doUpdateEmail = (Channel ch, ResponseData<EAllError> res, JsonNode jnode) -> {
+	ICommandFunction<AuthSession, ResponseData<EAllError>, JsonNode> doUpdateEmail = (AuthSession authSession, ResponseData<EAllError> res, JsonNode jnode) -> {
 		DataUpdateEmailUser data = new RecDataAuth().new DataUpdateEmailUser(jnode);
 		if(data.isValidAppToken()==false)
 			return res.setError(EAllError.invalid_app_token);
@@ -255,7 +241,7 @@ public class AuthCommandAction extends CommonAction {
 		return res.setParam("tid", tokenid).setParam("token", token).setError(EAllError.ok);
 	};
 
-	ICommandFunction<Channel, ResponseData<EAllError>, JsonNode> doUpdatePhoneNo = (Channel ch, ResponseData<EAllError> res, JsonNode jnode) -> {
+	ICommandFunction<AuthSession, ResponseData<EAllError>, JsonNode> doUpdatePhoneNo = (AuthSession authSession, ResponseData<EAllError> res, JsonNode jnode) -> {
 		DataUpdatePhoneUser data = new RecDataAuth().new DataUpdatePhoneUser(jnode);
 		if(data.isValidAppToken()==false)
 			return res.setError(EAllError.invalid_app_token);
@@ -285,7 +271,7 @@ public class AuthCommandAction extends CommonAction {
 		return res.setParam("tid", tokenid).setParam("token", token).setError(EAllError.ok);
 	};
 	
-	ICommandFunction<Channel, ResponseData<EAllError>, JsonNode> doVerifyPhoneNo = (Channel ch, ResponseData<EAllError> res, JsonNode jnode) -> {
+	ICommandFunction<AuthSession, ResponseData<EAllError>, JsonNode> doVerifyPhoneNo = (AuthSession authSession, ResponseData<EAllError> res, JsonNode jnode) -> {
 		DataVerifyPhoneUser data = new RecDataAuth().new DataVerifyPhoneUser(jnode);
 		if(data.isValidAppToken()==false)
 			return res.setError(EAllError.invalid_app_token);
@@ -321,7 +307,7 @@ public class AuthCommandAction extends CommonAction {
 	 * 		epid, ostype, osversion, appversion
 	 * @return
 	 */
-	ICommandFunction<Channel, ResponseData<EAllError>, JsonNode> doAnonyLogin = (Channel ch, ResponseData<EAllError> res, JsonNode jnode) -> {
+	ICommandFunction<AuthSession, ResponseData<EAllError>, JsonNode> doAnonyLogin = (AuthSession authSession, ResponseData<EAllError> res, JsonNode jnode) -> {
 		DataAnonyLogin data = new RecDataAuth().new DataAnonyLogin(jnode);
 		return doCommonAnonyLogin(res, data);
 	};
@@ -352,7 +338,7 @@ public class AuthCommandAction extends CommonAction {
 	}
 	
 	//[TODO] Need to check the gps..
-	ICommandFunction<Channel, ResponseData<EAllError>, JsonNode> doAnonyLoginGps = (Channel ch, ResponseData<EAllError> res, JsonNode jnode) -> {
+	ICommandFunction<AuthSession, ResponseData<EAllError>, JsonNode> doAnonyLoginGps = (AuthSession authSession, ResponseData<EAllError> res, JsonNode jnode) -> {
 		DataAnonyLoginGps data = new RecDataAuth().new DataAnonyLoginGps(jnode);
 		res = doCommonAnonyLogin(res, data);
 		if(res.getError() != EAllError.ok)
