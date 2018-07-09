@@ -3,12 +3,16 @@ package com.ccz.appinall.library.module.redis;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
+import redis.clients.jedis.GeoRadiusResponse;
+import redis.clients.jedis.GeoUnit;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.exceptions.JedisException;
+import redis.clients.jedis.params.geo.GeoRadiusParam;
 
 public class RedisCommander {	//standalone redis connection or sentinel type
-	/*IRedisConnection connector;
+	IRedisConnection connector;
 	
 	public RedisCommander(IRedisConnection connector) {
 		this.connector = connector;
@@ -343,5 +347,17 @@ public class RedisCommander {	//standalone redis connection or sentinel type
 		}finally{ 
 			if(null != jedis) jedis.close();			
 		}		
-	}*/
+	}
+	
+	public long addGeo(String key, double longitude, double latitude, String member) {
+		Jedis jedis = connector.getResource();
+		
+		return jedis.geoadd(key, longitude, latitude, member);
+	}
+
+	public List<String> getGeoRadius(String key, double longitude, double latitude, int meterRadius) {
+		Jedis jedis = connector.getResource();
+		List<GeoRadiusResponse> list = jedis.georadius(key, longitude, latitude, meterRadius, GeoUnit.M, GeoRadiusParam.geoRadiusParam().sortAscending());
+		return list.stream().map(x -> x.getMemberByString()).collect(Collectors.toList());
+	}
 }

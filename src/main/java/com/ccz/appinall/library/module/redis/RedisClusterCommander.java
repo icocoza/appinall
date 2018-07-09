@@ -15,7 +15,7 @@ import redis.clients.jedis.JedisPoolConfig;
 
 public class RedisClusterCommander {
 
-	/*JedisCluster jcluster;
+	JedisCluster jcluster;
 	public RedisClusterCommander(List<HostAndPort> hostAndPortList) {
 		Set<HostAndPort> jedisClusterNodes = new HashSet<>();
 		
@@ -166,5 +166,5 @@ public class RedisClusterCommander {
 			jedis.close();
 		}
 		return keys;
-	}*/
+	}
 }

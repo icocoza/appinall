@@ -141,6 +141,7 @@ public enum EAllError {
 	NoData,
 	NoListData,
 	InvalidParameter,
+	InvalidCategoryId,
 	PermissionDeny,
 	WrongAptCode,
 	

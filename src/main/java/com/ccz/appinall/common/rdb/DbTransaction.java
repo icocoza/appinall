@@ -10,6 +10,7 @@ import com.ccz.appinall.services.model.db.RecDeliveryOrder;
 import com.ccz.appinall.services.model.db.RecDeliveryPhoto;
 import com.ccz.appinall.services.model.db.RecUser;
 import com.ccz.appinall.services.model.db.RecUserAuth;
+import com.ccz.appinall.services.model.db.RecUserBoardTableList;
 import com.ccz.appinall.services.model.db.RecUserToken;
 import com.ccz.appinall.services.model.db.RecUserVoter;
 
@@ -91,4 +92,9 @@ public class DbTransaction {
 	public String queryUpdatePhotoUrl(String orderid, String photourl) {
 		return RecDeliveryOrder.qUpdatePhotoUrl(orderid, photourl);
 	}
+	
+	public String queryAddUserTable(String userid, String tableid, String title, int tablepos) {
+		return RecUserBoardTableList.qInsertUserTable(userid, tableid, title, tablepos);
+	}
+
 }

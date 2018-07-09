@@ -171,6 +171,8 @@ public class DbAppManager {
 			new RecDeliveryPhoto(scode).createTable();
 			new RecDeliveryStatus(scode).createTable();
 			new RecAddress(scode).createTable();
+			new RecUserBoardTableList(scode).createTable();
+			new RecBoardTableList(scode).createTable();
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return false;
@@ -211,6 +213,23 @@ public class DbAppManager {
 		return new RecUser(scode).updateUser(userid, ostype, osversion, appversion);
 	}
 	
+	//for user board list
+	public DbRecord addUserTable(String scode, String userid, String tableid, String title, int tablepos) {
+		return new RecUserBoardTableList(scode).insertUserTable(userid, tableid, title, tablepos);
+	}
+	public List<RecUserBoardTableList> getUserTableList(String scode, String userid) {
+		return new RecUserBoardTableList(scode).getUserTableList(userid);
+	}
+	
+	//for board list (custom for apaprtment)
+	public DbRecord insertTable(String scode, String tableid, String title, String boardtype, String servicetype, String sido, String sigu, String dong) {
+		return new RecBoardTableList(scode).insertTable(tableid, title, boardtype, servicetype, sido, sigu, dong);
+	}
+	
+	public RecBoardTableList getTableByTitle(String scode, String title, String sido, String sigu, String dong) {
+		return new RecBoardTableList(scode).getTableByTitle(title, sido, sigu, dong);
+	}
+
 	//for user token
 	public RecUserToken getUserTokenByUserId(String scode, String userid) {
 		return new RecUserToken(scode).getTokenByUserId(userid);

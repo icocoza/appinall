@@ -20,9 +20,11 @@ import com.ccz.appinall.library.util.KeyGen;
 import com.ccz.appinall.library.util.ShortUUID;
 import com.ccz.appinall.library.util.StrUtil;
 import com.ccz.appinall.services.controller.CommonAction;
+import com.ccz.appinall.services.controller.address.CategoryTable;
 import com.ccz.appinall.services.controller.auth.RecDataAuth.*;
 import com.ccz.appinall.services.enums.EAllCmd;
 import com.ccz.appinall.services.enums.EAllError;
+import com.ccz.appinall.services.enums.EBoardService;
 import com.ccz.appinall.services.enums.EUserAuthType;
 import com.ccz.appinall.services.model.db.*;
 import com.ccz.appinall.services.service.SessionService;
@@ -50,7 +52,7 @@ public class AuthCommandAction extends CommonAction {
 		super.setCommandFunction(EAllCmd.reg_phone, doRegPhone);
 		super.setCommandFunction(EAllCmd.login, doLogin);
 		super.setCommandFunction(EAllCmd.anony_login, doAnonyLogin);
-		super.setCommandFunction(EAllCmd.anony_login_gps, doAnonyLoginGps);
+		super.setCommandFunction(EAllCmd.anony_login_buildid, doAnonyLoginBuildId);
 		super.setCommandFunction(EAllCmd.signin, doSignin);
 		super.setCommandFunction(EAllCmd.anony_signin, doSignin);
 		super.setCommandFunction(EAllCmd.change_pw, doUpdatePW);
@@ -338,7 +340,7 @@ public class AuthCommandAction extends CommonAction {
 	}
 	
 	//[TODO] Need to check the gps..
-	ICommandFunction<AuthSession, ResponseData<EAllError>, JsonNode> doAnonyLoginGps = (AuthSession authSession, ResponseData<EAllError> res, JsonNode jnode) -> {
+	ICommandFunction<AuthSession, ResponseData<EAllError>, JsonNode> doAnonyLoginBuildId = (AuthSession authSession, ResponseData<EAllError> res, JsonNode jnode) -> {
 		DataAnonyLoginGps data = new RecDataAuth().new DataAnonyLoginGps(jnode);
 		res = doCommonAnonyLogin(res, data);
 		if(res.getError() != EAllError.ok)
@@ -346,10 +348,43 @@ public class AuthCommandAction extends CommonAction {
 		RecAddress addr = DbAppManager.getInst().getAddress(data.getScode(), data.getBuildid());
 		if(addr == null)
 			return res.setError(EAllError.not_exist_building);
-		DbAppManager.getInst().updateAppCode(data.getScode(), res.getUserid(), data.getBuildid());
 		
+		RecBoardTableList sido = DbAppManager.getInst().getTableByTitle(data.getScode(), addr.sido, addr.sido, "", "");	//get SiDo
+		if(DbRecord.Empty == sido) {
+			String tableid = StrUtil.getSha1Uuid("tableid");
+			sido = (RecBoardTableList) DbAppManager.getInst().insertTable(data.getScode(), tableid, addr.sido, "text", EBoardService.no03.value, addr.sido, "", "");
+		}
+		RecBoardTableList sigu = DbAppManager.getInst().getTableByTitle(data.getScode(), addr.sido, addr.sido, addr.sigu, "");	//get SiDo
+		if(DbRecord.Empty == sigu) {
+			String tableid = StrUtil.getSha1Uuid("tableid");
+			sigu = (RecBoardTableList) DbAppManager.getInst().insertTable(data.getScode(), tableid, addr.sido, "text", EBoardService.no02.value, addr.sido, addr.sigu, "");
+		}
+		RecBoardTableList dong = DbAppManager.getInst().getTableByTitle(data.getScode(), addr.sido, addr.sido, addr.sigu, addr.dongname);	//get SiDo
+		if(DbRecord.Empty == dong) {
+			String tableid = StrUtil.getSha1Uuid("tableid");
+			dong = (RecBoardTableList) DbAppManager.getInst().insertTable(data.getScode(), tableid, addr.sido, "text", EBoardService.no01.value, addr.sido, addr.sigu, addr.dongname);
+		}
+
+		List<String> queries = new ArrayList<>();
+		queries.add(DbTransaction.getInst().queryAddUserTable(res.getUserid(), sido.tableid, sido.title, 2));
+		queries.add(DbTransaction.getInst().queryAddUserTable(res.getUserid(), sigu.tableid, sigu.title, 1));
+		queries.add(DbTransaction.getInst().queryAddUserTable(res.getUserid(), dong.tableid, dong.title, 0));
+		
+		if(DbTransaction.getInst().transactionQuery(data.getScode(), queries) == true) {
+			List<CategoryTable> tableList = new ArrayList<>();
+			tableList.add(makeUserTableInfo(sido, 2));
+			tableList.add(makeUserTableInfo(sigu, 1));
+			tableList.add(makeUserTableInfo(dong, 0));
+			res.setParam("categories", tableList);
+			
+			authSession.setUserTableInfo(tableList);	// 게시글은 category no로 전달되면 세션에서 tableid꺼내어 categoryId로 활용한다.
+		}
 		return res.setError(EAllError.ok);
 	};
+	
+	private CategoryTable makeUserTableInfo(RecBoardTableList table, int tablepos) {
+		return new CategoryTable(table.tableid, table.title, tablepos);
+	}
 	
 	private ResponseData<EAllError> doRegisterUser(ResponseData<EAllError> res, String userid, String regId, String authQuery, DataRegUser data, boolean enableToken) {
 		String tokenid = StrUtil.getSha1Uuid("tid");

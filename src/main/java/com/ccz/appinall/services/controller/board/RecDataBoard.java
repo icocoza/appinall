@@ -21,7 +21,8 @@ public class RecDataBoard {
 		public EBoardItemType itemtype;
 		public String title, content; 
 		public boolean hasimage, hasfile;
-		public String category, appcode;
+		public String appcode;
+		private String category;
 		
 		public AddBoard(JsonNode jObj) {
 			itemtype = EBoardItemType.getType(jObj.get("itemtype").asText());
@@ -32,7 +33,16 @@ public class RecDataBoard {
 			category = jObj.get("category").asText();
 			appcode = jObj.get("appcode").asText();
 		}
+		
+		public int getCategoryInex() {
+			try {
+				return Integer.parseInt(category);
+			}catch(Exception e) {
+				return 0;
+			}
+		}
 	}
+	
 	public class DelBoard {
 		public String boardid;
 		

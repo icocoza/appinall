@@ -27,7 +27,7 @@ public class RecBoard  extends DbRecord {	//this data move to NoSQL like MongoDb
 	public EBoardItemType itemtype;
 	public String  content;
 	public boolean hasimage, hasfile;
-	public String category, appcode;
+	@JsonIgnore public String category, appcode;
 	@JsonIgnore public String createuserid;
 	public String createusername;
 	public Timestamp createtime;
@@ -39,8 +39,8 @@ public class RecBoard  extends DbRecord {	//this data move to NoSQL like MongoDb
 	public boolean createTable() {
 		String sql = String.format("CREATE TABLE IF NOT EXISTS %s (boardid VARCHAR(64) NOT NULL PRIMARY KEY, "
 				+ "itemtype VARCHAR(12) NOT NULL, title VARCHAR(128) NOT NULL, content VARCHAR(128) NOT NULL, hasimage BOOLEAN, hasfile BOOLEAN, "
-				+ "category VARCHAR(24), appcode VARCHAR(32), createuserid VARCHAR(64), createusername VARCHAR(32), "
-				+ "createtime DATETIME DEFAULT now(), INDEX(itemtype, appcode, createuserid))",  RecBoard.TBL_NAME);
+				+ "category VARCHAR(64) NOT NULL, appcode VARCHAR(32), createuserid VARCHAR(64), createusername VARCHAR(32), "
+				+ "createtime DATETIME DEFAULT now(), INDEX(itemtype, appcode, createuserid), INDEX idx_category(category))",  RecBoard.TBL_NAME);
 		return super.createTable(sql); 
 	}
 	

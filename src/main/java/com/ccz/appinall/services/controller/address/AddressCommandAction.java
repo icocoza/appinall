@@ -1,9 +1,13 @@
 package com.ccz.appinall.services.controller.address;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.ccz.appinall.common.config.ServicesConfig;
+import com.ccz.appinall.common.rdb.DbAppManager;
 import com.ccz.appinall.library.type.ResponseData;
 import com.ccz.appinall.library.type.inf.ICommandFunction;
 import com.ccz.appinall.services.controller.CommonAction;
@@ -11,17 +15,13 @@ import com.ccz.appinall.services.controller.address.RecDataAddr.*;
 import com.ccz.appinall.services.controller.auth.AuthSession;
 import com.ccz.appinall.services.enums.EAllCmd;
 import com.ccz.appinall.services.enums.EAllError;
-import com.ccz.appinall.services.repository.redis.OrderGeoRepository;
-import com.ccz.appinall.services.service.SendMessageManager;
+import com.ccz.appinall.services.model.db.RecAddress;
+import com.ccz.appinall.services.repository.redis.GeoRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.NullNode;
 
-import io.netty.channel.Channel;
-import lombok.extern.slf4j.Slf4j;
-
-@Slf4j
 @Component
 public class AddressCommandAction extends CommonAction {
 	
@@ -29,15 +29,12 @@ public class AddressCommandAction extends CommonAction {
 	
 	public ResponseData<EAllError> result;
 	
-	@Autowired
-	OrderGeoRepository geoRepository;
-	@Autowired
-	ServicesConfig servicesConfig;
-	@Autowired
-	SendMessageManager sendMessageManager;
+	@Autowired ServicesConfig servicesConfig;
+	@Autowired GeoRepository geoRepository;
 	
 	public AddressCommandAction() {
 		super.setCommandFunction(EAllCmd.addr_search, doSearch);
+		super.setCommandFunction(EAllCmd.gps_search, doGpsSearch);
 	}
 
 	/*
@@ -67,7 +64,17 @@ public class AddressCommandAction extends CommonAction {
 		return res.setParam("data", arrNode).setError(EAllError.ok);
 	};
 	
-
+	//Google gps -> WGS84
+	//But GeoRadius is searched by DMS
+	ICommandFunction<AuthSession, ResponseData<EAllError>, JsonNode> doGpsSearch = (AuthSession session, ResponseData<EAllError> res, JsonNode jnode) -> {
+		DataGpsSearchAddr data = new RecDataAddr().new DataGpsSearchAddr(jnode);
+		List<String> buildIds = geoRepository.searchOrder(data.getLon(), data.getLat(), 100, 100);
+		List<RecAddress> addrList = DbAppManager.getInst().getAddressList(session.scode, buildIds);
+		List<BuildingInfo> buildList = addrList.stream().map(x -> new BuildingInfo(x.buildid, x.buildname)).collect(Collectors.toList());
+		res.setParam("buildings", buildList);
+		return buildList.size() > 0 ? res.setError(EAllError.ok) : res.setError(EAllError.empty_search);
+	};
+	
 	private ArrayNode copySearshResultToResponse(ArrayNode arrNode) {
 		ObjectMapper mapper = new ObjectMapper();
 		ArrayNode copyArrNode = mapper.createArrayNode();

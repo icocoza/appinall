@@ -4,11 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.ccz.appinall.library.server.session.SessionItem;
+import com.ccz.appinall.services.controller.address.CategoryTable;
 import com.ccz.appinall.services.enums.EUserType;
 import com.ccz.appinall.services.model.db.RecUser;
 import com.ccz.appinall.services.model.redis.SessionData;
 
 import io.netty.channel.Channel;
+import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -19,6 +21,8 @@ public class AuthSession extends SessionItem<RecUser> {
 	@Setter @Getter SessionData sessionData;
 	
 	@Getter List<String> cleanUpIds = new ArrayList<>();
+	
+	@Getter @Setter List<CategoryTable> userTableInfo;
 	
 	public AuthSession(Channel ch) {
 		super(ch, 0);
@@ -56,5 +60,11 @@ public class AuthSession extends SessionItem<RecUser> {
 	}
 	public void delCleanUpId(String id) {
 		cleanUpIds.remove(id);
+	}
+	
+	public String getTableIdByCategoryIndex(int index) {
+		if(index <0 || userTableInfo.size() <= index)
+			return null;
+		return userTableInfo.get(index).getTableid();
 	}
 }

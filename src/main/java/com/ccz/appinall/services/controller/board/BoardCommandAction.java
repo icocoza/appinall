@@ -17,6 +17,7 @@ import com.ccz.appinall.services.enums.EAllCmd;
 import com.ccz.appinall.services.enums.EAllError;
 import com.ccz.appinall.services.model.db.RecBoard;
 import com.ccz.appinall.services.model.db.RecBoardReply;
+import com.ccz.appinall.services.model.db.RecUserBoardTableList;
 import com.ccz.appinall.services.model.db.RecVote;
 import com.ccz.appinall.services.model.db.RecVoteInfo;
 import com.ccz.appinall.services.model.db.RecVoteUser;
@@ -52,6 +53,17 @@ public class BoardCommandAction extends CommonAction {
 		super.setCommandFunction(EAllCmd.voteinfolist, getVoteInfoList);//O
 	}
 
+	ICommandFunction<AuthSession, ResponseData<EAllError>, JsonNode> doGetCategoryList = (AuthSession ss, ResponseData<EAllError> res, JsonNode jnode) -> {
+		if(ss==null)
+			return res.setError(EAllError.NoSession);
+		List<RecUserBoardTableList> tableList = DbAppManager.getInst().getUserTableList(ss.scode, ss.getUserId());
+		if(tableList.size()<1)
+			return res.setError(EAllError.NoData);
+		res.setParam("categories", tableList);	
+		return res.setError(EAllError.ok);
+	};
+	
+	
 	/** 
 	 * add new article
 	 * @param ch
@@ -426,14 +438,17 @@ public class BoardCommandAction extends CommonAction {
 	
 	
 	private ResponseData<EAllError> addBoard(AuthSession ss, ResponseData<EAllError> res, AddBoard data) {
-		String boardid = StrUtil.getSha1Uuid("brd");
-		if(DbAppManager.getInst().addBoardShort(ss.scode, boardid, data.itemtype, data.title, getShortContent(data.content), data.hasimage,
-				data.hasfile, data.category, data.appcode, ss.getUserId(), ss.getUsername())==false) 		//insert content's shortcut
+		String boardId = StrUtil.getSha1Uuid("brd");
+		String categoryId = ss.getTableIdByCategoryIndex(data.getCategoryInex());
+		if(categoryId==null)
+			return res.setError(EAllError.InvalidCategoryId);
+		if(DbAppManager.getInst().addBoardShort(ss.scode, boardId, data.itemtype, data.title, getShortContent(data.content), data.hasimage,
+				data.hasfile, categoryId, data.appcode, ss.getUserId(), ss.getUsername())==false) 		//insert content's shortcut
 			return res.setError(EAllError.FailAddBoard);
 		
-		DbAppManager.getInst().addBoardContent(ss.scode, boardid, data.content);	//insert content
-		DbAppManager.getInst().addBoardCount(ss.scode, boardid);
-		return res.setError(EAllError.ok).setParam("boardid", boardid);
+		DbAppManager.getInst().addBoardContent(ss.scode, boardId, data.content);	//insert content
+		DbAppManager.getInst().addBoardCount(ss.scode, boardId);
+		return res.setError(EAllError.ok).setParam("boardid", boardId);
 	}
 
 }

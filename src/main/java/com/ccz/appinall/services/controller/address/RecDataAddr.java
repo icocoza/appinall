@@ -1,6 +1,5 @@
 package com.ccz.appinall.services.controller.address;
 
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,7 +11,6 @@ import com.ccz.appinall.services.enums.EDeliverMethod;
 import com.ccz.appinall.services.enums.EGoodsSize;
 import com.ccz.appinall.services.enums.EGoodsType;
 import com.ccz.appinall.services.enums.EGoodsWeight;
-import com.ccz.appinall.services.model.address.RecGeo;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 
@@ -30,7 +28,19 @@ public class RecDataAddr {
 			this.search = jnode.get("search").asText();
 		}
 	}
-	
+
+	@Getter
+	public class DataGpsSearchAddr extends RecDataCommon {
+
+		private double lon, lat;
+		
+		public DataGpsSearchAddr(JsonNode jnode) {
+			super(jnode);
+			this.lon = jnode.get("lon").asDouble();
+			this.lat = jnode.get("lat").asDouble();
+		}
+	}
+
 	@Getter
 	public class DataOrderRequest extends RecDataCommon {
 		//private String senderid;
