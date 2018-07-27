@@ -15,7 +15,7 @@ public enum EAllCmd {
 	change_pw("change_pw"), reissue_email("reissue_email"), reissue_phone("reissue_phone"), verify_email("verify_email"), verify_sms("verify_sms"),
 	anony_login("anony_login"), anony_login_buildid("anony_login_buildid"), anony_signin("anony_signin"), find_id("find_id"),
 	
-	addboard("addboard"), delboard("delboard"), 
+	getcategorylist("getcategorylist"), addboard("addboard"), delboard("delboard"), 
 	updatetitle("updatetitle"), updatecontent("updatecontent"), updatecategory("updatecategory"), updateboard("updateboard"), boardlist("boardlist"), getcontent("getcontent"), 
 	like("like"), dislike("dislike"),
 	addreply("addreply"), delreply("delreply"), replylist("replylist"),

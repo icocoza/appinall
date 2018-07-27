@@ -14,6 +14,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 public class RecDataBoard {
@@ -21,17 +22,25 @@ public class RecDataBoard {
 		public EBoardItemType itemtype;
 		public String title, content; 
 		public boolean hasimage, hasfile;
-		public String appcode;
+		public String appcode = "";
 		private String category;
-		
-		public AddBoard(JsonNode jObj) {
-			itemtype = EBoardItemType.getType(jObj.get("itemtype").asText());
-			title = jObj.get("title").asText();
-			content = jObj.get("content").asText(); 
-			hasimage = jObj.get("hasimage").asBoolean();
-			hasfile = jObj.get("hasfile").asBoolean();
-			category = jObj.get("category").asText();
-			appcode = jObj.get("appcode").asText();
+		@Getter private List<String> fileids;
+		public AddBoard(JsonNode jnode) {
+			itemtype = EBoardItemType.getType(jnode.get("itemtype").asText());
+			title = jnode.get("title").asText();
+			content = jnode.get("content").asText(); 
+			hasimage = jnode.get("hasimage").asBoolean();
+			hasfile = jnode.get("hasfile").asBoolean();
+			category = jnode.get("category").asText();
+			if(jnode.has("appcode"))
+				appcode = jnode.get("appcode").asText();
+			
+			if(jnode.has("fileids")) {
+				fileids = new ArrayList<String>();
+				ArrayNode arrNode = (ArrayNode) jnode.get("fileids");
+				for(int i=0; i<arrNode.size(); i++)
+					fileids.add(arrNode.get(i).asText());
+			}
 		}
 		
 		public int getCategoryInex() {
@@ -111,9 +120,9 @@ public class RecDataBoard {
 	}
 
 	public class BoardList {
-		public String category;
-		public int offset, count;
-		public String userid;
+		private String category;
+		@Getter private int offset, count;
+		@Getter private String userid;
 		
 		public BoardList(String data) {
 			String[] sarray = data.split(ASS.UNIT, -1);
@@ -130,6 +139,11 @@ public class RecDataBoard {
 			if(jObj.has("userid"))
 				userid = jObj.get("userid").asText();
 		}
+		
+		public int getCategoryInex() {
+			return Integer.parseInt(category);
+		}
+		
 	}
 	public class BoardContent extends DelBoard{
 		public BoardContent(String data) {

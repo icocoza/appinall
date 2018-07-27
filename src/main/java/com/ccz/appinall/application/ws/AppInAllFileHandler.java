@@ -71,7 +71,7 @@ public class AppInAllFileHandler implements IServiceHandler {
 				ch.attr(attrFileSessionKey).set(null);
 				ch.attr(attrWebsocketData).get().setFilemode(false);
 				//NAS가 없는 환경에서는 Upload된 서버가 파일 호스트가 될 것임. 상용시에는 아래와 같이 FULL URL 생성을 최대한 지양해야 함.
-				String downUrl = String.format("http://%s:8080/download?fileid=%s&scode=%s", StrUtil.getHostIp(), fileSession.getKey(), fileSession.getScode());
+				//String downUrl = String.format(servicesConfig.getDownloadUrlFormat(), StrUtil.getHostIp(), fileSession.getKey(), fileSession.getScode());
 				Map<String, String> objectMap = new HashMap<>();
 				objectMap.put("hostip", StrUtil.getHostIp());
 				objectMap.put("hostport", servicesConfig.getFileDownPort()+"");
@@ -104,7 +104,7 @@ public class AppInAllFileHandler implements IServiceHandler {
 	private void response(Channel ch, FileSession fileSession, EAllError error) {
 		ResponseData<EAllError> res = new ResponseData<EAllError>(fileSession.getScode(), "0000", "uploadfile");
 		res.setError(error);
-		this.send(ch, res.toString());
+		this.send(ch, res.toJsonString());
 	}
 	
 	private void response(Channel ch, FileSession fileSession, EAllError error, Map<String, String> objectMap) {
@@ -112,7 +112,7 @@ public class AppInAllFileHandler implements IServiceHandler {
 		for(Entry<String, String> entry : objectMap.entrySet())
 			res.setParam(entry.getKey(), entry.getValue());
 		res.setError(error);
-		this.send(ch, res.toString());
+		this.send(ch, res.toJsonString());
 	}
 
 }

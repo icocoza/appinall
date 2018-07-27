@@ -2,6 +2,7 @@ package com.ccz.appinall.common.rdb;
 
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -11,6 +12,7 @@ import org.springframework.data.geo.Point;
 
 import com.ccz.appinall.library.dbhelper.DbConnMgr;
 import com.ccz.appinall.library.dbhelper.DbRecord;
+import com.ccz.appinall.services.controller.address.CategoryTable;
 import com.ccz.appinall.services.enums.*;
 import com.ccz.appinall.services.model.db.*;
 import com.ccz.appinall.services.model.db.RecChMime.RecChMimeExt;
@@ -220,7 +222,14 @@ public class DbAppManager {
 	public List<RecUserBoardTableList> getUserTableList(String scode, String userid) {
 		return new RecUserBoardTableList(scode).getUserTableList(userid);
 	}
-	
+
+	public List<CategoryTable> getUserCategoryList(String scode, String userid) {
+		List<RecUserBoardTableList> tableList = new RecUserBoardTableList(scode).getUserTableList(userid);
+		if(tableList==null||tableList.size()<1)
+			return new ArrayList<CategoryTable>();
+		return tableList.stream().map( x-> new CategoryTable(x.tableid, x.title, x.category)).collect(Collectors.toList());
+	}
+
 	//for board list (custom for apaprtment)
 	public DbRecord insertTable(String scode, String tableid, String title, String boardtype, String servicetype, String sido, String sigu, String dong) {
 		return new RecBoardTableList(scode).insertTable(tableid, title, boardtype, servicetype, sido, sigu, dong);
@@ -368,6 +377,9 @@ public class DbAppManager {
 	}
 	public List<RecBoard> getBoardList(String scode, String category, int offset, int count) {
 		return new RecBoard(scode).getList(category, offset, count);
+	}
+	public List<RecBoardDetail> getBoardDetailList(String scode, String category, int offset, int count) {
+		return new RecBoardDetail(scode).getBoardList(category, offset, count);
 	}
 	public List<RecBoard> getBoardList(String scode, String userid, String category, int offset, int count) {
 		return new RecBoard(scode).getList(userid, category, offset, count);
@@ -614,8 +626,8 @@ public class DbAppManager {
 	}
 
 	//for images info
-	public boolean addFileInit(String scode, String fileid, String userid, String filename, String filetype, long size) {
-		return new RecFile(scode).insertFileInit(fileid, userid, filename, filetype, size) != DbRecord.Empty;
+	public boolean addFileInit(String scode, String fileid, String userid, String filename, String filetype, long size, String comment) {
+		return new RecFile(scode).insertFileInit(fileid, userid, filename, filetype, size, comment) != DbRecord.Empty;
 	}
 	public boolean updateFileInfo(String scode, String fileid, int width, int height, long size, String fileserver) {
 		return new RecFile(scode).updateFileInfo(fileid, width, height, size, fileserver) != DbRecord.Empty;
@@ -629,11 +641,11 @@ public class DbAppManager {
 	public RecFile getFileInfo(String scode, String fileid) {
 		return new RecFile(scode).getFile(fileid);
 	}
-	public boolean updateFileEnabled(String scode, String fileid, boolean enabled) {
-		return new RecFile(scode).updateFileEnabled(fileid, enabled);
+	public boolean updateFileEnabled(String scode, String fileid, String boardid, boolean enabled) {
+		return new RecFile(scode).updateFileEnabled(fileid, boardid, enabled);
 	}
-	public boolean updateFilesEnabled(String scode, List<String> fileids, boolean enabled) {
-		return new RecFile(scode).updateFilesEnabled(fileids, enabled);
+	public boolean updateFilesEnabled(String scode, List<String> fileids, String boardid, boolean enabled) {
+		return new RecFile(scode).updateFilesEnabled(fileids, boardid, enabled);
 	}
 	
 	//for webscrab

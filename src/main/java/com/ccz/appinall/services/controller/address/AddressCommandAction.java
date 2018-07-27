@@ -1,6 +1,8 @@
 package com.ccz.appinall.services.controller.address;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +12,7 @@ import com.ccz.appinall.common.config.ServicesConfig;
 import com.ccz.appinall.common.rdb.DbAppManager;
 import com.ccz.appinall.library.type.ResponseData;
 import com.ccz.appinall.library.type.inf.ICommandFunction;
+import com.ccz.appinall.library.util.GeoUtil;
 import com.ccz.appinall.services.controller.CommonAction;
 import com.ccz.appinall.services.controller.address.RecDataAddr.*;
 import com.ccz.appinall.services.controller.auth.AuthSession;
@@ -68,9 +71,15 @@ public class AddressCommandAction extends CommonAction {
 	//But GeoRadius is searched by DMS
 	ICommandFunction<AuthSession, ResponseData<EAllError>, JsonNode> doGpsSearch = (AuthSession session, ResponseData<EAllError> res, JsonNode jnode) -> {
 		DataGpsSearchAddr data = new RecDataAddr().new DataGpsSearchAddr(jnode);
-		List<String> buildIds = geoRepository.searchOrder(data.getLon(), data.getLat(), 100, 100);
-		List<RecAddress> addrList = DbAppManager.getInst().getAddressList(session.scode, buildIds);
-		List<BuildingInfo> buildList = addrList.stream().map(x -> new BuildingInfo(x.buildid, x.buildname)).collect(Collectors.toList());
+		List<String> buildIds = geoRepository.searchOrder(GeoUtil.toDMS(data.getLon()), GeoUtil.toDMS(data.getLat()), 200, 10);
+		List<RecAddress> addrList = DbAppManager.getInst().getAddressList(data.getScode(), buildIds);
+		Set<String> hashSet = new HashSet<>();
+		List<BuildingInfo> buildList = addrList.stream()
+									   .filter(x -> hashSet.contains(x.buildname)==false)
+									   .map(x -> {
+										   hashSet.add(x.buildname);
+										   return new BuildingInfo(x.buildid, x.buildname);
+										}).collect(Collectors.toList());
 		res.setParam("buildings", buildList);
 		return buildList.size() > 0 ? res.setError(EAllError.ok) : res.setError(EAllError.empty_search);
 	};

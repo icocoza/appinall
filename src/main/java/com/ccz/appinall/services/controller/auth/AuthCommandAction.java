@@ -64,10 +64,10 @@ public class AuthCommandAction extends CommonAction {
 	
 	ICommandFunction<AuthSession, ResponseData<EAllError>, JsonNode> doFindId = (AuthSession authSession, ResponseData<EAllError> res, JsonNode jnode) -> {
 		DataUserId data = new RecDataAuth().new DataUserId(jnode);
-		if(data.getUid().length()<8)
+		if(data.getUid().getBytes().length < 10)
 			return res.setError(EAllError.userid_more_than_8);
-		if(StrUtil.isAlphaNumeric(data.getUid())==false)
-			return res.setError(EAllError.userid_alphabet_and_digit);
+		//if(StrUtil.isAlphaNumeric(data.getUid())==false)
+		//	return res.setError(EAllError.userid_alphabet_and_digit);
 		if( DbAppManager.getInst().findUid(data.getScode(), data.getUid()) == true )
 			return res.setError(EAllError.already_exist_userid);
 		return res.setError(EAllError.ok);
@@ -174,9 +174,8 @@ public class AuthCommandAction extends CommonAction {
 		//if(user.isSameAppCode(data.getScode()) == false)
 		//	DbAppManager.getInst().updateAppCode(data.getScode(), token.userid, data.getScode());	//update apt code
 		//user.inappcode = data.getTokenAppId();
-		
 		authSession.putSession(user, data.getScode());	//consider the sessionid to find instance when close
-		
+		authSession.setUserTableInfo(DbAppManager.getInst().getUserCategoryList(data.getScode(), auth.getUserid()));
 		authSession.setSessionData(sessionService.addUserSession(token.userid, StrUtil.getHostIp()));	//save to redis
 		authSession.getCh().attr(chAttributeKey.getAuthSessionKey()).set(authSession);
 		sessionManager.put(authSession);
@@ -320,7 +319,7 @@ public class AuthCommandAction extends CommonAction {
 
 		String userid = KeyGen.makeKeyWithSeq("anonyus");
 		String authQuery = DbTransaction.getInst().queryInsertUID(userid, data.getUid(), data.getUid()); //anonymous user는 uid(client defined)와 inappcode를 pw로 사용함(즉, passcode 없음) 
-		DataRegUser regUser = new RecDataAuth().new DataRegUser(data.getUuid(), ShortUUID.next(), data);
+		DataRegUser regUser = new RecDataAuth().new DataRegUser(data.getUuid(), data.getUid(), data);
 		
 		if(doRegisterUser(res, userid, data.getUid(), authQuery, regUser, true).getError() != EAllError.ok)
 			return res;
@@ -357,12 +356,12 @@ public class AuthCommandAction extends CommonAction {
 		RecBoardTableList sigu = DbAppManager.getInst().getTableByTitle(data.getScode(), addr.sido, addr.sido, addr.sigu, "");	//get SiDo
 		if(DbRecord.Empty == sigu) {
 			String tableid = StrUtil.getSha1Uuid("tableid");
-			sigu = (RecBoardTableList) DbAppManager.getInst().insertTable(data.getScode(), tableid, addr.sido, "text", EBoardService.no02.value, addr.sido, addr.sigu, "");
+			sigu = (RecBoardTableList) DbAppManager.getInst().insertTable(data.getScode(), tableid, addr.sigu, "text", EBoardService.no02.value, addr.sido, addr.sigu, "");
 		}
 		RecBoardTableList dong = DbAppManager.getInst().getTableByTitle(data.getScode(), addr.sido, addr.sido, addr.sigu, addr.dongname);	//get SiDo
 		if(DbRecord.Empty == dong) {
 			String tableid = StrUtil.getSha1Uuid("tableid");
-			dong = (RecBoardTableList) DbAppManager.getInst().insertTable(data.getScode(), tableid, addr.sido, "text", EBoardService.no01.value, addr.sido, addr.sigu, addr.dongname);
+			dong = (RecBoardTableList) DbAppManager.getInst().insertTable(data.getScode(), tableid, addr.dongname, "text", EBoardService.no01.value, addr.sido, addr.sigu, addr.dongname);
 		}
 
 		List<String> queries = new ArrayList<>();
@@ -375,8 +374,6 @@ public class AuthCommandAction extends CommonAction {
 			tableList.add(makeUserTableInfo(sido, 2));
 			tableList.add(makeUserTableInfo(sigu, 1));
 			tableList.add(makeUserTableInfo(dong, 0));
-			res.setParam("categories", tableList);
-			
 			authSession.setUserTableInfo(tableList);	// 게시글은 category no로 전달되면 세션에서 tableid꺼내어 categoryId로 활용한다.
 		}
 		return res.setError(EAllError.ok);

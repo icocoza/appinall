@@ -5,7 +5,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public enum EBoardItemType {
 	none("none"), text("text"), image("image"), audio("audio"), video("video"), 
-	link("link"), richtext("richtext");
+	link("link"), textimage("textimage"), textaudio("textaudio"), textvideo("textvideo"), 
+	imageaudio("imageaudio"), imagevideo("imagevideo"), multimedia("multimedia"), richtext("richtext");
 	
 	
 	public final String value;

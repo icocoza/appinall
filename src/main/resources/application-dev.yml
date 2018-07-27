@@ -70,6 +70,8 @@ fileupload:
   
 filedown:
   port: 8080
+  thumbformat: http://%s:%d/thumb?fileid=%s&scode=%s
+  downformat: http://%s:8080/download?fileid=%s&scode=%s
   
 #keystroke
 keystore:

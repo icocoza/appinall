@@ -111,7 +111,7 @@ public class DeliveryCommandAction extends CommonAction {
 			return res.setError(EAllError.failed_to_saveorder);
 		geoRepository.addLocation(orderid, from.lon, from.lat, to.lon, to.lat);
 		
-		DbAppManager.getInst().updateFilesEnabled(data.getScode(), data.getFileids(), true);	//업로딩된 파일을 enabled 시킴. enabled=false은 주기적으로 삭제 필요
+		DbAppManager.getInst().updateFilesEnabled(data.getScode(), data.getFileids(), orderid, true);	//업로딩된 파일을 enabled 시킴. enabled=false은 주기적으로 삭제 필요
 		List<String> queries = new ArrayList<>();
 		for(String fileid : data.getFileids())
 			queries.add(DbTransaction.getInst().queryInsertOrderFile(fileid, orderid, session.getUserId(), EUserType.sender));
@@ -437,7 +437,7 @@ public class DeliveryCommandAction extends CommonAction {
 			return res.setError(EAllError.not_arrived_order);
 		
 		if(data.getFileids().size()>0)
-			DbAppManager.getInst().updateFilesEnabled(data.getScode(), data.getFileids(), true);	//업로딩된 파일을 enabled 시킴. enabled=false은 주기적으로 삭제 필요
+			DbAppManager.getInst().updateFilesEnabled(data.getScode(), data.getFileids(), order.orderid, true);	//업로딩된 파일을 enabled 시킴. enabled=false은 주기적으로 삭제 필요
 		List<String> queries = new ArrayList<>();
 		for(String fileid : data.getFileids())
 			queries.add(DbTransaction.getInst().queryInsertOrderFile(fileid, data.getOrderid(), session.getUserId(), EUserType.deliver));

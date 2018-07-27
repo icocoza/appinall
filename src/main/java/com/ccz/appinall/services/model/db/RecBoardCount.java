@@ -83,32 +83,3 @@ public class RecBoardCount extends DbRecord{
 	
 }
 
-/*{
-	@Id
-	@Column(length = 64, nullable = false)
-	public String boardid;
-	
-	@Column
-	public int likes = 0;
-	
-	@Column
-	public int dislikes = 0;
-	
-	@Column
-	public int visit = 0;
-	
-	@Column
-	public int  reply = 0;
-	
-	@CreationTimestamp
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(updatable = true)
-	public Date lastmodify;
-	
-	public RecBoardCount() {	}
-	
-	public RecBoardCount(String boardid) {
-		this.boardid = boardid;
-	}
-}
-*/

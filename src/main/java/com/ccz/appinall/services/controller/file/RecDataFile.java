@@ -10,12 +10,15 @@ public class RecDataFile {
 	public class FileInit extends RecDataCommon {
 		private String filename, filetype;
 		private long filesize;
+		private String comment;
 		
 		public FileInit(JsonNode jnode) {
 			super(jnode);
 			this.filename = jnode.get("filename").asText();
 			this.filetype = jnode.get("filetype").asText();
 			this.filesize = jnode.get("filesize").asLong();
+			if(jnode.has("comment"))
+				comment = jnode.get("comment").asText();
 		}
 	}
 	

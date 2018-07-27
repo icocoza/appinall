@@ -16,6 +16,7 @@ import com.ccz.appinall.services.controller.board.RecDataBoard.*;
 import com.ccz.appinall.services.enums.EAllCmd;
 import com.ccz.appinall.services.enums.EAllError;
 import com.ccz.appinall.services.model.db.RecBoard;
+import com.ccz.appinall.services.model.db.RecBoardDetail;
 import com.ccz.appinall.services.model.db.RecBoardReply;
 import com.ccz.appinall.services.model.db.RecUserBoardTableList;
 import com.ccz.appinall.services.model.db.RecVote;
@@ -32,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 public class BoardCommandAction extends CommonAction {
 	
 	public BoardCommandAction() {
+		super.setCommandFunction(EAllCmd.getcategorylist, doGetCategoryList);
 		super.setCommandFunction(EAllCmd.addboard, doAddBoard); //O
 		super.setCommandFunction(EAllCmd.delboard, doDelBoard);//O
 		super.setCommandFunction(EAllCmd.updatetitle, doUpdateBoardTitle);//O
@@ -171,14 +173,16 @@ public class BoardCommandAction extends CommonAction {
 		BoardList data = new RecDataBoard().new BoardList(jnode);
 		if(ss==null)
 			return res.setError(EAllError.NoSession);
-		List<RecBoard> boardList = null;
-		if(data.userid==null || data.userid.length()<1)
-			boardList = DbAppManager.getInst().getBoardList(ss.scode, data.category, data.offset, data.count);	//load all list
-		else
-			boardList = DbAppManager.getInst().getBoardList(ss.scode, data.userid, data.category, data.offset, data.count); //load a specific user's list
+		String categoryId = ss.getTableIdByCategoryIndex(data.getCategoryInex());
+		if(categoryId==null)
+			return res.setError(EAllError.InvalidCategoryId);
+
+		List<RecBoardDetail> boardList = DbAppManager.getInst().getBoardDetailList(ss.scode, categoryId, data.getOffset(), data.getCount());	//load all list
+		//boardList = DbAppManager.getInst().getBoardList(ss.scode, data.getUserid(), categoryId, data.getOffset(), data.getCount()); //load a specific user's list
 		if(boardList.size()<1)
 			return res.setError(EAllError.NoListData);
 		
+		res.setParam("category", data.getCategoryInex());
 		res.setParam("data", boardList);
 		return res.setError(EAllError.ok);
 	};
@@ -438,16 +442,17 @@ public class BoardCommandAction extends CommonAction {
 	
 	
 	private ResponseData<EAllError> addBoard(AuthSession ss, ResponseData<EAllError> res, AddBoard data) {
-		String boardId = StrUtil.getSha1Uuid("brd");
 		String categoryId = ss.getTableIdByCategoryIndex(data.getCategoryInex());
 		if(categoryId==null)
 			return res.setError(EAllError.InvalidCategoryId);
+		String boardId = StrUtil.getSha1Uuid("brd");
 		if(DbAppManager.getInst().addBoardShort(ss.scode, boardId, data.itemtype, data.title, getShortContent(data.content), data.hasimage,
-				data.hasfile, categoryId, data.appcode, ss.getUserId(), ss.getUsername())==false) 		//insert content's shortcut
+				data.hasfile, categoryId, "", ss.getUserId(), ss.getUsername())==false) 		//insert content's shortcut
 			return res.setError(EAllError.FailAddBoard);
 		
 		DbAppManager.getInst().addBoardContent(ss.scode, boardId, data.content);	//insert content
 		DbAppManager.getInst().addBoardCount(ss.scode, boardId);
+		DbAppManager.getInst().updateFilesEnabled(ss.scode, data.getFileids(), boardId, true);	//업로딩된 파일을 enabled 시킴. enabled=false은 주기적으로 삭제 필요
 		return res.setError(EAllError.ok).setParam("boardid", boardId);
 	}
 

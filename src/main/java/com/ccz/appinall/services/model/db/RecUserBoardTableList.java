@@ -61,7 +61,7 @@ public class RecUserBoardTableList extends DbRecord {
 	}
 
 	public List<RecUserBoardTableList> getUserTableList(String userid) {
-		String sql = String.format("SELECT userid, tableid, title FROM %s WHERE userid='%s'" , TBL_NAME, userid);
+		String sql = String.format("SELECT userid, tableid, title, category FROM %s WHERE userid='%s' ORDER BY category ASC" , TBL_NAME, userid);
 		return super.getList(sql).stream().map(e->(RecUserBoardTableList)e).collect(Collectors.toList());
 	}
 	

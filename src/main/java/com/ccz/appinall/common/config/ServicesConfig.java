@@ -136,8 +136,13 @@ public class ServicesConfig {
     private String fileUploadIp;
     @Value("${fileupload.port}")
     private int fileUploadPort;
+    
     @Value("${filedown.port}")
     private int fileDownPort;
+    @Value("${filedown.thumbformat}")
+    private String thumbUrlFormat;
+    @Value("${filedown.downformat}")
+    private String downloadUrlFormat;
     
     @Bean(name = "webSocketPort")
     public InetSocketAddress wsPort() {

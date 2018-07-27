@@ -48,7 +48,7 @@ public class FileCommandAction extends CommonAction {
 		
 		String fileid = StrUtil.getUuid("file");//Crypto.AES256Cipher.getInst().enc(data.getScode()+"/"+session.getUserId()+"/"+System.currentTimeMillis()+"/"+seq);
 		
-		if(DbAppManager.getInst().addFileInit(data.getScode(), fileid, ss.getUserId(), data.getFilename(), data.getFiletype(), data.getFilesize()) == false)
+		if(DbAppManager.getInst().addFileInit(data.getScode(), fileid, ss.getUserId(), data.getFilename(), data.getFiletype(), data.getFilesize(), data.getComment()) == false)
 			return res.setError(EAllError.fail_to_uploadfile);
 		
 		return res.setError(EAllError.ok).setParam("fileid", fileid).setParam("ip", servicesConfig.getFileUploadIp()).setParam("port", servicesConfig.getFileUploadPort()+"");

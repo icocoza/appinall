@@ -80,12 +80,16 @@ public class ResponseData<T> {
 	public String toJsonString() {
 		ObjectMapper objectMapper = new ObjectMapper();
 		ObjectNode objNode = (ObjectNode) objectMapper.convertValue(mapParam, JsonNode.class);
-		objNode.put("service", serviceCode);
+		objNode.put("scode", serviceCode);
 		objNode.put("cmd", cmd);
 		objNode.put("rcode", code);
 		objNode.put("result", error.toString());
 		//if(jsonData != null)
 		//	objNode.set("data", jsonData);
 		return objNode.toString();
+	}
+	@Override
+	public String toString() {
+		return toJsonString();
 	}
 }

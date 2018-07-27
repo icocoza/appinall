@@ -170,13 +170,16 @@ public class AppInAllServiceHandler  implements IServiceHandler {
 		}
 
 		@SuppressWarnings({ "rawtypes", "unlikely-arg-type" })
-		ICommandFunction cmdFunc = cmdFuncMap.get(EAllCmd.getType(cmd));
+		EAllCmd eCmd = EAllCmd.getType(cmd);
+		ICommandFunction cmdFunc = cmdFuncMap.get(eCmd);
 		if(cmdFunc == null) {
 			log.info("Unknown Command");
 			return false;
 		}
-		
-		res = (ResponseData<EAllError>) cmdFunc.doAction(session, res, jdata);
+		if(eCmd.isNeedSession()==true)
+			res = (ResponseData<EAllError>) cmdFunc.doAction(session, res, jdata);
+		else
+			res = (ResponseData<EAllError>) cmdFunc.doAction(ch, res, jdata);
 		this.send(ch, res.toJsonString());
 		return true;
 	}

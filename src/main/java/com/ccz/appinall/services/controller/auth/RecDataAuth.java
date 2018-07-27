@@ -112,14 +112,14 @@ public class RecDataAuth {
 
 	public class DataAnonyLoginGps extends DataAnonyLogin {
 		@Getter private String buildid;
-		@Getter private double lon;
-		@Getter private double lat;
+		//@Getter private double lon;
+		//@Getter private double lat;
 		
 		public DataAnonyLoginGps(JsonNode jnode) {
 			super(jnode);
 			this.buildid = jnode.get("buildid").asText();
-			this.lon = jnode.get("lon").asDouble();
-			this.lat = jnode.get("lat").asDouble();
+			//this.lon = jnode.get("lon").asDouble();
+			//this.lat = jnode.get("lat").asDouble();
 		}
 	} 
 
@@ -164,7 +164,7 @@ public class RecDataAuth {
 		}
 		
 		public boolean isValidUuid() {
-			return this.uuid.equals(this.tokenUuid);
+			return true; //this.uuid.equals(this.tokenUuid);
 		}
 	}
 	
