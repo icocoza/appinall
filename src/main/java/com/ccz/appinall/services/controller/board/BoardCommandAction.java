@@ -18,6 +18,7 @@ import com.ccz.appinall.services.enums.EAllError;
 import com.ccz.appinall.services.model.db.RecBoard;
 import com.ccz.appinall.services.model.db.RecBoardDetail;
 import com.ccz.appinall.services.model.db.RecBoardReply;
+import com.ccz.appinall.services.model.db.RecBoardUser;
 import com.ccz.appinall.services.model.db.RecUserBoardTableList;
 import com.ccz.appinall.services.model.db.RecVote;
 import com.ccz.appinall.services.model.db.RecVoteInfo;
@@ -58,7 +59,7 @@ public class BoardCommandAction extends CommonAction {
 	ICommandFunction<AuthSession, ResponseData<EAllError>, JsonNode> doGetCategoryList = (AuthSession ss, ResponseData<EAllError> res, JsonNode jnode) -> {
 		if(ss==null)
 			return res.setError(EAllError.NoSession);
-		List<RecUserBoardTableList> tableList = DbAppManager.getInst().getUserTableList(ss.scode, ss.getUserId());
+		List<RecUserBoardTableList> tableList = DbAppManager.getInst().getUserTableList(ss.scode, ss.getUserId(), 3);
 		if(tableList.size()<1)
 			return res.setError(EAllError.NoData);
 		res.setParam("categories", tableList);	
@@ -203,7 +204,12 @@ public class BoardCommandAction extends CommonAction {
 		if(content==null)
 			return res.setError(EAllError.NoData);
 		DbAppManager.getInst().incBoardVisit(ss.scode, data.boardid);
-		return res.setError(EAllError.ok).setParam(content);
+		RecBoardUser recLike = DbAppManager.getInst().getBoardLikeDislike(ss.scode, data.boardid, ss.getUserId());
+		if(recLike != DbRecord.Empty)
+			res.setParam("like", recLike);
+		res.setParam("files", DbAppManager.getInst().getFileList(ss.scode, data.boardid));
+		res.setParam("vote", DbAppManager.getInst().getVoteItemList(ss.scode, data.boardid));
+		return res.setError(EAllError.ok).setParam("content", content);
 	};
 	
 	/** 
@@ -226,6 +232,8 @@ public class BoardCommandAction extends CommonAction {
 			return res.setError(EAllError.NotExistLikedUser);
 			
 		DbAppManager.getInst().incBoardLike(ss.scode, data.boardid, data.isadd);
+		res.setParam("preference", data.preference);
+		res.setParam("isadd", data.isadd);
 		return res.setError(EAllError.ok);
 	};
 	
@@ -249,6 +257,8 @@ public class BoardCommandAction extends CommonAction {
 			return res.setError(EAllError.NotExistDislikeUser);
 		
 		DbAppManager.getInst().incBoardDislike(ss.scode, data.boardid, data.isadd);
+		res.setParam("preference", data.preference);
+		res.setParam("isadd", data.isadd);
 		return res.setError(EAllError.ok);
 	};
 	

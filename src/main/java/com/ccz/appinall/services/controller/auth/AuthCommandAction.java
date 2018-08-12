@@ -180,6 +180,7 @@ public class AuthCommandAction extends CommonAction {
 		authSession.getCh().attr(chAttributeKey.getAuthSessionKey()).set(authSession);
 		sessionManager.put(authSession);
 		
+		res.setParam("username", user.username);
 		return res.setError(EAllError.ok).setParam(""+user.lasttime);
 	};
 
@@ -348,32 +349,40 @@ public class AuthCommandAction extends CommonAction {
 		if(addr == null)
 			return res.setError(EAllError.not_exist_building);
 		
-		RecBoardTableList sido = DbAppManager.getInst().getTableByTitle(data.getScode(), addr.sido, addr.sido, "", "");	//get SiDo
+		RecBoardTableList sido = DbAppManager.getInst().getTableByTitle(data.getScode(), addr.sido, addr.sido, "", "", "");	//get SiDo
 		if(DbRecord.Empty == sido) {
 			String tableid = StrUtil.getSha1Uuid("tableid");
-			sido = (RecBoardTableList) DbAppManager.getInst().insertTable(data.getScode(), tableid, addr.sido, "text", EBoardService.no03.value, addr.sido, "", "");
+			sido = (RecBoardTableList) DbAppManager.getInst().insertTable(data.getScode(), tableid, addr.sido, "text", EBoardService.no04.value, addr.sido, "", "", "");
 		}
-		RecBoardTableList sigu = DbAppManager.getInst().getTableByTitle(data.getScode(), addr.sido, addr.sido, addr.sigu, "");	//get SiDo
+		RecBoardTableList sigu = DbAppManager.getInst().getTableByTitle(data.getScode(), addr.sigu, addr.sido, addr.sigu, "", "");	//get SiDo
 		if(DbRecord.Empty == sigu) {
 			String tableid = StrUtil.getSha1Uuid("tableid");
-			sigu = (RecBoardTableList) DbAppManager.getInst().insertTable(data.getScode(), tableid, addr.sigu, "text", EBoardService.no02.value, addr.sido, addr.sigu, "");
+			sigu = (RecBoardTableList) DbAppManager.getInst().insertTable(data.getScode(), tableid, addr.sigu, "text", EBoardService.no03.value, addr.sido, addr.sigu, "", "");
 		}
-		RecBoardTableList dong = DbAppManager.getInst().getTableByTitle(data.getScode(), addr.sido, addr.sido, addr.sigu, addr.dongname);	//get SiDo
+		RecBoardTableList dong = DbAppManager.getInst().getTableByTitle(data.getScode(), addr.dongname, addr.sido, addr.sigu, addr.dongname, "");	//get SiDo
 		if(DbRecord.Empty == dong) {
 			String tableid = StrUtil.getSha1Uuid("tableid");
-			dong = (RecBoardTableList) DbAppManager.getInst().insertTable(data.getScode(), tableid, addr.dongname, "text", EBoardService.no01.value, addr.sido, addr.sigu, addr.dongname);
+			dong = (RecBoardTableList) DbAppManager.getInst().insertTable(data.getScode(), tableid, addr.dongname, "text", EBoardService.no02.value, addr.sido, addr.sigu, addr.dongname, "");
+		}
+
+		RecBoardTableList buildname = DbAppManager.getInst().getTableByTitle(data.getScode(), addr.buildname, addr.sido, addr.sigu, addr.dongname, addr.buildname);	//get SiDo
+		if(DbRecord.Empty == buildname) {
+			String tableid = StrUtil.getSha1Uuid("tableid");
+			buildname = (RecBoardTableList) DbAppManager.getInst().insertTable(data.getScode(), tableid, addr.buildname, "text", EBoardService.no01.value, addr.sido, addr.sigu, addr.dongname, addr.buildname);
 		}
 
 		List<String> queries = new ArrayList<>();
-		queries.add(DbTransaction.getInst().queryAddUserTable(res.getUserid(), sido.tableid, sido.title, 2));
-		queries.add(DbTransaction.getInst().queryAddUserTable(res.getUserid(), sigu.tableid, sigu.title, 1));
-		queries.add(DbTransaction.getInst().queryAddUserTable(res.getUserid(), dong.tableid, dong.title, 0));
+		queries.add(DbTransaction.getInst().queryAddUserTable(res.getUserid(), sido.tableid, sido.title, 3));
+		queries.add(DbTransaction.getInst().queryAddUserTable(res.getUserid(), sigu.tableid, sigu.title, 2));
+		queries.add(DbTransaction.getInst().queryAddUserTable(res.getUserid(), dong.tableid, dong.title, 1));
+		queries.add(DbTransaction.getInst().queryAddUserTable(res.getUserid(), buildname.tableid, buildname.title, 0));
 		
 		if(DbTransaction.getInst().transactionQuery(data.getScode(), queries) == true) {
 			List<CategoryTable> tableList = new ArrayList<>();
-			tableList.add(makeUserTableInfo(sido, 2));
-			tableList.add(makeUserTableInfo(sigu, 1));
-			tableList.add(makeUserTableInfo(dong, 0));
+			//tableList.add(makeUserTableInfo(sido, 3));
+			tableList.add(makeUserTableInfo(sigu, 2));
+			tableList.add(makeUserTableInfo(dong, 1));
+			tableList.add(makeUserTableInfo(buildname, 0));
 			authSession.setUserTableInfo(tableList);	// 게시글은 category no로 전달되면 세션에서 tableid꺼내어 categoryId로 활용한다.
 		}
 		return res.setError(EAllError.ok);

@@ -1,8 +1,11 @@
 package com.ccz.appinall.services.model.db;
 
+import java.sql.Timestamp;
+
 import com.ccz.appinall.library.dbhelper.DbReader;
 import com.ccz.appinall.library.dbhelper.DbRecord;
 import com.ccz.appinall.services.enums.EBoardPreference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 //@Entity
 //@Data
@@ -10,10 +13,10 @@ import com.ccz.appinall.services.enums.EBoardPreference;
 public class RecBoardUser extends DbRecord {
 	public static final String TBL_NAME = "boarduser";
 	
-	public String boardid, userid;
-	public String username;
+	@JsonIgnore public String boardid, userid;
+	@JsonIgnore public String username;
 	public EBoardPreference preference;
-	public long visittime;
+	public Timestamp visittime;
 	
 	public RecBoardUser(String poolName) {
 		super(poolName);
@@ -21,7 +24,7 @@ public class RecBoardUser extends DbRecord {
 	
 	public boolean createTable() {
 		String sql = String.format("CREATE TABLE IF NOT EXISTS %s (boardid VARCHAR(64) NOT NULL, userid VARCHAR(64) NOT NULL,"
-				+ "preference VARCHAR(16) NOT NULL, username VARCHAR(32), visittime DATETIME, PRIMARY KEY(boardid, userid, preference))", 
+				+ "preference VARCHAR(16) NOT NULL, username VARCHAR(32), visittime DATETIME DEFAULT now(), PRIMARY KEY(boardid, userid))", 
 				RecBoardUser.TBL_NAME);
 		return super.createTable(sql);
 	}
@@ -33,7 +36,7 @@ public class RecBoardUser extends DbRecord {
 		rec.userid = rd.getString("userid");
 		rec.username = rd.getString("username");
 		rec.preference = EBoardPreference.getType(rd.getString("preference"));
-		rec.visittime = rd.getLong("visittime");
+		rec.visittime = rd.getDate("visittime");
 		return rec;
 	}
 
@@ -64,4 +67,9 @@ public class RecBoardUser extends DbRecord {
 		return super.delete(sql);
 	}
 
+	public RecBoardUser getPreference(String boardid, String userid) {
+		String sql = String.format("SELECT * FROM %s WHERE boardid='%s' AND userid='%s'",RecBoardUser.TBL_NAME, boardid, userid);
+		return (RecBoardUser) super.getOne(sql);
+	}
+	
 }

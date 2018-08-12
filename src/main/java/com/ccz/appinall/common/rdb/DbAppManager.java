@@ -223,6 +223,10 @@ public class DbAppManager {
 		return new RecUserBoardTableList(scode).getUserTableList(userid);
 	}
 
+	public List<RecUserBoardTableList> getUserTableList(String scode, String userid, int categoryMax) {
+		return new RecUserBoardTableList(scode).getUserTableList(userid, categoryMax);
+	}
+
 	public List<CategoryTable> getUserCategoryList(String scode, String userid) {
 		List<RecUserBoardTableList> tableList = new RecUserBoardTableList(scode).getUserTableList(userid);
 		if(tableList==null||tableList.size()<1)
@@ -230,13 +234,20 @@ public class DbAppManager {
 		return tableList.stream().map( x-> new CategoryTable(x.tableid, x.title, x.category)).collect(Collectors.toList());
 	}
 
+	public List<CategoryTable> getUserCategoryList(String scode, String userid, int categoryMax) {
+		List<RecUserBoardTableList> tableList = new RecUserBoardTableList(scode).getUserTableList(userid, categoryMax);
+		if(tableList==null||tableList.size()<1)
+			return new ArrayList<CategoryTable>();
+		return tableList.stream().map( x-> new CategoryTable(x.tableid, x.title, x.category)).collect(Collectors.toList());
+	}
+
 	//for board list (custom for apaprtment)
-	public DbRecord insertTable(String scode, String tableid, String title, String boardtype, String servicetype, String sido, String sigu, String dong) {
-		return new RecBoardTableList(scode).insertTable(tableid, title, boardtype, servicetype, sido, sigu, dong);
+	public DbRecord insertTable(String scode, String tableid, String title, String boardtype, String servicetype, String sido, String sigu, String dong, String buildname) {
+		return new RecBoardTableList(scode).insertTable(tableid, title, boardtype, servicetype, sido, sigu, dong, buildname);
 	}
 	
-	public RecBoardTableList getTableByTitle(String scode, String title, String sido, String sigu, String dong) {
-		return new RecBoardTableList(scode).getTableByTitle(title, sido, sigu, dong);
+	public RecBoardTableList getTableByTitle(String scode, String title, String sido, String sigu, String dong, String buildname) {
+		return new RecBoardTableList(scode).getTableByTitle(title, sido, sigu, dong, buildname);
 	}
 
 	//for user token
@@ -424,6 +435,9 @@ public class DbAppManager {
 	}
 	public boolean delBoardLikeDislike(String scode, String boardid, String userid, EBoardPreference preference) {
 		return new RecBoardUser(scode).delete(boardid, userid, preference);
+	}
+	public RecBoardUser getBoardLikeDislike(String scode, String boardid, String userid) {
+		return new RecBoardUser(scode).getPreference(boardid, userid);
 	}
 	
 	public boolean incBoardLike(String scode, String boardid, boolean bInc) {
@@ -640,6 +654,9 @@ public class DbAppManager {
 	}
 	public RecFile getFileInfo(String scode, String fileid) {
 		return new RecFile(scode).getFile(fileid);
+	}
+	public List<RecFile> getFileList(String scode, String boardid) {
+		return new RecFile(scode).getFileList(boardid);
 	}
 	public boolean updateFileEnabled(String scode, String fileid, String boardid, boolean enabled) {
 		return new RecFile(scode).updateFileEnabled(fileid, boardid, enabled);

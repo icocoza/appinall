@@ -71,7 +71,7 @@ public class AddressCommandAction extends CommonAction {
 	//But GeoRadius is searched by DMS
 	ICommandFunction<AuthSession, ResponseData<EAllError>, JsonNode> doGpsSearch = (AuthSession session, ResponseData<EAllError> res, JsonNode jnode) -> {
 		DataGpsSearchAddr data = new RecDataAddr().new DataGpsSearchAddr(jnode);
-		List<String> buildIds = geoRepository.searchOrder(GeoUtil.toDMS(data.getLon()), GeoUtil.toDMS(data.getLat()), 200, 10);
+		List<String> buildIds = geoRepository.searchOrder(GeoUtil.toDMS(data.getLon()), GeoUtil.toDMS(data.getLat()), 300, 15);
 		List<RecAddress> addrList = DbAppManager.getInst().getAddressList(data.getScode(), buildIds);
 		Set<String> hashSet = new HashSet<>();
 		List<BuildingInfo> buildList = addrList.stream()

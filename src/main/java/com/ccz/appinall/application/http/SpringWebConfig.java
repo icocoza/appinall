@@ -101,10 +101,13 @@ public class SpringWebConfig extends WebMvcConfigurerAdapter implements Applicat
      */
     @Override
     public void addResourceHandlers(final ResourceHandlerRegistry registry) {
-        super.addResourceHandlers(registry);
+    	  if (!registry.hasMappingForPattern("/assets/**")) {
+    		     registry.addResourceHandler("/assets/**").addResourceLocations("classpath:/assets/");
+    		  }
+/*        super.addResourceHandlers(registry);
         registry.addResourceHandler("/images/**").addResourceLocations("/images/");
         registry.addResourceHandler("/css/**").addResourceLocations("/css/");
-        registry.addResourceHandler("/js/**").addResourceLocations("/js/");
+        registry.addResourceHandler("/js/**").addResourceLocations("/js/");*/
     }
 
 }

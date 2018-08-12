@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.apache.commons.codec.digest.DigestUtils;
+import org.mortbay.log.Log;
 
 public class StrUtil {
 	private static final String EMAIL_PATTERN =
@@ -91,9 +92,12 @@ public class StrUtil {
 				NetworkInterface ni = en.nextElement();
 				if (ni.isLoopback())
 					continue;
+				if(ni.getDisplayName().startsWith("u"))
+					continue;
 
 				Enumeration<InetAddress> inetAddresses = ni.getInetAddresses();
 				while(inetAddresses.hasMoreElements()) { 
+					
 					InetAddress ia = inetAddresses.nextElement();
 					if (ia.getHostAddress() != null && ia.getHostAddress().indexOf(".") != -1) {
 						ip = ia.getHostAddress();
@@ -104,6 +108,7 @@ public class StrUtil {
 				if (!isLoopBack)
 					break;
 			}
+ 			Log.info("Local System IP Address: " + ip);
  			hostIp = ip;
 			return ip;
 		} catch (SocketException e) {

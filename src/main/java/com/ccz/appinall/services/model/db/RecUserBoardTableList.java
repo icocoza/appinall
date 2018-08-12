@@ -64,5 +64,10 @@ public class RecUserBoardTableList extends DbRecord {
 		String sql = String.format("SELECT userid, tableid, title, category FROM %s WHERE userid='%s' ORDER BY category ASC" , TBL_NAME, userid);
 		return super.getList(sql).stream().map(e->(RecUserBoardTableList)e).collect(Collectors.toList());
 	}
-	
+
+	public List<RecUserBoardTableList> getUserTableList(String userid, int categoryMax) {
+		String sql = String.format("SELECT userid, tableid, title, category FROM %s WHERE userid='%s' AND category < %d ORDER BY category ASC" , TBL_NAME, userid, categoryMax);
+		return super.getList(sql).stream().map(e->(RecUserBoardTableList)e).collect(Collectors.toList());
+	}
+
 }

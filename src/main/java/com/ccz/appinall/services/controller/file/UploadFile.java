@@ -23,7 +23,7 @@ public class UploadFile {
 	private String scode;
 	private String uploadPath, filepath;
 	
-	final float THUMB_SIZE=240;
+	final float THUMB_SIZE=480;
 	static int seq=0;
 	public UploadFile(RecFile file) {
 		this.file = file;

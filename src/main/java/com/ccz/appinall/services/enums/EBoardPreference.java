@@ -4,7 +4,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public enum EBoardPreference {
-	none("none"), happy("happy"), smile("smile"), sad("sad");
+	none("none"), like("like"), dislike("dislike"), happy("happy"), smile("smile"), sad("sad");
 	
 	
 	public final String value;

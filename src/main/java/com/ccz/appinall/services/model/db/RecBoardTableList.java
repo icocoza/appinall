@@ -14,7 +14,7 @@ public class RecBoardTableList extends DbRecord {
 	public String tableid, title;
 	public String boardtype;
 	public EBoardService servicetype;
-	public String sido, sigu, dong;
+	public String sido, sigu, dong, buildname;
 	public Timestamp createdAt;
  
 	public RecBoardTableList(String poolName) {
@@ -25,8 +25,8 @@ public class RecBoardTableList extends DbRecord {
 	@Override
 	public boolean createTable() {
 		String sql = String.format("CREATE TABLE IF NOT EXISTS %s (tableid VARCHAR(64) NOT NULL PRIMARY KEY, title VARCHAR(64) NOT NULL, "
-				+ "boardtype VARCHAR(24), servicetype VARCHAR(24), sido VARCHAR(32), sigu VARCHAR(32), dong VARCHAR(32), createdAt DATETIME DEFAULT now(), "
-				+ "INDEX idx_title(title), INDEX idx_sido(sido), INDEX idx_sigu(sigu), INDEX idx_dong(dong))",  TBL_NAME);
+				+ "boardtype VARCHAR(24), servicetype VARCHAR(24), sido VARCHAR(32), sigu VARCHAR(32), dong VARCHAR(32), buildname VARCHAR(32), createdAt DATETIME DEFAULT now(), "
+				+ "INDEX idx_title(title), INDEX idx_sido(sido), INDEX idx_sigu(sigu), INDEX idx_dong(dong), INDEX idx_buildname(buildname))",  TBL_NAME);
 		return super.createTable(sql); 
 	}
 
@@ -40,6 +40,7 @@ public class RecBoardTableList extends DbRecord {
 		rec.sido = rd.getString("sido");
 		rec.sigu = rd.getString("sigu");
 		rec.dong = rd.getString("dong");
+		rec.buildname = rd.getString("buildname");
 		rec.createdAt = rd.getDate("createdAt");
 		return rec;
 	}
@@ -54,7 +55,7 @@ public class RecBoardTableList extends DbRecord {
 		return doLoad(rd, new RecBoardTableList(super.poolName));
 	}
 	
-	public DbRecord insertTable(String tableid, String title, String boardtype, String servicetype, String sido, String sigu, String dong) {
+	public DbRecord insertTable(String tableid, String title, String boardtype, String servicetype, String sido, String sigu, String dong, String buildname) {
 		this.tableid = tableid;
 		this.title = title;
 		this.boardtype = boardtype;
@@ -62,16 +63,18 @@ public class RecBoardTableList extends DbRecord {
 		this.sido = sido;
 		this.sigu = sigu;
 		this.dong = dong;
-		return super.insert(qInsertTable(tableid, title, boardtype, servicetype, sido, sigu, dong)) ? this : DbRecord.Empty;
+		this.buildname = buildname;
+		return super.insert(qInsertTable(tableid, title, boardtype, servicetype, sido, sigu, dong, buildname)) ? this : DbRecord.Empty;
 	}
 	
-	static public String qInsertTable(String tableid, String title, String boardtype, String servicetype, String sido, String sigu, String dong) {
-		return String.format("INSERT INTO %s (tableid, title, boardtype, servicetype, sido, sigu, dong) VALUES('%s', '%s', '%s', '%s', '%s', '%s', '%s')", 
-									TBL_NAME, tableid, title, boardtype, servicetype, sido, sigu, dong);
+	static public String qInsertTable(String tableid, String title, String boardtype, String servicetype, String sido, String sigu, String dong, String buildname) {
+		return String.format("INSERT INTO %s (tableid, title, boardtype, servicetype, sido, sigu, dong, buildname) VALUES('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')", 
+									TBL_NAME, tableid, title, boardtype, servicetype, sido, sigu, dong, buildname);
 	}
 
-	public RecBoardTableList getTableByTitle(String title, String sido, String sigu, String dong) {
-		String sql = String.format("SELECT tableid, title, boardtype, servicetype, sigu, dong FROM %s WHERE title='%s' AND  sido='%s' AND sigu='%s' AND dong='%s'" , TBL_NAME, title, sido, sigu, dong);
+	public RecBoardTableList getTableByTitle(String title, String sido, String sigu, String dong, String buildname) {
+		String sql = String.format("SELECT tableid, title, boardtype, servicetype, sigu, dong FROM %s WHERE title='%s' AND  sido='%s' AND sigu='%s' AND dong='%s' AND buildname='%s'" , TBL_NAME, title, sido, sigu, dong, buildname);
 		return (RecBoardTableList) super.getOne(sql);
 	}
+	
 }

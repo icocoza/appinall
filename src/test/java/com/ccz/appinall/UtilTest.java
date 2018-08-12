@@ -15,6 +15,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 public class UtilTest {
 	@Test
+	@Ignore
 	public void testCollectToList() {
 		List<String> strNumList = new ArrayList<>();
 		

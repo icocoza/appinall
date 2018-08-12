@@ -4,7 +4,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public enum EBoardService {
-	none("none"), no01("no01"), no02("no02"), no03("no03"), normal("normal");
+	none("none"), no01("no01"), no02("no02"), no03("no03"), no04("no04"),normal("normal");
 	
 	
 	public final String value;

@@ -35,11 +35,11 @@ public class GeoUtil {
 	} 
 	
 	public static double toDMS(double wgs84) {
-		int d = (int)wgs84;
-		int m = (int) ((wgs84 - (double)d)* 60f);
-		double s =  ((wgs84 - (double)d) * 60f - (double)m) * 60f;
-		String dms = String.format("%d.%d%d", d, m, (int)(s * 10000f));
-		return Double.parseDouble(dms);
+        int d = (int)wgs84;
+        int m = (int) ((wgs84 - (double)d)* 60f);
+        double s =  ((wgs84 - (double)d) * 60f - (double)m) * 60f;
+        String dms = String.format("%d.%02d%02d", d, m, (int)(s * 10000f));
+        return Double.parseDouble(dms);
 	}
 	
 	public static double toDegree(double dms) {

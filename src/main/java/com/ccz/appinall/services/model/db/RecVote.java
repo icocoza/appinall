@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 
 import com.ccz.appinall.library.dbhelper.DbReader;
 import com.ccz.appinall.library.dbhelper.DbRecord;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import lombok.Data;
 
@@ -15,7 +16,8 @@ import lombok.Data;
 public class RecVote extends DbRecord {
 	static final String TBL_NAME = "vote";
 	
-	public String vitemid, boardid; //boardid could have many vitemid(vote item id)
+	public String vitemid;
+	@JsonIgnore public String boardid; //boardid could have many vitemid(vote item id)
 	public int selectcount;
 	public String votetext;//, voteurl;
 	

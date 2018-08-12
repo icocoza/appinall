@@ -17,13 +17,16 @@ import lombok.Data;
 public class RecFile extends DbRecord{
 	static final String TBL_NAME = "upfile";
 	
-	public String fileid, userid, filename, thumbname, boardid;
+	public String fileid;
+	@JsonIgnore public String userid;
+	@JsonIgnore public String filename, thumbname;
+	@JsonIgnore public String boardid;
 	public String filetype, fileserver; //file server ip
-	public int width, height, thumbwidth, thumbheight;
+	@JsonIgnore public int width, height, thumbwidth, thumbheight;
 	public long filesize;
-	public boolean uploaded, enabled;
+	@JsonIgnore public boolean uploaded, enabled;
 	public String comment;
-	public Timestamp regtime;
+	@JsonIgnore public Timestamp regtime;
 	
 	public RecFile(String poolName) {
 		super(poolName);
@@ -120,4 +123,8 @@ public class RecFile extends DbRecord{
 		return (RecFile) super.getOne(sql);
 	}
 	
+	public List<RecFile> getFileList(String boardid) {
+		String sql = String.format("SELECT * FROM %s WHERE boardid='%s'", RecFile.TBL_NAME, boardid);
+		return super.getList(sql).stream().map(e -> (RecFile)e).collect(Collectors.toList());
+	}
 }

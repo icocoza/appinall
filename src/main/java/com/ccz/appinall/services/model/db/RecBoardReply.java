@@ -102,8 +102,11 @@ public class RecBoardReply extends DbRecord {
 	}
 	
 	public List<RecBoardReply> getList(String boardid, int offset, int count) {
-		String sql = String.format("SELECT * FROM %s WHERE boardid='%s' ORDER BY replytime LIMIT %d, %d", 
+//		String sql = String.format("SELECT * FROM %s WHERE boardid='%s' ORDER BY replytime LIMIT %d, %d", 
+//				RecBoardReply.TBL_NAME, boardid, offset, count);
+		String sql = String.format("SELECT * FROM %s WHERE boardid='%s' LIMIT %d, %d", 
 				RecBoardReply.TBL_NAME, boardid, offset, count);
+
 		return super.getList(sql).stream().map(e->(RecBoardReply)e).collect(Collectors.toList());
 	}
 	
