@@ -5,6 +5,7 @@ import java.util.Date;
 
 import com.ccz.appinall.library.dbhelper.DbReader;
 import com.ccz.appinall.library.dbhelper.DbRecord;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import lombok.Data;
 
@@ -14,9 +15,9 @@ import lombok.Data;
 public class RecBoardCount extends DbRecord{
 	public static final String TBL_NAME = "boardcount";
 	
-	public String boardid;
+	@JsonIgnore public String boardid;
 	public int likes, dislikes, visit, reply;
-	public Timestamp lastmodify;
+	@JsonIgnore public Timestamp lastmodify;
 	
 	public RecBoardCount(String poolName) {
 		super(poolName);
@@ -79,6 +80,11 @@ public class RecBoardCount extends DbRecord{
 	public boolean incReply(String boardid) {
 		String sql = String.format("UPDATE %s SET reply=reply+1 WHERE boardid='%s'", RecBoardCount.TBL_NAME, boardid);
 		return super.update(sql);
+	}
+	
+	public RecBoardCount getCount(String boardid) {
+		String sql = String.format("SELECT * FROM %s WHERE boardid='%s'", RecBoardCount.TBL_NAME, boardid);
+		return (RecBoardCount) super.getOne(sql);
 	}
 	
 }

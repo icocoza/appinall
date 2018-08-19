@@ -48,10 +48,11 @@ public class FileCommandAction extends CommonAction {
 		
 		String fileid = StrUtil.getUuid("file");//Crypto.AES256Cipher.getInst().enc(data.getScode()+"/"+session.getUserId()+"/"+System.currentTimeMillis()+"/"+seq);
 		
-		if(DbAppManager.getInst().addFileInit(data.getScode(), fileid, ss.getUserId(), data.getFilename(), data.getFiletype(), data.getFilesize(), data.getComment()) == false)
+		//[TODO][Notide] 웹소켓으로 접속된 IP로 파일을 업로딩 해야 함. 성능, 비용 절감 위함. StrUtil.getHostIp()는 필수적임.
+		if(DbAppManager.getInst().addFileInit(data.getScode(), fileid, ss.getUserId(), StrUtil.getHostIp(), data.getFilename(), data.getFiletype(), data.getFilesize(), data.getComment()) == false)
 			return res.setError(EAllError.fail_to_uploadfile);
 		
-		return res.setError(EAllError.ok).setParam("fileid", fileid).setParam("ip", servicesConfig.getFileUploadIp()).setParam("port", servicesConfig.getFileUploadPort()+"");
+		return res.setError(EAllError.ok).setParam("fileid", fileid).setParam("ip", StrUtil.getHostIp()).setParam("port", servicesConfig.getFileUploadPort()+"");
 	};
 	
 	ICommandFunction<Channel, ResponseData<EAllError>, JsonNode> doFileStart = (Channel ch, ResponseData<EAllError> res, JsonNode jnode) -> {

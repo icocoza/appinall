@@ -23,8 +23,12 @@ public class UploadFile {
 	private String scode;
 	private String uploadPath, filepath;
 	
-	final float THUMB_SIZE=480;
+	static final float THUMB_SIZE=480;
+	public static final String THUMB_PATH = "thumb";
+	public static final String CROP_PATH = "crop";
+	
 	static int seq=0;
+	
 	public UploadFile(RecFile file) {
 		this.file = file;
 	}
@@ -60,23 +64,24 @@ public class UploadFile {
 			file.height = imageSize.height;
 			makeThumb(imageResizeWorker);
 		}
-		return DbAppManager.getInst().updateFileInfo(scode, file.fileid, file.width, file.height, downsize, StrUtil.getHostIp());
+		return DbAppManager.getInst().updateFileInfo(scode, file.fileid, file.width, file.height, downsize);
 	}
 	
 	public RecFile getFile() {	return file;		}
 	
 	public boolean isOverSize() { return file.filesize <= downsize; }
 	
-	public int getSeq() {	return ++seq % 1000; }
+	
 	
 	public void makeThumb(ImageResizeWorker imageResizeWorker) {
 		float rate = file.width > file.height ? THUMB_SIZE / (float)file.width : THUMB_SIZE / (float)file.height;
-		String thumbname = String.format("thumb%d_%03d", System.currentTimeMillis(), seq);
-		String dir = uploadPath +"/"+ scode +"/thumb/";
+		String thumbName = newThumbFilename();
+		String dir = getThumbPath(scode, uploadPath);
+		
 		(new File(dir)).mkdirs();
-		int thumbwidth = (int)(file.width * rate);
-		int thumbheight = (int)(file.height * rate);
-		imageResizeWorker.doResize(filepath, dir + thumbname, thumbwidth, thumbheight, new ImageResizerCallback() {
+		int thumbWidth = (int)(file.width * rate);
+		int thumbHeight = (int)(file.height * rate);
+		imageResizeWorker.doResize(filepath, dir + thumbName, thumbWidth, thumbHeight, new ImageResizerCallback() {
 			@Override
 			public void onCompleted(Object dest) {
 				System.out.println(dest);
@@ -87,6 +92,31 @@ public class UploadFile {
 				System.out.println(src);
 			}
 		});
-		DbAppManager.getInst().updateThumbnail(scode, file.fileid, thumbname, thumbwidth, thumbheight);
+		DbAppManager.getInst().updateThumbnail(scode, file.fileid, thumbName, thumbWidth, thumbHeight);
 	}
+	
+	public void makeCrop(String src, String dest) {
+		
+	}
+	
+	public static int getSeq() {	return ++seq % 1000; }
+	
+	public static String newThumbFilename() {
+		 return String.format("%s%d_%03d", THUMB_PATH, System.currentTimeMillis(), getSeq());
+	}
+	public static String getThumbPath(String scode, String uploadPath) {
+		return uploadPath +"/"+ scode +"/" + THUMB_PATH +"/";
+	}
+	
+	public static String newCropFilename() {
+		 return String.format("%s%d_%03d", CROP_PATH, System.currentTimeMillis(), getSeq());
+	}
+	public static String newCropFilename(String name) {
+		 return String.format("%s%s", CROP_PATH, name);
+	}
+
+	public static String getCropPath(String scode, String uploadPath) {
+		return uploadPath +"/"+ scode +"/" + CROP_PATH +"/";
+	}
+
 }

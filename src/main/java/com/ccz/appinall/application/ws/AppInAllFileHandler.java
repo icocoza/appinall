@@ -32,11 +32,10 @@ public class AppInAllFileHandler implements IServiceHandler {
 	public final AttributeKey<FileSession> attrFileSessionKey = AttributeKey.valueOf(FileSession.class.getSimpleName());
 	private final AttributeKey<WebsocketPacketData> attrWebsocketData = AttributeKey.valueOf(WebsocketPacketData.class.getSimpleName());
 	
-	@Autowired
-	ServicesConfig servicesConfig;
+	@Autowired	ServicesConfig servicesConfig;
+	@Autowired ImageResizeWorker imageResizeWorker;
+	
 	private final String serviceCode = WebsocketBinaryData.BINARY_DATA;
-
-	private ImageResizeWorker imageResizeWorker = new ImageResizeWorker();
 	
 	public IServiceHandler init() {
 		return this;
@@ -70,8 +69,7 @@ public class AppInAllFileHandler implements IServiceHandler {
 				}
 				ch.attr(attrFileSessionKey).set(null);
 				ch.attr(attrWebsocketData).get().setFilemode(false);
-				//NAS가 없는 환경에서는 Upload된 서버가 파일 호스트가 될 것임. 상용시에는 아래와 같이 FULL URL 생성을 최대한 지양해야 함.
-				//String downUrl = String.format(servicesConfig.getDownloadUrlFormat(), StrUtil.getHostIp(), fileSession.getKey(), fileSession.getScode());
+
 				Map<String, String> objectMap = new HashMap<>();
 				objectMap.put("hostip", StrUtil.getHostIp());
 				objectMap.put("hostport", servicesConfig.getFileDownPort()+"");

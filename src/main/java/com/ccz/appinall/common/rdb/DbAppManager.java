@@ -166,6 +166,7 @@ public class DbAppManager {
 			new RecMessageDel(scode).createTable();
 			new RecPushToken(scode).createTable();
 			new RecFile(scode).createTable();
+			new RecFileCrop(scode).createTable();
 			new RecWebScrab(scode).createTable();
 			new RecDeliveryApply(scode).createTable();
 			new RecDeliveryHistory(scode).createTable();
@@ -452,6 +453,9 @@ public class DbAppManager {
 	public boolean incBoardReply(String scode, String boardid) {
 		return new RecBoardCount(scode).incReply(boardid);
 	}
+	public RecBoardCount getBoardCount(String scode, String boardid) {
+		return new RecBoardCount(scode).getCount(boardid);
+	}
 	
 	//for board reply
 	public int addReply(String scode, String boardid, String parentid, String userid, String username, short depth, String msg) {
@@ -640,11 +644,11 @@ public class DbAppManager {
 	}
 
 	//for images info
-	public boolean addFileInit(String scode, String fileid, String userid, String filename, String filetype, long size, String comment) {
-		return new RecFile(scode).insertFileInit(fileid, userid, filename, filetype, size, comment) != DbRecord.Empty;
+	public boolean addFileInit(String scode, String fileid, String userid, String fileserver, String filename, String filetype, long size, String comment) {
+		return new RecFile(scode).insertFileInit(fileid, userid, fileserver, filename, filetype, size, comment) != DbRecord.Empty;
 	}
-	public boolean updateFileInfo(String scode, String fileid, int width, int height, long size, String fileserver) {
-		return new RecFile(scode).updateFileInfo(fileid, width, height, size, fileserver) != DbRecord.Empty;
+	public boolean updateFileInfo(String scode, String fileid, int width, int height, long size) {
+		return new RecFile(scode).updateFileInfo(fileid, width, height, size) != DbRecord.Empty;
 	}
 	public boolean updateThumbnail(String scode, String fileid, String thumbname, int thumbwidth, int thumbheight) {
 		return new RecFile(scode).updateThumbnail(fileid, thumbname, thumbwidth, thumbheight);
@@ -663,6 +667,15 @@ public class DbAppManager {
 	}
 	public boolean updateFilesEnabled(String scode, List<String> fileids, String boardid, boolean enabled) {
 		return new RecFile(scode).updateFilesEnabled(fileids, boardid, enabled);
+	}
+	
+	//for file crop
+	public DbRecord addCropFile(String scode, String boardid, String serverip, String subpath, String filename) {
+		return new RecFileCrop(scode).insertCropFile(boardid, serverip, subpath, filename);
+	}
+	
+	public RecFileCrop getCropFile(String scode, String boardid) {
+		return new RecFileCrop(scode).getFile(boardid);
 	}
 	
 	//for webscrab

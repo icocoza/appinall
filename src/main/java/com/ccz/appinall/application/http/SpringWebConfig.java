@@ -17,7 +17,7 @@ import org.thymeleaf.spring4.view.ThymeleafViewResolver;
 import org.thymeleaf.templatemode.TemplateMode;
 
 @Configuration
-@EnableWebMvc
+//@EnableWebMvc
 @ComponentScan
 @EnableAutoConfiguration
 public class SpringWebConfig extends WebMvcConfigurerAdapter implements ApplicationContextAware {
@@ -85,7 +85,7 @@ public class SpringWebConfig extends WebMvcConfigurerAdapter implements Applicat
     @Bean(name = "messageSource")
     public ResourceBundleMessageSource getMessageSource() {
     		ResourceBundleMessageSource messageSource = new ResourceBundleMessageSource();
-        messageSource.setBasename("config/messages");
+        messageSource.setBasename("classpath:resourcebundles/messages");//("config/messages");
         messageSource.setDefaultEncoding("UTF-8");
         messageSource.setUseCodeAsDefaultMessage(true);
         return messageSource;
@@ -101,11 +101,12 @@ public class SpringWebConfig extends WebMvcConfigurerAdapter implements Applicat
      */
     @Override
     public void addResourceHandlers(final ResourceHandlerRegistry registry) {
-    	  if (!registry.hasMappingForPattern("/assets/**")) {
-    		     registry.addResourceHandler("/assets/**").addResourceLocations("classpath:/assets/");
-    		  }
-/*        super.addResourceHandlers(registry);
-        registry.addResourceHandler("/images/**").addResourceLocations("/images/");
+    	super.addResourceHandlers(registry);
+    	/*if (!registry.hasMappingForPattern("/static/**")) {
+    		     registry.addResourceHandler("/static/**").addResourceLocations("classpath:/static/");
+     	}*/
+        
+        /*registry.addResourceHandler("/images/**").addResourceLocations("/images/");
         registry.addResourceHandler("/css/**").addResourceLocations("/css/");
         registry.addResourceHandler("/js/**").addResourceLocations("/js/");*/
     }

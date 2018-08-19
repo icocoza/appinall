@@ -37,7 +37,24 @@ public class ImageUtil {
     }
     
     //below is,,, 출처: http://javacan.tistory.com/entry/124 [자바캔(Java Can Do IT)]
-    static public boolean resize(File src, File dest, int width, int height) throws IOException {
+    public static boolean resize(File src, File dest, int width, int height) throws IOException {
+    	BufferedImage destImg = resize(src, width, height);
+        return ImageIO.write(destImg, "jpg", dest);
+    }
+    
+    public static boolean crop(File src, File dest, int width, int height) throws IOException {
+    	BufferedImage resizeImg = resize(src, width, height);
+    	int cropSize = width > height ? height : width;
+    	cropSize = (int)((float)cropSize * 0.85f);
+    	
+    	int x = (width - cropSize) / 2;
+    	int y = (height - cropSize) / 2;
+    	
+    	BufferedImage cropImg = resizeImg.getSubimage(x, y, cropSize, cropSize);
+        return ImageIO.write(cropImg, "jpg", dest);
+    }
+    
+    public static BufferedImage resize(File src, int width, int height) throws IOException {
         Image srcImg = null;
         String suffix = src.getName().substring(src.getName().lastIndexOf('.')+1).toLowerCase();
         if (suffix.equals("bmp") || suffix.equals("png") || suffix.equals("gif")) {
@@ -51,17 +68,8 @@ public class ImageUtil {
         
         int destWidth = -1, destHeight = -1;
         
-        if (width == SAME) {
-            destWidth = srcWidth;
-        } else if (width > 0) {
-            destWidth = width;
-        }
-        
-        if (height == SAME) {
-            destHeight = srcHeight;
-        } else if (height > 0) {
-            destHeight = height;
-        }
+        destWidth =  (width == SAME) ? srcWidth : width;
+        destHeight = (height == SAME) ? srcHeight : height;
         
         if (width == RATIO && height == RATIO) {
             destWidth = srcWidth;
@@ -84,28 +92,6 @@ public class ImageUtil {
         } 
         BufferedImage destImg = new BufferedImage(destWidth, destHeight, BufferedImage.TYPE_INT_RGB); 
         destImg.setRGB(0, 0, destWidth, destHeight, pixels, 0, destWidth); 
-        
-        return ImageIO.write(destImg, "jpg", dest);
+        return destImg;
     }
-    
-    public static BufferedImage resize(BufferedImage image, int width, int height) {
-	    	float w = new Float(width) ;
-	    	float h = new Float(height) ;
-	
-	    	if ( w <= 0 && h <= 0 ) {
-	    		w = image.getWidth();
-	    		h = image.getHeight();
-	    	} else if ( w <= 0 ) {
-	    		w = image.getWidth() * ( h / image.getHeight() ); 
-	    	} else if ( h <= 0 ) {
-	    		h = image.getHeight() * ( w / image.getWidth() ); 
-	    	}
-	
-	    	int wi = (int) w;
-	    	int he = (int) h;
-	    	BufferedImage resizedImage = new BufferedImage(wi,he,BufferedImage.TYPE_INT_RGB);
-	    	resizedImage.getGraphics().drawImage(image.getScaledInstance(wi,he,Image.SCALE_SMOOTH),0,0,wi,he,null);
-	
-	    	return resizedImage;
-    	}
 }

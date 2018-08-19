@@ -74,26 +74,27 @@ public class RecFile extends DbRecord{
 		return doLoad(rd, new RecFile(poolName));
 	}
 
-	public DbRecord insertFileInit(String fileid, String userid, String filename, String filetype, long filesize, String comment) {
+	public DbRecord insertFileInit(String fileid, String userid, String fileserver, String filename, String filetype, long filesize, String comment) {
 		this.fileid = fileid;
 		this.userid = userid;
+		this.fileserver = fileserver;
 		this.filename = filename;
 		this.filetype = filetype;
 		this.filesize = filesize;
 		this.comment = comment;
-		String sql = String.format("INSERT INTO %s (fileid, userid, filename, filetype, filesize, comment) VALUES('%s', '%s', '%s', '%s', %d, '%s')", 
-									RecFile.TBL_NAME, fileid, userid, filename, filetype, filesize, comment);
+		String sql = String.format("INSERT INTO %s (fileid, userid, fileserver, filename, filetype, filesize, comment) VALUES('%s', '%s', '%s', '%s', '%s', %d, '%s')", 
+									RecFile.TBL_NAME, fileid, userid, fileserver, filename, filetype, filesize, comment);
 		return super.insert(sql) ? this : DbRecord.Empty;
 	}
 	
-	public DbRecord updateFileInfo(String fileid, int width, int height, long filesize, String fileserver) {
+	public DbRecord updateFileInfo(String fileid, int width, int height, long filesize) {
 		this.fileid = fileid;
 		this.width = width;
 		this.height = height;
 		this.filesize = filesize;
-		this.fileserver = fileserver;
-		String sql = String.format("UPDATE %s SET width=%d, height=%d, filesize=%d, fileserver='%s', uploaded=true WHERE fileid='%s'",
-								RecFile.TBL_NAME, width, height, filesize, fileserver, fileid);
+		
+		String sql = String.format("UPDATE %s SET width=%d, height=%d, filesize=%d, uploaded=true WHERE fileid='%s'",
+								RecFile.TBL_NAME, width, height, filesize, fileid);
 		return super.insert(sql) ? this : DbRecord.Empty;
 	}
 	

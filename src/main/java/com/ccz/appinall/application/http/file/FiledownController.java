@@ -73,6 +73,25 @@ public class FiledownController {
                 .body(resource);
     }
     
+    static int seq = 0;
+    @RequestMapping("/crop")
+    public ResponseEntity<InputStreamResource> downloadCrop(@RequestParam String scode, @RequestParam String boardid) throws IOException {
+        String filename = String.format("%d%03d.jpg", System.currentTimeMillis(), ++seq);
+        MediaTypeUtils mediaTypeUtils = new MediaTypeUtils();
+        MediaType mediaType = mediaTypeUtils.getMediaTypeForFileName(this.servletContext, filename);
+        File file = new File(servicesConfig.getFileUploadDir() + "/" + scode + "/crop/" + boardid);
+        InputStreamResource resource = new InputStreamResource(new FileInputStream(file));
+ 
+        return ResponseEntity.ok()
+                // Content-Disposition
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + filename)
+                // Content-Type
+                .contentType(mediaType)
+                // Contet-Length
+                .contentLength(file.length()) //
+                .body(resource);
+    }
+    
     public class MediaTypeUtils {
         public MediaType getMediaTypeForFileName(ServletContext servletContext, String fileName) {
             String mineType = servletContext.getMimeType(fileName);

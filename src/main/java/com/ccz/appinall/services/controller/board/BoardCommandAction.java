@@ -1,11 +1,16 @@
 package com.ccz.appinall.services.controller.board;
 
+import java.io.File;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.ccz.appinall.common.config.ServicesConfig;
 import com.ccz.appinall.common.rdb.DbAppManager;
 import com.ccz.appinall.library.dbhelper.DbRecord;
+import com.ccz.appinall.library.module.scrap.ImageResizeWorker;
+import com.ccz.appinall.library.module.scrap.ImageResizeWorker.ImageResizerCallback;
 import com.ccz.appinall.library.type.ResponseData;
 import com.ccz.appinall.library.type.inf.ICommandFunction;
 import com.ccz.appinall.library.util.AsciiSplitter.ASS;
@@ -13,12 +18,15 @@ import com.ccz.appinall.library.util.StrUtil;
 import com.ccz.appinall.services.controller.CommonAction;
 import com.ccz.appinall.services.controller.auth.AuthSession;
 import com.ccz.appinall.services.controller.board.RecDataBoard.*;
+import com.ccz.appinall.services.controller.file.UploadFile;
 import com.ccz.appinall.services.enums.EAllCmd;
 import com.ccz.appinall.services.enums.EAllError;
 import com.ccz.appinall.services.model.db.RecBoard;
+import com.ccz.appinall.services.model.db.RecBoardCount;
 import com.ccz.appinall.services.model.db.RecBoardDetail;
 import com.ccz.appinall.services.model.db.RecBoardReply;
 import com.ccz.appinall.services.model.db.RecBoardUser;
+import com.ccz.appinall.services.model.db.RecFile;
 import com.ccz.appinall.services.model.db.RecUserBoardTableList;
 import com.ccz.appinall.services.model.db.RecVote;
 import com.ccz.appinall.services.model.db.RecVoteInfo;
@@ -30,8 +38,9 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
-
 public class BoardCommandAction extends CommonAction {
+	@Autowired ImageResizeWorker imageResizeWorker;
+	@Autowired ServicesConfig servicesConfig;
 	
 	public BoardCommandAction() {
 		super.setCommandFunction(EAllCmd.getcategorylist, doGetCategoryList);
@@ -232,8 +241,11 @@ public class BoardCommandAction extends CommonAction {
 			return res.setError(EAllError.NotExistLikedUser);
 			
 		DbAppManager.getInst().incBoardLike(ss.scode, data.boardid, data.isadd);
+		RecBoardCount count = DbAppManager.getInst().getBoardCount(ss.scode, data.boardid);
 		res.setParam("preference", data.preference);
 		res.setParam("isadd", data.isadd);
+		if(count!=null)
+			res.setParam("count", count);
 		return res.setError(EAllError.ok);
 	};
 	
@@ -257,8 +269,11 @@ public class BoardCommandAction extends CommonAction {
 			return res.setError(EAllError.NotExistDislikeUser);
 		
 		DbAppManager.getInst().incBoardDislike(ss.scode, data.boardid, data.isadd);
+		RecBoardCount count = DbAppManager.getInst().getBoardCount(ss.scode, data.boardid);
 		res.setParam("preference", data.preference);
 		res.setParam("isadd", data.isadd);
+		if(count!=null)
+			res.setParam("count", count);
 		return res.setError(EAllError.ok);
 	};
 	
@@ -277,6 +292,9 @@ public class BoardCommandAction extends CommonAction {
 		int replyId = DbAppManager.getInst().addReply(ss.scode, data.boardid, data.parentrepid, ss.getUserId(), ss.getUsername(), (short)data.depth, data.msg);
 		if(replyId < 1)
 			return res.setError(EAllError.FailAddReply);
+		List<RecBoardReply> replyList = DbAppManager.getInst().getReplyList(ss.scode, data.boardid, 0, 15);	//Reply를 추가하면 0부터 15개를 전달한다.
+		if(replyList.size() > 0)
+			res.setParam("data", replyList);
 		return res.setError(EAllError.ok).setParam("replyid", replyId);
 	};
 	
@@ -293,6 +311,7 @@ public class BoardCommandAction extends CommonAction {
 			return res.setError(EAllError.NoSession);
 		if(DbAppManager.getInst().delReply(ss.scode, data.boardid, data.replyid, ss.getUserId())==false)
 			return res.setError(EAllError.FailDeleteReply);
+		res.setParam("replyid", data.replyid);
 		return res.setError(EAllError.ok);
 	};
 	
@@ -463,7 +482,34 @@ public class BoardCommandAction extends CommonAction {
 		DbAppManager.getInst().addBoardContent(ss.scode, boardId, data.content);	//insert content
 		DbAppManager.getInst().addBoardCount(ss.scode, boardId);
 		DbAppManager.getInst().updateFilesEnabled(ss.scode, data.getFileids(), boardId, true);	//업로딩된 파일을 enabled 시킴. enabled=false은 주기적으로 삭제 필요
+		if(data.getFileids().size() > 0) {
+			RecFile recfile = DbAppManager.getInst().getFileInfo(ss.scode, data.getFileids().get(0));
+			if(makeCrop(ss.scode, boardId, recfile) != null)
+				DbAppManager.getInst().addCropFile(ss.scode, boardId, recfile.fileserver, UploadFile.CROP_PATH, boardId);
+		}
 		return res.setError(EAllError.ok).setParam("boardid", boardId);
+	}
+	
+	public String makeCrop(String scode, String boardId, RecFile recfile) {
+		if(recfile==null || recfile.thumbname==null)
+			return null;
+		String thumbPath = UploadFile.getThumbPath(scode, servicesConfig.getFileUploadDir());
+		String cropPath = UploadFile.getCropPath(scode, servicesConfig.getFileUploadDir());
+		File cropDir = new File(cropPath);
+		if(cropDir.exists()==false)
+			cropDir.mkdirs();
+		
+		imageResizeWorker.doCrop(thumbPath + recfile.thumbname, cropPath + boardId, recfile.thumbwidth/2, recfile.thumbheight/2, new ImageResizerCallback() {
+			@Override
+			public void onCompleted(Object dest) {
+				System.out.println(dest);
+			}
+			@Override
+			public void onFailed(Object src) {
+				System.out.println(src);
+			}
+		});
+		return cropPath + boardId;
 	}
 
 }

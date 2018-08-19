@@ -181,6 +181,7 @@ public class AuthCommandAction extends CommonAction {
 		sessionManager.put(authSession);
 		
 		res.setParam("username", user.username);
+		res.setParam("userid", auth.getUserid());
 		return res.setError(EAllError.ok).setParam(""+user.lasttime);
 	};
 
