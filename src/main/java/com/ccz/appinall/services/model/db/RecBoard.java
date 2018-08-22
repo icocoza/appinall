@@ -30,7 +30,10 @@ public class RecBoard  extends DbRecord {	//this data move to NoSQL like MongoDb
 	@JsonIgnore public String category, appcode;
 	@JsonIgnore public String createuserid;
 	public String createusername;
+	@JsonIgnore public boolean deleted;
+	@JsonIgnore public Date deletedAt;
 	public Timestamp createtime;
+	public String userid;
 	
 	public RecBoard(String poolName) {
 		super(poolName);
@@ -40,6 +43,7 @@ public class RecBoard  extends DbRecord {	//this data move to NoSQL like MongoDb
 		String sql = String.format("CREATE TABLE IF NOT EXISTS %s (boardid VARCHAR(64) NOT NULL PRIMARY KEY, "
 				+ "itemtype VARCHAR(12) NOT NULL, title VARCHAR(128) NOT NULL, content VARCHAR(128) NOT NULL, hasimage BOOLEAN, hasfile BOOLEAN, "
 				+ "category VARCHAR(64) NOT NULL, appcode VARCHAR(32), createuserid VARCHAR(64), createusername VARCHAR(32), "
+				+ "deleted BOOLEAN DEFAULT false, deletedAt DATETIME, "
 				+ "createtime DATETIME DEFAULT now(), INDEX(itemtype, appcode, createuserid), INDEX idx_category(category), INDEX idx_createtime(createtime))",  RecBoard.TBL_NAME);
 		return super.createTable(sql); 
 	}
@@ -58,6 +62,7 @@ public class RecBoard  extends DbRecord {	//this data move to NoSQL like MongoDb
 		rec.createuserid = rd.getString("createuserid");
 		rec.createusername = rd.getString("createusername");
 		rec.createtime = rd.getDate("createtime");
+		rec.userid = rec.createuserid;
 		return rec;
 	}
 
@@ -90,6 +95,11 @@ public class RecBoard  extends DbRecord {	//this data move to NoSQL like MongoDb
 				RecBoardContent.TBL_NAME, RecBoard.TBL_NAME, RecBoardContent.TBL_NAME,
 				RecBoard.TBL_NAME, boardid, RecBoard.TBL_NAME, userid);
 		return super.delete(sql);
+	}
+	
+	public boolean updateDelete(String boardid, String userid) {
+		String sql = String.format("UPDATE %s SET deleted=true, deletedAt=NOW() WHERE createuserid='%s' AND boardid='%s'", RecBoard.TBL_NAME, userid, boardid);
+		return super.update(sql);
 	}
 	
 	public boolean updateTitle(String boardid, String userid, String title) {

@@ -406,8 +406,9 @@ public class DbAppManager {
 		return new RecBoard(scode).updateCategory(boardid, userid, category);
 	}
 	public boolean delBoard(String scode, String userid, String boardid) {
-		return new RecBoard(scode).delete(userid, boardid);
+		return new RecBoard(scode).updateDelete(boardid, userid);//return new RecBoard(scode).delete(userid, boardid);
 	}
+	
 	public boolean updateBoard(String scode, String userid, String boardid, String title, String content, boolean hasimage, boolean hasfile, String category) {
 		return new RecBoard(scode).updateBoard(boardid, userid, title, content, hasimage, hasfile, category);
 	}
@@ -668,7 +669,9 @@ public class DbAppManager {
 	public boolean updateFilesEnabled(String scode, List<String> fileids, String boardid, boolean enabled) {
 		return new RecFile(scode).updateFilesEnabled(fileids, boardid, enabled);
 	}
-	
+	public boolean updateDeleteFile(String scode, String boardid) {
+		return new RecFile(scode).updateDeleteFile(boardid);
+	}
 	//for file crop
 	public DbRecord addCropFile(String scode, String boardid, String serverip, String subpath, String filename) {
 		return new RecFileCrop(scode).insertCropFile(boardid, serverip, subpath, filename);

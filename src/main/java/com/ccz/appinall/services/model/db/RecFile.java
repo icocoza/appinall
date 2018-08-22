@@ -24,9 +24,9 @@ public class RecFile extends DbRecord{
 	public String filetype, fileserver; //file server ip
 	@JsonIgnore public int width, height, thumbwidth, thumbheight;
 	public long filesize;
-	@JsonIgnore public boolean uploaded, enabled;
+	@JsonIgnore public boolean uploaded, enabled, deleted;
 	public String comment;
-	@JsonIgnore public Timestamp regtime;
+	@JsonIgnore public Timestamp regtime, deletedAt;
 	
 	public RecFile(String poolName) {
 		super(poolName);
@@ -38,7 +38,7 @@ public class RecFile extends DbRecord{
 				+ "filename VARCHAR(64) NOT NULL, thumbname VARCHAR(64), boardid VARCHAR(64), filetype VARCHAR(16), fileserver VARCHAR(64), "
 				+ "width INTEGER DEFAULT 0, height INTEGER DEFAULT 0, thumbwidth INTEGER DEFAULT 0, thumbheight INTEGER DEFAULT 0, "
 				+ "filesize LONG, uploaded BOOLEAN DEFAULT false, enabled BOOLEAN DEFAULT false, comment VARCHAR(256), "
-				+ "regtime DATETIME DEFAULT now(), INDEX idx_boardid(boardid))", RecFile.TBL_NAME);
+				+ "regtime DATETIME DEFAULT now(), deleted BOOLEAN DEFAULT false, deletedAt DATETIME, INDEX idx_boardid(boardid))", RecFile.TBL_NAME);
 		return super.createTable(sql);
 	}
 
@@ -59,8 +59,10 @@ public class RecFile extends DbRecord{
 		rec.filesize = rd.getLong("filesize");
 		rec.uploaded = rd.getBoolean("uploaded");
 		rec.enabled = rd.getBoolean("enabled");
+		rec.deleted = rd.getBoolean("deleted");
 		rec.comment = rd.getString("comment");
 		rec.regtime = rd.getDate("regtime");
+		rec.deletedAt = rd.getDate("deletedAt");
 		return rec;
 	}
 
@@ -99,12 +101,12 @@ public class RecFile extends DbRecord{
 	}
 	
 	public boolean updateFileEnabled(String fileid, String boardid, boolean enabled) {
-		String sql = String.format("UPDATE %s SET boardid='%s', enabled=%b WHERE fileid='%s' AND uploaded=true", RecFile.TBL_NAME, boardid, enabled, fileid);
+		String sql = String.format("UPDATE %s SET boardid='%s', enabled=%b, deleted=false, deletedAt=null WHERE fileid='%s' AND uploaded=true", RecFile.TBL_NAME, boardid, enabled, fileid);
 		return super.update(sql);
 	}
 	public boolean updateFilesEnabled(List<String> fileids, String boardid, boolean enabled) {
 		String filestr = fileids.stream().map(x -> "'"+x+"'").collect(Collectors.joining(","));
-		String sql = String.format("UPDATE %s SET boardid='%s', enabled=%b WHERE fileid IN(%s) AND uploaded=true", RecFile.TBL_NAME, boardid, enabled, filestr);
+		String sql = String.format("UPDATE %s SET boardid='%s', enabled=%b, deleted=false, deletedAt=null WHERE fileid IN(%s) AND uploaded=true", RecFile.TBL_NAME, boardid, enabled, filestr);
 		return super.update(sql);
 	}
 
@@ -114,6 +116,11 @@ public class RecFile extends DbRecord{
 		return super.update(sql);
 	}
 
+	public boolean updateDeleteFile(String boardid) {
+		String sql = String.format("UPDATE %s SET deleted=true, deletedAt=NOW() WHERE boardid='%s'", RecFile.TBL_NAME, boardid);
+		return super.update(sql);
+	}
+	
 	public boolean delete(String fileid) {
 		String sql = String.format("DELETE FROM %s WHERE fileid='%s'", RecFile.TBL_NAME, fileid);
 		return super.delete(sql);
@@ -125,7 +132,7 @@ public class RecFile extends DbRecord{
 	}
 	
 	public List<RecFile> getFileList(String boardid) {
-		String sql = String.format("SELECT * FROM %s WHERE boardid='%s'", RecFile.TBL_NAME, boardid);
+		String sql = String.format("SELECT * FROM %s WHERE boardid='%s' AND deleted=false", RecFile.TBL_NAME, boardid);
 		return super.getList(sql).stream().map(e -> (RecFile)e).collect(Collectors.toList());
 	}
 }

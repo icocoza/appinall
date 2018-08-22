@@ -46,7 +46,7 @@ public class RecBoardDetail extends RecBoard {
 		String sql = String.format("SELECT * FROM board " + 
 				"LEFT JOIN boardcount ON board.boardid=boardcount.boardid " + 
 				"LEFT JOIN filecrop ON board.boardid=filecrop.boardid " + 
-				"WHERE board.category='%s' ORDER BY board.createtime DESC LIMIT %d, %d", category, offset, count);
+				"WHERE board.category='%s' AND board.deleted=false ORDER BY board.createtime DESC LIMIT %d, %d", category, offset, count);
 		return super.getList(sql).stream().map(e->(RecBoardDetail)e).collect(Collectors.toList());
 	}
 	

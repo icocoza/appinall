@@ -92,9 +92,9 @@ public class BoardCommandAction extends CommonAction {
 	};
 	
 	private String getShortContent(String content) {
-		if(content.length()<64)
+		if(content.length()<54)
 			return content;
-		return content.substring(0, 64);
+		return content.substring(0, 54) + "...(더보기)";
 	}
 	
 	ICommandFunction<AuthSession, ResponseData<EAllError>, JsonNode> doDelBoard = (AuthSession ss, ResponseData<EAllError> res, JsonNode jnode) -> {
@@ -103,6 +103,7 @@ public class BoardCommandAction extends CommonAction {
 			return res.setError(EAllError.NoSession);
 		if(DbAppManager.getInst().delBoard(ss.scode, ss.getUserId(), data.boardid)==false)
 			return res.setError(EAllError.FailDeleteBoard);
+		res.setParam("boardid", data.boardid);
 		return res.setError(EAllError.ok);
 	};
 
@@ -166,10 +167,7 @@ public class BoardCommandAction extends CommonAction {
 		UpdateBoard data = new RecDataBoard().new UpdateBoard(jnode);
 		if(ss==null)
 			return res.setError(EAllError.NoSession);
-		if(DbAppManager.getInst().updateBoard(ss.scode, ss.getUserId(), data.boardid, data.title, getShortContent(data.content), data.hasimage, data.hasfile, data.category)==false)
-			return res.setError(EAllError.FailUpdate);
-		DbAppManager.getInst().updateBoardContent(ss.scode, data.boardid, data.content);
-		return res.setError(EAllError.ok);//.setParam(""+user.lasttime);
+		return updateBoard(ss, res, data);
 	};
 
 	/** 
@@ -489,7 +487,19 @@ public class BoardCommandAction extends CommonAction {
 		}
 		return res.setError(EAllError.ok).setParam("boardid", boardId);
 	}
+
+	private ResponseData<EAllError> updateBoard(AuthSession ss, ResponseData<EAllError> res, UpdateBoard data) {
+		String categoryId = ss.getTableIdByCategoryIndex(data.getCategoryInex());
+		if(categoryId==null)
+			return res.setError(EAllError.InvalidCategoryId);
 	
+		if(DbAppManager.getInst().updateBoard(ss.scode, ss.getUserId(), data.boardid, data.title, getShortContent(data.content), data.hasimage, data.hasfile, categoryId)==false)
+			return res.setError(EAllError.FailUpdate);
+		DbAppManager.getInst().updateBoardContent(ss.scode, data.boardid, data.content);
+		DbAppManager.getInst().updateDeleteFile(ss.scode, data.boardid);
+		DbAppManager.getInst().updateFilesEnabled(ss.scode, data.getFileids(), data.boardid, true);
+		return res.setError(EAllError.ok).setParam("boardid", data.boardid);
+	}
 	public String makeCrop(String scode, String boardId, RecFile recfile) {
 		if(recfile==null || recfile.thumbname==null)
 			return null;

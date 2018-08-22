@@ -18,6 +18,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 public class RecDataBoard {
+
 	public class AddBoard {
 		public EBoardItemType itemtype;
 		public String title, content; 
@@ -104,17 +105,12 @@ public class RecDataBoard {
 
 	}
 	
-	public class UpdateBoard {
-		public String boardid, title, content, category; 
-		public boolean hasimage, hasfile;
+	public class UpdateBoard extends AddBoard{
+		public String boardid; 
 		
 		public UpdateBoard(JsonNode jObj) {
+			super(jObj);
 			boardid = jObj.get("boardid").asText();
-			title = jObj.get("title").asText();
-			content = jObj.get("content").asText(); 
-			hasimage = jObj.get("hasimage").asBoolean();
-			hasfile = jObj.get("hasfile").asBoolean();
-			category = jObj.get("category").asText();
 		}
 
 	}
@@ -224,30 +220,17 @@ public class RecDataBoard {
 	public class AddVote {
 		public AddBoard board;
 		public long expiretime;
-		//public boolean isclose;
-		//public List<VoteText> itemList = new ArrayList<>();
 		public List<String> itemList = new ArrayList<>();
 		
 		public AddVote(JsonNode jObj) {
 			board = new AddBoard(jObj);
 			expiretime = jObj.get("expiretime").asLong();
-			//isclose = jObj.get("isclose").asBoolean();
 			ArrayNode jArr = (ArrayNode) jObj.get("voteitems");
 			for(JsonNode jItem : jArr)
-				//itemList.add(new VoteText(jItem.get("votetext").asText(), jItem.get("voteurl").asText()));
 				itemList.add(jItem.asText());
-			}
 		}
+	}
 		
-//		public class VoteText {
-//			public String votetext, voteurl;
-//			
-//			public VoteText(String votetext, String voteurl) {
-//				this.votetext = votetext;
-//				this.voteurl = voteurl;
-//			}
-//		}
-
 	public class SelectVote {
 		public String boardid, vitemid;
 		public boolean isselect;
