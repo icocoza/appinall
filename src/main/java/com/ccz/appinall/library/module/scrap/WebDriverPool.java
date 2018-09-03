@@ -5,6 +5,7 @@ import org.openqa.selenium.Dimension;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
 
+@Deprecated
 public class WebDriverPool extends ConnectionPool<WebDriver> {
 	
 	private int width, height;

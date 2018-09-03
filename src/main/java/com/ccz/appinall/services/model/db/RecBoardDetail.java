@@ -12,6 +12,7 @@ public class RecBoardDetail extends RecBoard {
 	@JsonIgnore private String serverip, subpath, filename;
 	public String cropurl;
 	public int likes = 0, dislikes=0, visit=0, reply=0;
+	public RecScrap scrap;
 	
 	public RecBoardDetail(String poolName) {
 		super(poolName);
@@ -29,6 +30,7 @@ public class RecBoardDetail extends RecBoard {
 		rec.subpath = rd.getString("subpath");
 		rec.filename = rd.getString("filename");
 		rec.cropurl = getCropfilePath(rec);
+		rec.scrap = new RecScrap(rd);
 		return rec;
 	}
 
@@ -45,7 +47,9 @@ public class RecBoardDetail extends RecBoard {
 	public List<RecBoardDetail> getBoardList(String category, int offset,  int count) {
 		String sql = String.format("SELECT * FROM board " + 
 				"LEFT JOIN boardcount ON board.boardid=boardcount.boardid " + 
-				"LEFT JOIN filecrop ON board.boardid=filecrop.boardid " + 
+				"LEFT JOIN filecrop ON board.boardid=filecrop.boardid "+
+				"LEFT JOIN boardscrap ON board.boardid=boardscrap.boardid "+
+				"LEFT JOIN scrap ON scrap.scrapid=boardscrap.scrapid " + 
 				"WHERE board.category='%s' AND board.deleted=false ORDER BY board.createtime DESC LIMIT %d, %d", category, offset, count);
 		return super.getList(sql).stream().map(e->(RecBoardDetail)e).collect(Collectors.toList());
 	}

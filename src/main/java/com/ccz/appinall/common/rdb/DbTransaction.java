@@ -6,8 +6,10 @@ import com.ccz.appinall.library.dbhelper.DbHelper;
 import com.ccz.appinall.library.util.StrUtil;
 import com.ccz.appinall.services.enums.EUserType;
 import com.ccz.appinall.services.model.db.RecAddress;
+import com.ccz.appinall.services.model.db.RecBoardScrap;
 import com.ccz.appinall.services.model.db.RecDeliveryOrder;
 import com.ccz.appinall.services.model.db.RecDeliveryPhoto;
+import com.ccz.appinall.services.model.db.RecScrap;
 import com.ccz.appinall.services.model.db.RecUser;
 import com.ccz.appinall.services.model.db.RecUserAuth;
 import com.ccz.appinall.services.model.db.RecUserBoardTableList;
@@ -97,4 +99,12 @@ public class DbTransaction {
 		return RecUserBoardTableList.qInsertUserTable(userid, tableid, title, tablepos);
 	}
 
+	public String queryInsertScrap(String scrapid, String url, String title, String subtitle, String body) {
+		return RecScrap.qInsertScrap(scrapid, url, title, subtitle, body);
+	}
+
+	public String queryInsertScrapId(String boardid, String scrapid) {
+		return RecBoardScrap.qInsertScrap(boardid, scrapid);
+	}
+	
 }

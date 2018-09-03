@@ -11,6 +11,7 @@ import org.openqa.selenium.remote.DesiredCapabilities;
 
 import com.ccz.appinall.library.util.ConnectionPool;
 
+@Deprecated
 public class PhantomJSDriverPool extends ConnectionPool<PhantomJSDriver> {
 
 	private int width, height;

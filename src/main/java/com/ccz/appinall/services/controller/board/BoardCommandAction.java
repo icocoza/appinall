@@ -1,19 +1,34 @@
 package com.ccz.appinall.services.controller.board;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.ccz.appinall.common.config.ServicesConfig;
 import com.ccz.appinall.common.rdb.DbAppManager;
+import com.ccz.appinall.common.rdb.DbTransaction;
 import com.ccz.appinall.library.dbhelper.DbRecord;
+import com.ccz.appinall.library.module.scrap.HtmlNode;
+import com.ccz.appinall.library.module.scrap.HtmlScrapper;
 import com.ccz.appinall.library.module.scrap.ImageResizeWorker;
 import com.ccz.appinall.library.module.scrap.ImageResizeWorker.ImageResizerCallback;
 import com.ccz.appinall.library.type.ResponseData;
 import com.ccz.appinall.library.type.inf.ICommandFunction;
 import com.ccz.appinall.library.util.AsciiSplitter.ASS;
+import com.ccz.appinall.library.util.ImageUtil;
+import com.ccz.appinall.library.util.ImageUtil.ImageSize;
 import com.ccz.appinall.library.util.StrUtil;
 import com.ccz.appinall.services.controller.CommonAction;
 import com.ccz.appinall.services.controller.auth.AuthSession;
@@ -27,6 +42,7 @@ import com.ccz.appinall.services.model.db.RecBoardDetail;
 import com.ccz.appinall.services.model.db.RecBoardReply;
 import com.ccz.appinall.services.model.db.RecBoardUser;
 import com.ccz.appinall.services.model.db.RecFile;
+import com.ccz.appinall.services.model.db.RecScrap;
 import com.ccz.appinall.services.model.db.RecUserBoardTableList;
 import com.ccz.appinall.services.model.db.RecVote;
 import com.ccz.appinall.services.model.db.RecVoteInfo;
@@ -88,7 +104,8 @@ public class BoardCommandAction extends CommonAction {
 		AddBoard data = new RecDataBoard().new AddBoard(jnode);
 		if(ss==null)
 			return res.setError(EAllError.NoSession);
-		return addBoard(ss, res, data);
+		List<String> scrapIds = findAndAddScrap(ss, data);
+		return addBoard(ss, res, data, scrapIds);
 	};
 	
 	private String getShortContent(String content) {
@@ -343,7 +360,7 @@ public class BoardCommandAction extends CommonAction {
 		AddVote data = new RecDataBoard().new AddVote(jnode);
 		if(ss==null)
 			return res.setError(EAllError.NoSession);
-		if( (res = addBoard(ss, res, data.board)).getError() != EAllError.ok)	//1. board info of vote
+		if( (res = addBoard(ss, res, data.board, null)).getError() != EAllError.ok)	//1. board info of vote
 			return res;
 		
 		String newBoardid = res.getDataParam("boardid");
@@ -468,7 +485,7 @@ public class BoardCommandAction extends CommonAction {
 	};
 	
 	
-	private ResponseData<EAllError> addBoard(AuthSession ss, ResponseData<EAllError> res, AddBoard data) {
+	private ResponseData<EAllError> addBoard(AuthSession ss, ResponseData<EAllError> res, AddBoard data, List<String> scrapIds) {
 		String categoryId = ss.getTableIdByCategoryIndex(data.getCategoryInex());
 		if(categoryId==null)
 			return res.setError(EAllError.InvalidCategoryId);
@@ -479,15 +496,40 @@ public class BoardCommandAction extends CommonAction {
 		
 		DbAppManager.getInst().addBoardContent(ss.scode, boardId, data.content);	//insert content
 		DbAppManager.getInst().addBoardCount(ss.scode, boardId);
-		DbAppManager.getInst().updateFilesEnabled(ss.scode, data.getFileids(), boardId, true);	//업로딩된 파일을 enabled 시킴. enabled=false은 주기적으로 삭제 필요
+			
 		if(data.getFileids().size() > 0) {
+			DbAppManager.getInst().updateFilesEnabled(ss.scode, data.getFileids(), boardId, true);	//업로딩된 파일을 enabled 시킴. enabled=false은 주기적으로 삭제 필요
 			RecFile recfile = DbAppManager.getInst().getFileInfo(ss.scode, data.getFileids().get(0));
 			if(makeCrop(ss.scode, boardId, recfile) != null)
 				DbAppManager.getInst().addCropFile(ss.scode, boardId, recfile.fileserver, UploadFile.CROP_PATH, boardId);
 		}
+		{
+			List<String> queries = new ArrayList<>();
+			for(String scrapid : scrapIds)
+				queries.add(DbTransaction.getInst().queryInsertScrapId(boardId, scrapid));
+			if(queries.size()>0)
+				DbTransaction.getInst().transactionQuery(ss.scode, queries);
+		}	
 		return res.setError(EAllError.ok).setParam("boardid", boardId);
 	}
 
+	private List<String> findAndAddScrap(AuthSession ss, AddBoard data) {
+		List<String> list = StrUtil.extractUrls(data.content);
+		if(list.size()<1)
+			return null;
+		List<HtmlNode> htmls = list.stream().map(x -> HtmlScrapper.doScrap(x)).filter(x -> x.isEmpty()==false).collect(Collectors.toList());
+		List<String> urls = htmls.stream().map(x -> x.getUrl()).collect(Collectors.toList());
+		
+		List<String> dbUrls = DbAppManager.getInst().getScrapListByUrl(ss.scode, urls).stream().map(x->x.getUrl()).collect(Collectors.toList());
+		htmls.removeIf(x -> dbUrls.contains(x.getUrl()));
+		
+		for(HtmlNode node : htmls) {
+			DbAppManager.getInst().insertScrap(ss.scode, node.getScrapid(), node.getUrl(), node.getMainTitle(), node.getSubTitle(), node.getShortBody());
+			makeScrapImage(ss.scode, node);
+		}
+		return DbAppManager.getInst().getScrapListByUrl(ss.scode, urls).stream().map(x->x.getScrapid()).collect(Collectors.toList());
+	}
+	
 	private ResponseData<EAllError> updateBoard(AuthSession ss, ResponseData<EAllError> res, UpdateBoard data) {
 		String categoryId = ss.getTableIdByCategoryIndex(data.getCategoryInex());
 		if(categoryId==null)
@@ -500,6 +542,7 @@ public class BoardCommandAction extends CommonAction {
 		DbAppManager.getInst().updateFilesEnabled(ss.scode, data.getFileids(), data.boardid, true);
 		return res.setError(EAllError.ok).setParam("boardid", data.boardid);
 	}
+	
 	public String makeCrop(String scode, String boardId, RecFile recfile) {
 		if(recfile==null || recfile.thumbname==null)
 			return null;
@@ -522,4 +565,43 @@ public class BoardCommandAction extends CommonAction {
 		return cropPath + boardId;
 	}
 
+	Executor executor = Executors.newFixedThreadPool(20);
+	private final float MAX_SCRAP_SIZE = 256f;
+	private void makeScrapImage(final String scode, final HtmlNode htmlNode) {
+		Runnable runnable = () -> {
+			try {
+				URL url = new URL(htmlNode.getImageUrl());
+				String localSrc = servicesConfig.getFileUploadDir() + "/scrap/" + htmlNode.getScrapid();
+				String localDest = servicesConfig.getFileUploadDir() + "/scrapcrop/" + htmlNode.getScrapid();
+				
+		        InputStream in = url.openStream();
+		        OutputStream out = new BufferedOutputStream(new FileOutputStream(localSrc));
+
+		        int n = 0;
+				byte[] buf = new byte[4096];
+		        while( -1 != (n=in.read(buf))) {
+		        	out.write(buf);
+		        }
+		        out.close();
+		        in.close();
+		        
+		        ImageSize imgSize = ImageUtil.getImageSize(localSrc);
+		        float rate = MAX_SCRAP_SIZE / (imgSize.width > imgSize.height ? (float)imgSize.width : (float)imgSize.height);
+		        imageResizeWorker.doCrop(localSrc, localDest, (int)(imgSize.width * rate), (int)(imgSize.height * rate), new ImageResizerCallback() {
+					@Override
+					public void onCompleted(Object dest) {
+						DbAppManager.getInst().updateScrap(scode, htmlNode.getScrapid(), StrUtil.getHostIp(), "scrapcrop");
+						new File(localSrc).delete();
+					}
+					@Override
+					public void onFailed(Object src) {
+						System.out.println(src);
+					}
+				});
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		};
+		executor.execute(runnable);
+	}
 }

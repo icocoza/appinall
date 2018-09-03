@@ -91,7 +91,25 @@ public class FiledownController {
                 .contentLength(file.length()) //
                 .body(resource);
     }
-    
+
+    @RequestMapping("/scrap")
+    public ResponseEntity<InputStreamResource> downloadScrap(@RequestParam String scrapid) throws IOException {
+        //String filename = String.format("%d%03d.jpg", System.currentTimeMillis(), ++seq);
+        MediaTypeUtils mediaTypeUtils = new MediaTypeUtils();
+        MediaType mediaType = mediaTypeUtils.getMediaTypeForFileName(this.servletContext, scrapid);
+        File file = new File(servicesConfig.getFileUploadDir() + "/scrapcrop/" + scrapid);
+        InputStreamResource resource = new InputStreamResource(new FileInputStream(file));
+ 
+        return ResponseEntity.ok()
+                // Content-Disposition
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + scrapid)
+                // Content-Type
+                .contentType(mediaType)
+                // Contet-Length
+                .contentLength(file.length()) //
+                .body(resource);
+    }
+
     public class MediaTypeUtils {
         public MediaType getMediaTypeForFileName(ServletContext servletContext, String fileName) {
             String mineType = servletContext.getMimeType(fileName);

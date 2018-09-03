@@ -12,6 +12,7 @@ import org.springframework.data.geo.Point;
 
 import com.ccz.appinall.library.dbhelper.DbConnMgr;
 import com.ccz.appinall.library.dbhelper.DbRecord;
+import com.ccz.appinall.library.util.SqlUtils;
 import com.ccz.appinall.services.controller.address.CategoryTable;
 import com.ccz.appinall.services.enums.*;
 import com.ccz.appinall.services.model.db.*;
@@ -151,6 +152,8 @@ public class DbAppManager {
 			new RecBoardCount(scode).createTable();
 			new RecBoardReply(scode).createTable();
 			new RecBoardUser(scode).createTable();
+			new RecBoardScrap(scode).createTable();
+			new RecBoardTableList(scode).createTable();
 			new RecChannel(scode).createTable();
 			new RecChMime(scode).createTable();
 			new RecMessage(scode).createTable();
@@ -167,7 +170,6 @@ public class DbAppManager {
 			new RecPushToken(scode).createTable();
 			new RecFile(scode).createTable();
 			new RecFileCrop(scode).createTable();
-			new RecWebScrab(scode).createTable();
 			new RecDeliveryApply(scode).createTable();
 			new RecDeliveryHistory(scode).createTable();
 			new RecDeliveryOrder(scode).createTable();
@@ -175,7 +177,7 @@ public class DbAppManager {
 			new RecDeliveryStatus(scode).createTable();
 			new RecAddress(scode).createTable();
 			new RecUserBoardTableList(scode).createTable();
-			new RecBoardTableList(scode).createTable();
+			new RecScrap(scode).createTable();
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return false;
@@ -682,7 +684,7 @@ public class DbAppManager {
 	}
 	
 	//for webscrab
-	public DbRecord addWebScrab(String scode, String webid, String url, String title, String scrabpath, int width, int height) {
+/*	public DbRecord addWebScrab(String scode, String webid, String url, String title, String scrabpath, int width, int height) {
 		return new RecWebScrab(scode).insert(webid, url, title, scrabpath, width, height);
 	}
 	public boolean delWebScrab(String scode, String imgid) {
@@ -695,7 +697,7 @@ public class DbAppManager {
 	public boolean incAccessUrl(String scode, String imgid) {
 		return new RecWebScrab(scode).inc(imgid);
 	}
-	
+*/	
 	//for delivery order
 	public boolean addOrder(String scode, String orderid, String userid, String from, String to, String name, String notice,
 			EGoodsSize size, EGoodsWeight weight, EGoodsType type, int price, long begintime, long endtime, String photourl) {
@@ -842,5 +844,38 @@ public class DbAppManager {
 	public List<RecZipGeo> getPoiByGps(String scode, double longitude, double latitude) {
 		return new RecZipGeo(scode).getPoiByGps(longitude, latitude); 
 	}
+	
+	public boolean insertScrap(String scode, String scrapid, String url, String title, String subtitle, String body) {
+		return new RecScrap(scode).insertScrap(scrapid, url, title, subtitle, body);
+	}
+	
+	public RecScrap getScrap(String scode, String scrapid) {
+		return new RecScrap(scode).getScrap(scrapid);
+	}
+	
+	public List<RecScrap> getScrapList(String scode, List<String> scrapids) {
+		return new RecScrap(scode).getScrapList(scrapids);
+	}
 
+	public List<RecScrap> getScrapListByUrl(String scode, List<String> urls) {
+		return new RecScrap(scode).getScrapListByUrl(urls);
+	}
+	
+	public boolean updateScrap(String scode, String scrapid, String serverip, String subpath) {
+		return new RecScrap(scode).updateScrap(scrapid, serverip, subpath);
+	}
+	
+	public boolean insertScrapId(String scode, String boardid, String scrapid) {
+		return new RecBoardScrap(scode).insertScrap(boardid, scrapid);
+	}
+
+	public RecBoardScrap getScrapId(String scode, String boardid) {
+		return new RecBoardScrap(scode).getScrapId(boardid);
+	}
+	
+	public List<RecBoardScrap> getScrapIdList(String scode, String boardid) {
+		return new RecBoardScrap(scode).getScrapIdList(boardid);
+	}
+
+	
 }

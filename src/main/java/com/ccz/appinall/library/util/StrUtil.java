@@ -4,15 +4,35 @@ import java.io.File;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.mortbay.log.Log;
 
 public class StrUtil {
+	
+	private static final String URL_PATTERN = "\\(?\\b((http|https)://|www[.])[-A-Za-z0-9+&amp;@#/%?=~_()|!:,.;]*[-A-Za-z0-9+&amp;@#/%=~_()|]";
+	//private static final String URL_PATTERN = (http\:\/\/){0,1}(www){0,1}[\.]{0,1}[a-zA-Z0-9_]+\.[a-zA-Z0-9_]+(\/{1}[a-zA-Z0-9_\.]+)*;
+	public static List<String> extractUrls(String text) {
+		ArrayList<String> links = new ArrayList<>();
+		 
+		Pattern p = Pattern.compile(URL_PATTERN);
+		Matcher m = p.matcher(text);
+		while(m.find()) {
+			String urlStr = m.group();
+			if (urlStr.startsWith("(") && urlStr.endsWith(")"))
+				urlStr = urlStr.substring(1, urlStr.length() - 1);
+			links.add(urlStr);
+		}
+		return links;
+	}
+	
 	private static final String EMAIL_PATTERN =
 			"^[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*@"
 			+ "[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$";

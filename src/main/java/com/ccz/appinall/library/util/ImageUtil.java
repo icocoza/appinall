@@ -25,14 +25,12 @@ public class ImageUtil {
     		}
     }
     
+    static public ImageSize getImageSize(String srcPath) throws IOException {
+    	return getImageSize(new File(srcPath));
+    }
+
     static public ImageSize getImageSize(File src) throws IOException {
-    		Image srcImg = null;
-        String suffix = src.getName().substring(src.getName().lastIndexOf('.')+1).toLowerCase();
-        if (suffix.equals("bmp") || suffix.equals("png") || suffix.equals("gif"))
-            srcImg = ImageIO.read(src);
-        else
-            srcImg = new ImageIcon(src.toURI().toURL()).getImage();
-        
+    	Image srcImg = getImage(src);
         return new ImageUtil().new ImageSize(srcImg.getWidth(null), srcImg.getHeight(null));	//if not image, return -1
     }
     
@@ -55,13 +53,7 @@ public class ImageUtil {
     }
     
     public static BufferedImage resize(File src, int width, int height) throws IOException {
-        Image srcImg = null;
-        String suffix = src.getName().substring(src.getName().lastIndexOf('.')+1).toLowerCase();
-        if (suffix.equals("bmp") || suffix.equals("png") || suffix.equals("gif")) {
-            srcImg = ImageIO.read(src);
-        } else {
-            srcImg = new ImageIcon(src.toURI().toURL()).getImage();
-        }
+        Image srcImg = getImage(src);
         
         int srcWidth = srcImg.getWidth(null);
         int srcHeight = srcImg.getHeight(null);
@@ -93,5 +85,16 @@ public class ImageUtil {
         BufferedImage destImg = new BufferedImage(destWidth, destHeight, BufferedImage.TYPE_INT_RGB); 
         destImg.setRGB(0, 0, destWidth, destHeight, pixels, 0, destWidth); 
         return destImg;
+    }
+    
+    public static Image getImage(String srcPath) throws IOException {
+    	return getImage(new File(srcPath));
+    }
+    
+    public static Image getImage(File src) throws IOException {
+    	String suffix = src.getName().substring(src.getName().lastIndexOf('.')+1).toLowerCase();
+        if (suffix.equals("bmp") || suffix.equals("png") || suffix.equals("gif"))
+            return ImageIO.read(src);
+        return new ImageIcon(src.toURI().toURL()).getImage();
     }
 }

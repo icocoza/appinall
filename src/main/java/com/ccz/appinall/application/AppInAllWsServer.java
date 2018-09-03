@@ -1,5 +1,6 @@
 package com.ccz.appinall.application;
 
+import java.io.File;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.HashMap;
@@ -47,6 +48,7 @@ public class AppInAllWsServer {
 		if(initElasticSearch() == false)
 			return false;
 		//initMongoDb();
+		initGlobalFolder();
 		
 		bootstrap = new ServerBootstrap();
 		bossGroup = new NioEventLoopGroup();
@@ -116,4 +118,17 @@ public class AppInAllWsServer {
 	//	AddressMongoDb.getInst().init(servicesConfig.getMongoDbUrl(), servicesConfig.getMongoDbPort(), 
 	//			servicesConfig.getAddressMongoDatabase(), servicesConfig.getAddressMongocollection());
 	//}
+	
+	private final String SCRAP = "/scrap/";
+	private final String SCRAPCROP = "/scrapcrop/";
+	private void initGlobalFolder() {
+		String scrap = servicesConfig.getFileUploadDir() + SCRAP;
+		File fscrap = new File(scrap);
+		if(fscrap.exists()==false)
+			fscrap.mkdirs();
+		String scrapcrop = servicesConfig.getFileUploadDir() + SCRAPCROP;
+		File fscrapcrop = new File(scrapcrop);
+		if(fscrapcrop.exists()==false)
+			fscrapcrop.mkdirs();
+	}
 }
