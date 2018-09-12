@@ -178,6 +178,7 @@ public class DbAppManager {
 			new RecAddress(scode).createTable();
 			new RecUserBoardTableList(scode).createTable();
 			new RecScrap(scode).createTable();
+			new RecScrapBody(scode).createTable();
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return false;
@@ -394,6 +395,9 @@ public class DbAppManager {
 	}
 	public List<RecBoardDetail> getBoardDetailList(String scode, String category, int offset, int count) {
 		return new RecBoardDetail(scode).getBoardList(category, offset, count);
+	}
+	public List<RecBoardDetail> getBoardDetailList(String scode, List<String> boardids) {
+		return new RecBoardDetail(scode).getBoardList(boardids);
 	}
 	public List<RecBoard> getBoardList(String scode, String userid, String category, int offset, int count) {
 		return new RecBoard(scode).getList(userid, category, offset, count);
@@ -845,12 +849,16 @@ public class DbAppManager {
 		return new RecZipGeo(scode).getPoiByGps(longitude, latitude); 
 	}
 	
-	public boolean insertScrap(String scode, String scrapid, String url, String title, String subtitle, String body) {
-		return new RecScrap(scode).insertScrap(scrapid, url, title, subtitle, body);
+	public boolean insertScrap(String scode, String scrapid, String url, String title, String subtitle) {
+		return new RecScrap(scode).insertScrap(scrapid, url, title, subtitle);
 	}
 	
 	public RecScrap getScrap(String scode, String scrapid) {
 		return new RecScrap(scode).getScrap(scrapid);
+	}
+	
+	public boolean deleteBoardScrap(String scode, String boardid) {
+		return new RecBoardScrap(scode).delete(boardid);
 	}
 	
 	public List<RecScrap> getScrapList(String scode, List<String> scrapids) {
@@ -877,5 +885,20 @@ public class DbAppManager {
 		return new RecBoardScrap(scode).getScrapIdList(boardid);
 	}
 
+	public boolean insertScrapBody(String scode, String scrapid,  String body) {
+		return new RecScrapBody(scode).insertScrapBody(scrapid, body);
+	}
+
+	public RecScrapBody getScrapBody(String scode, String scrapid) {
+		return new RecScrapBody(scode).getScrapBody(scrapid);
+	}
+		
+	public boolean updateScrapBody(String scode, String scrapid, String body) {
+		return new RecScrapBody(scode).updateScrapBody(scrapid, body);
+	}
+
+	public List<RecScrapDetail> getScrapDetailList(String scode, String boardid) {
+		return new RecScrapDetail(scode).getScrapDetailList(boardid);
+	}
 	
 }

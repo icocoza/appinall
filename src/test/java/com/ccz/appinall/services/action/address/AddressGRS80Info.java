@@ -4,10 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -27,11 +24,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import com.ccz.appinall.application.http.admin.business.service.ResourceLoaderService;
 import com.ccz.appinall.common.config.ServicesConfig;
-import com.ccz.appinall.services.controller.address.AddressElasticSearch;
+import com.ccz.appinall.library.module.elasticsearch.ElasticSearchManager;
+import com.ccz.appinall.library.util.ResourceLoaderService;
 import com.ccz.appinall.services.model.elasticsearch.ElasticSourcePair;
 import com.ccz.appinall.services.model.elasticsearch.EntrcInfo;
+import com.ccz.appinall.services.repository.elasticsearch.AddressElasticSearch;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -39,7 +37,9 @@ public class AddressGRS80Info {
 
 	@Autowired
 	ResourceLoaderService resourceLoaderService;
-	
+	@Autowired ElasticSearchManager elasticSearchManager;
+	@Autowired AddressElasticSearch addressElasticSearch;
+
 	@Autowired
 	ServicesConfig servicesConfig;
 	
@@ -50,15 +50,10 @@ public class AddressGRS80Info {
 	@Test
 	@Ignore
 	public void loadGRS80Address() throws InterruptedException, ExecutionException, IOException {
-		String settings = resourceLoaderService.loadText("/static/addrsetting.cfg");	//셋팅은 index 생성과 함께 만들어져야 한다.
-		String mappings = resourceLoaderService.loadText("/static/addrkormapping.cfg");
-
 		AddressElasticSearch addressElasticSearch = new AddressElasticSearch();
-		addressElasticSearch.init(servicesConfig.getElasticClusterName(), servicesConfig.getElasticClusterNode(), 
-				servicesConfig.getElasticUrl(), servicesConfig.getElasticPort(), 
-				servicesConfig.getElasticIndex(), servicesConfig.getElasticType(), settings);
-		
-		addressElasticSearch.setMappings(mappings);
+		elasticSearchManager.init(servicesConfig.getElasticClusterName(), servicesConfig.getElasticClusterNode(), 
+				servicesConfig.getElasticUrl(), servicesConfig.getElasticPort());
+		addressElasticSearch.init();
 		
 			System.out.println("start reading the address db");
 			InputStream is = getClass().getResourceAsStream("/static/entrc_seoul.txt");
@@ -129,7 +124,7 @@ public class AddressGRS80Info {
 						  System.out.println("@");
 					  }
 */
-						addressElasticSearch.insertAddress(new ElasticSourcePair((String)doc.get("buildid"), doc.toJson()));
+						addressElasticSearch.insert(new ElasticSourcePair((String)doc.get("buildid"), doc.toJson()));
 						System.out.printf(".");
 						if(++count>128) {
 							System.out.println("@");

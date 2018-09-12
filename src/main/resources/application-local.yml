@@ -29,8 +29,8 @@ address:
     
 # ElasticSearch
 elastic:
-  cluster-name: oyw-cluster
-  cluster-node: oyw-node-1
+  cluster-name: foodingredient-cluster
+  cluster-node: foodingredient-cluster
   url: localhost
   port: 9300
   client: 
@@ -55,13 +55,6 @@ websocket:
   keystore:
     path: /jks_file_path
     password: jks_file_password  
-      
-so:
-  keepalive: true
-  backlog: 1000
-  reuseaddr: true
-  linger: 0
-  
 #mysql for admin
 admin: 
   mysql: 
@@ -81,6 +74,8 @@ fileupload:
   
 filedown:
   port: 8080
+  thumbformat: http://%s:%d/thumb?fileid=%s&scode=%s
+  downformat: http://%s:8080/download?fileid=%s&scode=%s
   
 #keystroke
 keystore:

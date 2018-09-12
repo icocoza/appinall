@@ -48,15 +48,9 @@ public class ServicesConfig {
 	@Value("${elastic.port}")
     private int elasticPort;
 
-	@Value("${elastic.index_db}")
-    private String elasticIndex;
-	
-	@Value("${elastic.type_table}")
-    private String elasticType;
-	
 	@Value("${elastic.client.transport.sniff}")
 	private boolean elasticSniff;
-	
+
     @Value("${admin.mysql.url}")
     private String adminMysqlUrl;
     

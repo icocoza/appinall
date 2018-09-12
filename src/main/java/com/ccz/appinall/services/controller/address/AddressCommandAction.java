@@ -19,6 +19,7 @@ import com.ccz.appinall.services.controller.auth.AuthSession;
 import com.ccz.appinall.services.enums.EAllCmd;
 import com.ccz.appinall.services.enums.EAllError;
 import com.ccz.appinall.services.model.db.RecAddress;
+import com.ccz.appinall.services.repository.elasticsearch.AddressElasticSearch;
 import com.ccz.appinall.services.repository.redis.GeoRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -34,6 +35,7 @@ public class AddressCommandAction extends CommonAction {
 	
 	@Autowired ServicesConfig servicesConfig;
 	@Autowired GeoRepository geoRepository;
+	@Autowired AddressElasticSearch addressElasticSearch;
 	
 	public AddressCommandAction() {
 		super.setCommandFunction(EAllCmd.addr_search, doSearch);
@@ -49,7 +51,7 @@ public class AddressCommandAction extends CommonAction {
 		JsonNode jsonNode =  null;
 		AddressInference ai = new AddressInference(data.getSearch());
 		try {
-			jsonNode = AddressElasticSearch.getInst().searchAddresByRestJson(ai);
+			jsonNode = addressElasticSearch.searchAddrByRestJson(ai);
 		} catch (Exception e) {
 			e.printStackTrace();
 			return res.setError(EAllError.failed_search);

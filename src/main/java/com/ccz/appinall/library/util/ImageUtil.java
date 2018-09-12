@@ -51,7 +51,7 @@ public class ImageUtil {
     	BufferedImage cropImg = resizeImg.getSubimage(x, y, cropSize, cropSize);
         return ImageIO.write(cropImg, "jpg", dest);
     }
-    
+
     public static BufferedImage resize(File src, int width, int height) throws IOException {
         Image srcImg = getImage(src);
         

@@ -32,16 +32,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import com.ccz.appinall.application.http.admin.business.service.ResourceLoaderService;
 import com.ccz.appinall.common.config.ServicesConfig;
-import com.ccz.appinall.services.controller.address.AddressElasticSearch;
+import com.ccz.appinall.library.module.elasticsearch.ElasticSearchManager;
+import com.ccz.appinall.library.util.ResourceLoaderService;
 import com.ccz.appinall.services.controller.address.AddressInference;
 import com.ccz.appinall.services.model.elasticsearch.ElasticSourcePair;
+import com.ccz.appinall.services.repository.elasticsearch.AddressElasticSearch;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 //@RunWith(SpringRunner.class)
 //@SpringBootTest
 public class AddressElasticTests {
+
+	@Autowired ElasticSearchManager elasticSearchManager;
+	@Autowired AddressElasticSearch addressElasticSearch;
 
 	@Autowired
 	ResourceLoaderService resourceLoaderService;
@@ -55,40 +59,38 @@ public class AddressElasticTests {
 	@Test
 	@Ignore
 	public void findAddresByRest() throws JsonProcessingException, IOException {
-		AddressElasticSearch addressElasticSearch = new AddressElasticSearch();
-		addressElasticSearch.init(servicesConfig.getElasticClusterName(), servicesConfig.getElasticClusterNode(), 
-				servicesConfig.getElasticUrl(), servicesConfig.getElasticPort(), 
-				servicesConfig.getElasticIndex(), servicesConfig.getElasticType(), null);
+		elasticSearchManager.init(servicesConfig.getElasticClusterName(), servicesConfig.getElasticClusterNode(), 
+				servicesConfig.getElasticUrl(), servicesConfig.getElasticPort());
+		addressElasticSearch.init();
 		AddressInference ai = new AddressInference("고덕로 롯데캐슬");
-		String resBody = addressElasticSearch.searchAddresByRest(ai);
+		String resBody = addressElasticSearch.searchAddrByRest(ai);
 		System.out.println(resBody);
 	}
 	public void findAddress() throws InterruptedException, ExecutionException, UnknownHostException, JsonProcessingException {
-		AddressElasticSearch addressElasticSearch = new AddressElasticSearch();
-		addressElasticSearch.init(servicesConfig.getElasticClusterName(), servicesConfig.getElasticClusterNode(), 
-				servicesConfig.getElasticUrl(), servicesConfig.getElasticPort(), 
-				servicesConfig.getElasticIndex(), servicesConfig.getElasticType(), null);
+		elasticSearchManager.init(servicesConfig.getElasticClusterName(), servicesConfig.getElasticClusterNode(), 
+				servicesConfig.getElasticUrl(), servicesConfig.getElasticPort());
+		addressElasticSearch.init();
 
 		try {
 			AddressInference ai = new AddressInference("고덕로 롯데캐슬");
-			SearchResponse res = addressElasticSearch.searchAddress(ai);
+			SearchResponse res = addressElasticSearch.searchAddr(ai);
 
 			for(SearchHit hit : res.getHits()) {
 				System.out.println(hit.getScore() + " - " +hit.getSourceAsString());
 			}
 			
 			ai = new AddressInference("고덕로 롯데캐슬");
-			res = addressElasticSearch.searchAddress(ai);
+			res = addressElasticSearch.searchAddr(ai);
 			for(SearchHit hit : res.getHits())
 				System.out.println(hit.getSourceAsString());
 			
 			ai = new AddressInference("상인동 1149");
-			res = addressElasticSearch.searchAddress(ai);
+			res = addressElasticSearch.searchAddr(ai);
 			for(SearchHit hit : res.getHits())
 				System.out.println(hit.getSourceAsString());
 			
 			ai = new AddressInference("화원읍 구라리 1557");
-			res = addressElasticSearch.searchAddress(ai);
+			res = addressElasticSearch.searchAddr(ai);
 			for(SearchHit hit : res.getHits())
 				System.out.println(hit.getSourceAsString());
 		}catch(Exception e) {
@@ -123,26 +125,20 @@ public class AddressElasticTests {
 	}
 	
 	public void searchAddress() throws UnknownHostException, InterruptedException, ExecutionException, UnsupportedEncodingException {
-		AddressElasticSearch addressElasticSearch = new AddressElasticSearch();
-		addressElasticSearch.init(servicesConfig.getElasticClusterName(), servicesConfig.getElasticClusterNode(), 
-				servicesConfig.getElasticUrl(), servicesConfig.getElasticPort(), 
-				servicesConfig.getElasticIndex(), servicesConfig.getElasticType(), null);
-		SearchResponse res = addressElasticSearch.searchAddress("강동롯데캐슬");
+		elasticSearchManager.init(servicesConfig.getElasticClusterName(), servicesConfig.getElasticClusterNode(), 
+				servicesConfig.getElasticUrl(), servicesConfig.getElasticPort());
+		addressElasticSearch.init();
+		SearchResponse res = addressElasticSearch.search("강동롯데캐슬");
 		for(SearchHit hit : res.getHits())
 			System.out.println(hit.getSourceAsString());
 	}
 	
 	//@Test
 	public void insertAddressToElasticSearch() throws InterruptedException, ExecutionException, IOException {
-		String settings = resourceLoaderService.loadText("/static/addrsetting.cfg");	//셋팅은 index 생성과 함께 만들어져야 한다.
-		String mappings = resourceLoaderService.loadText("/static/addrkormapping.cfg");
-
-		AddressElasticSearch addressElasticSearch = new AddressElasticSearch();
-		addressElasticSearch.init(servicesConfig.getElasticClusterName(), servicesConfig.getElasticClusterNode(), 
-				servicesConfig.getElasticUrl(), servicesConfig.getElasticPort(), 
-				servicesConfig.getElasticIndex(), servicesConfig.getElasticType(), settings);
-		
-		addressElasticSearch.setMappings(mappings);
+		elasticSearchManager.init(servicesConfig.getElasticClusterName(), servicesConfig.getElasticClusterNode(), 
+				servicesConfig.getElasticUrl(), servicesConfig.getElasticPort());
+		addressElasticSearch.init();
+		addressElasticSearch.setMappings();
 
 		List<ElasticSourcePair> pairs = new ArrayList<>();
 		InputStream is = getClass().getResourceAsStream("/static/seoul.txt");
@@ -153,7 +149,7 @@ public class AddressElasticTests {
 			while ( (line = reader.readLine())!=null) {
 			  String[] sp = line.split("\\|", -1);
 			  Document doc = CommonAddressUtils.makeDocument(sp);
-			  addressElasticSearch.insertAddress(new ElasticSourcePair((String)doc.get("buildid"), doc.toJson()));
+			  addressElasticSearch.insert(new ElasticSourcePair((String)doc.get("buildid"), doc.toJson()));
 			  /*pairs.add(new ElasticSourcePair((String)doc.get("buildid"), doc.toJson()));
 			  if(pairs.size() >= MAX_DOC_SIZE) {
 				  addressElasticSearch.insertAddress(servicesConfig.getElasticType(), pairs);

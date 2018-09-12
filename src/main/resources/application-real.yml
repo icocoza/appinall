@@ -38,6 +38,12 @@ elastic:
   client: 
     transport:
       sniff: false
+  address:
+    index: address
+    type: southkorea
+  board:
+    index: board
+    type: apartment
   
 #AppInAll Websocket Server
 websocket:

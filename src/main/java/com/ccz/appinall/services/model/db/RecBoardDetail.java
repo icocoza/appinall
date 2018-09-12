@@ -54,6 +54,16 @@ public class RecBoardDetail extends RecBoard {
 		return super.getList(sql).stream().map(e->(RecBoardDetail)e).collect(Collectors.toList());
 	}
 	
+	public List<RecBoardDetail> getBoardList(List<String> boardids) {
+		String sql = String.format("SELECT * FROM board " + 
+				"LEFT JOIN boardcount ON board.boardid=boardcount.boardid " + 
+				"LEFT JOIN filecrop ON board.boardid=filecrop.boardid "+
+				"LEFT JOIN boardscrap ON board.boardid=boardscrap.boardid "+
+				"LEFT JOIN scrap ON scrap.scrapid=boardscrap.scrapid " + 
+				"WHERE board.boardid IN (%s)", boardids.stream().collect(Collectors.joining(",")));
+		return super.getList(sql).stream().map(e->(RecBoardDetail)e).collect(Collectors.toList());
+	}
+	
 	public String getCropfilePath(RecBoardDetail rec) {
 		if(rec.filename==null || rec.filename.length()<1)
 			return null;

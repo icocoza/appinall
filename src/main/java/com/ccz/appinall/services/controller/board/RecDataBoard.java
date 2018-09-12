@@ -26,6 +26,9 @@ public class RecDataBoard {
 		public String appcode = "";
 		private String category;
 		@Getter private List<String> fileids;
+		
+		public AddBoard() {}
+		
 		public AddBoard(JsonNode jnode) {
 			itemtype = EBoardItemType.getType(jnode.get("itemtype").asText());
 			title = jnode.get("title").asText();
@@ -76,8 +79,8 @@ public class RecDataBoard {
 			boardid = jObj.get("boardid").asText();
 			title = jObj.get("title").asText();
 		}
-
 	}
+	
 	public class UpdateBoardContent {
 		public String boardid, content; 
 		public boolean hasimage, hasfile;
@@ -168,6 +171,22 @@ public class RecDataBoard {
 		}
 
 	}
+	
+	@Getter
+	public class SearchBoard {
+		String search;
+		int categoryIndex;
+		int offset=0;
+		int count=20;
+		
+		public SearchBoard(JsonNode jObj) {
+			search = jObj.get("search").asText();
+			categoryIndex = jObj.get("categoryindex").asInt();
+			offset = jObj.get("offset").asInt();
+			//count = jObj.get("count").asInt();
+		}
+	}
+	
 	public class AddReply {
 		public String boardid, parentrepid = "0";
 		public int depth;

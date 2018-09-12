@@ -31,6 +31,8 @@ import com.ccz.appinall.library.util.ImageUtil;
 import com.ccz.appinall.library.util.ImageUtil.ImageSize;
 import com.ccz.appinall.library.util.StrUtil;
 import com.ccz.appinall.services.controller.CommonAction;
+import com.ccz.appinall.services.controller.address.RecDataAddr;
+import com.ccz.appinall.services.controller.address.RecDataAddr.DataSearchAddr;
 import com.ccz.appinall.services.controller.auth.AuthSession;
 import com.ccz.appinall.services.controller.board.RecDataBoard.*;
 import com.ccz.appinall.services.controller.file.UploadFile;
@@ -43,11 +45,18 @@ import com.ccz.appinall.services.model.db.RecBoardReply;
 import com.ccz.appinall.services.model.db.RecBoardUser;
 import com.ccz.appinall.services.model.db.RecFile;
 import com.ccz.appinall.services.model.db.RecScrap;
+import com.ccz.appinall.services.model.db.RecScrapDetail;
 import com.ccz.appinall.services.model.db.RecUserBoardTableList;
 import com.ccz.appinall.services.model.db.RecVote;
 import com.ccz.appinall.services.model.db.RecVoteInfo;
 import com.ccz.appinall.services.model.db.RecVoteUser;
+import com.ccz.appinall.services.repository.elasticsearch.BoardElasticSearch;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.NullNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.netty.channel.Channel;
 import lombok.extern.slf4j.Slf4j;
@@ -55,8 +64,10 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 public class BoardCommandAction extends CommonAction {
+	
 	@Autowired ImageResizeWorker imageResizeWorker;
 	@Autowired ServicesConfig servicesConfig;
+	@Autowired BoardElasticSearch boardElasticSearch;
 	
 	public BoardCommandAction() {
 		super.setCommandFunction(EAllCmd.getcategorylist, doGetCategoryList);
@@ -79,6 +90,7 @@ public class BoardCommandAction extends CommonAction {
 		super.setCommandFunction(EAllCmd.voteupdate, updateVote);//O
 		super.setCommandFunction(EAllCmd.changeselection, changeVoteSelection);//O
 		super.setCommandFunction(EAllCmd.voteinfolist, getVoteInfoList);//O
+		super.setCommandFunction(EAllCmd.boardsearch, boardSearch);
 	}
 
 	ICommandFunction<AuthSession, ResponseData<EAllError>, JsonNode> doGetCategoryList = (AuthSession ss, ResponseData<EAllError> res, JsonNode jnode) -> {
@@ -184,7 +196,8 @@ public class BoardCommandAction extends CommonAction {
 		UpdateBoard data = new RecDataBoard().new UpdateBoard(jnode);
 		if(ss==null)
 			return res.setError(EAllError.NoSession);
-		return updateBoard(ss, res, data);
+		List<String> scrapIds = findAndAddScrap(ss, data);
+		return updateBoard(ss, res, data, scrapIds);
 	};
 
 	/** 
@@ -227,12 +240,15 @@ public class BoardCommandAction extends CommonAction {
 		String content = DbAppManager.getInst().getBoardContent(ss.scode, data.boardid);
 		if(content==null)
 			return res.setError(EAllError.NoData);
+		List<RecScrapDetail> scraps = DbAppManager.getInst().getScrapDetailList(ss.scode, data.boardid);
 		DbAppManager.getInst().incBoardVisit(ss.scode, data.boardid);
 		RecBoardUser recLike = DbAppManager.getInst().getBoardLikeDislike(ss.scode, data.boardid, ss.getUserId());
 		if(recLike != DbRecord.Empty)
 			res.setParam("like", recLike);
 		res.setParam("files", DbAppManager.getInst().getFileList(ss.scode, data.boardid));
 		res.setParam("vote", DbAppManager.getInst().getVoteItemList(ss.scode, data.boardid));
+		if(scraps != null)
+			res.setParam("scraps", scraps);
 		return res.setError(EAllError.ok).setParam("content", content);
 	};
 	
@@ -484,6 +500,38 @@ public class BoardCommandAction extends CommonAction {
 		return res.setError(EAllError.ok).setParam("data", vinfolist);
 	};
 	
+	ICommandFunction<AuthSession, ResponseData<EAllError>, JsonNode> boardSearch = (AuthSession ss, ResponseData<EAllError> res, JsonNode jnode) -> {
+		SearchBoard data = new RecDataBoard().new SearchBoard(jnode);	//SearchBoard.count value is fixed 20.
+		String categoryId = ss.getTableIdByCategoryIndex(data.getCategoryIndex());
+		//ElkBoard elkBoard = new ElkBoard(categoryIndex, null, data.getSearch(), data.getSearch()); 
+		try {
+			String jsonResult = this.boardElasticSearch.searchBoardByRest(getBoardSearchQuery(categoryId, data));
+			if(jsonResult == null || jsonResult.length() < 1)
+				return res.setError(EAllError.invalid_search);
+			JsonNode jsonNode = new ObjectMapper().readTree(jsonResult);
+			if(jsonNode == NullNode.instance)
+				return res.setError(EAllError.invalid_search);
+			JsonNode hitsNode = jsonNode.get("hits");
+			if(hitsNode == null )
+				return res.setError(EAllError.empty_search);
+			JsonNode totalNode = hitsNode.get("total");
+			if(totalNode==null || totalNode.asInt() == 0)
+				return res.setError(EAllError.no_search_result);
+			
+			List<String> boardids = this.boardElasticSearch.copySearshResultToResponse((ArrayNode) hitsNode.get("hits"));
+			List<RecBoardDetail> boardList = DbAppManager.getInst().getBoardDetailList(ss.scode, boardids);	//load all list
+			if(boardList.size()<1)
+				return res.setError(EAllError.NoListData);
+			
+			res.setParam("category", data.getCategoryIndex());
+			res.setParam("data", boardList);
+			return res.setError(EAllError.ok);
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return res.setError(EAllError.unknown_error);
+	};
 	
 	private ResponseData<EAllError> addBoard(AuthSession ss, ResponseData<EAllError> res, AddBoard data, List<String> scrapIds) {
 		String categoryId = ss.getTableIdByCategoryIndex(data.getCategoryInex());
@@ -503,13 +551,14 @@ public class BoardCommandAction extends CommonAction {
 			if(makeCrop(ss.scode, boardId, recfile) != null)
 				DbAppManager.getInst().addCropFile(ss.scode, boardId, recfile.fileserver, UploadFile.CROP_PATH, boardId);
 		}
-		{
+		if(scrapIds != null) {
 			List<String> queries = new ArrayList<>();
 			for(String scrapid : scrapIds)
 				queries.add(DbTransaction.getInst().queryInsertScrapId(boardId, scrapid));
 			if(queries.size()>0)
 				DbTransaction.getInst().transactionQuery(ss.scode, queries);
-		}	
+		}
+		this.boardElasticSearch.addBoard(boardId, categoryId, ss.getUsername(), data);
 		return res.setError(EAllError.ok).setParam("boardid", boardId);
 	}
 
@@ -524,13 +573,13 @@ public class BoardCommandAction extends CommonAction {
 		htmls.removeIf(x -> dbUrls.contains(x.getUrl()));
 		
 		for(HtmlNode node : htmls) {
-			DbAppManager.getInst().insertScrap(ss.scode, node.getScrapid(), node.getUrl(), node.getMainTitle(), node.getSubTitle(), node.getShortBody());
+			DbTransaction.getInst().insertTransactionalScrap(ss.scode, node.getScrapid(), node.getUrl(), node.getMainTitle(), node.getSubTitle(), node.getShortBody());
 			makeScrapImage(ss.scode, node);
 		}
 		return DbAppManager.getInst().getScrapListByUrl(ss.scode, urls).stream().map(x->x.getScrapid()).collect(Collectors.toList());
 	}
 	
-	private ResponseData<EAllError> updateBoard(AuthSession ss, ResponseData<EAllError> res, UpdateBoard data) {
+	private ResponseData<EAllError> updateBoard(AuthSession ss, ResponseData<EAllError> res, UpdateBoard data, List<String> scrapIds) {
 		String categoryId = ss.getTableIdByCategoryIndex(data.getCategoryInex());
 		if(categoryId==null)
 			return res.setError(EAllError.InvalidCategoryId);
@@ -540,6 +589,15 @@ public class BoardCommandAction extends CommonAction {
 		DbAppManager.getInst().updateBoardContent(ss.scode, data.boardid, data.content);
 		DbAppManager.getInst().updateDeleteFile(ss.scode, data.boardid);
 		DbAppManager.getInst().updateFilesEnabled(ss.scode, data.getFileids(), data.boardid, true);
+		{
+			DbAppManager.getInst().deleteBoardScrap(ss.scode, data.boardid);
+			List<String> queries = new ArrayList<>();
+			for(String scrapid : scrapIds)
+				queries.add(DbTransaction.getInst().queryInsertScrapId(data.boardid, scrapid));
+			if(queries.size()>0)
+				DbTransaction.getInst().transactionQuery(ss.scode, queries);
+		}	
+
 		return res.setError(EAllError.ok).setParam("boardid", data.boardid);
 	}
 	
@@ -604,4 +662,68 @@ public class BoardCommandAction extends CommonAction {
 		};
 		executor.execute(runnable);
 	}
+	
+/*	public String getBoardSearchQuery(ElkBoard elkBoard, int offset, int count) throws JsonProcessingException {
+		ObjectMapper mapper = new ObjectMapper();
+		ArrayNode arrNode = mapper.createArrayNode();
+		
+		List<ObjectNode> nodeList = new ArrayList<>();
+		if(elkBoard.getWriter() != null)
+			nodeList.add(mapper.createObjectNode().put("writer", elkBoard.getWriter()));
+		if(elkBoard.getVillage() != null) 
+			nodeList.add(mapper.createObjectNode().put("village", elkBoard.getVillage()));
+		if(elkBoard.getTitle() != null) 
+			nodeList.add(mapper.createObjectNode().put("title", elkBoard.getTitle()));
+		if(elkBoard.getContent() != null) 
+			nodeList.add(mapper.createObjectNode().put("content", elkBoard.getContent()));
+		
+		nodeList.stream().map(node -> mapper.createObjectNode().set("match", node)).forEach(node->arrNode.add(node));
+		if(arrNode.size()<1)
+			return null;
+		ObjectNode rootNode = mapper.createObjectNode();
+//		JsonNode resultNode = rootNode.set("query", mapper.createObjectNode().set("bool", mapper.createObjectNode().set("should", arrNode)));
+		rootNode.set("query", mapper.createObjectNode().set("bool", mapper.createObjectNode().set("should", arrNode)));
+		rootNode.put("from", offset);
+		rootNode.put("size", count);
+		rootNode.set("_source", getSources(mapper));
+		String json = mapper.writeValueAsString(rootNode);
+		return json;
+	}*/
+	
+	public String getBoardSearchQuery(String categoryId, SearchBoard search) throws JsonProcessingException {
+		ObjectMapper mapper = new ObjectMapper();
+		ObjectNode rootNode = mapper.createObjectNode();
+		rootNode.put("from", search.getOffset());
+		rootNode.put("size", search.getCount());
+		rootNode.set("_source", getSources(mapper));
+		rootNode.set("query", mapper.createObjectNode().set("bool", getQuery(mapper, categoryId, search, false)));
+		return mapper.writeValueAsString(rootNode);
+	}
+	
+	public ArrayNode getSources(ObjectMapper mapper) {
+		ArrayNode arrNode = mapper.createArrayNode();
+		return arrNode.add("boardid");
+	}
+	
+	public JsonNode getQuery(ObjectMapper mapper, String categoryId, SearchBoard search, boolean compareBody) {
+		ObjectNode queryNode = mapper.createObjectNode();
+		queryNode.set("must", getMust(mapper, categoryId));
+		queryNode.set("should", getShould(mapper, search, compareBody));
+		return queryNode;
+	}
+	
+	public ArrayNode getMust(ObjectMapper mapper, String categoryId) {
+		ArrayNode arrNode = mapper.createArrayNode();
+		arrNode.add(mapper.createObjectNode().set("match", mapper.createObjectNode().put("category", categoryId)));
+		return arrNode;
+	}
+	
+	public ArrayNode getShould(ObjectMapper mapper, SearchBoard search, boolean compareBody) {
+		ArrayNode arrNode = mapper.createArrayNode();
+		arrNode.add(mapper.createObjectNode().set("match", mapper.createObjectNode().put("title", search.getSearch())));
+		if(compareBody == true)
+			arrNode.add(mapper.createObjectNode().set("match", mapper.createObjectNode().put("content", search.getSearch())));
+		return arrNode;
+	}
+	
 }

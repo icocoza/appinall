@@ -6,18 +6,12 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.springframework.stereotype.Component;
+
+@Component
 public class ResourceLoader {
 	
-	private static ResourceLoader s_pThis;
-	public static ResourceLoader getInst() {	return s_pThis = (s_pThis==null ? new ResourceLoader() : s_pThis); }
-	public static void freeInst() {	s_pThis = null;	}
-	
-	public void loadConfig() {
-		configInputStream = loadConfig("config.cfg");
-	}
-	
-	private InputStream configInputStream = null;
-	public InputStream loadConfig(String filename) {
+	private InputStream loadConfig(String filename) {
 		InputStream is = null;
 	    try {
 	        File file = new File(filename);
@@ -37,14 +31,6 @@ public class ResourceLoader {
 	    return is;
 	}
 	
-	public InputStream getStream() {
-		return configInputStream;
-	}
-	
-	public String getAllText() throws IOException {
-		return getAllText(configInputStream, "UTF-8");
-	}
-
 	public String getAllText(String filepath) throws IOException {
 		InputStream is = loadConfig(filepath);
 		return getAllText(is, "UTF-8");

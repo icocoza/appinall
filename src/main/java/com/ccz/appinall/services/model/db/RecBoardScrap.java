@@ -65,4 +65,9 @@ public class RecBoardScrap extends DbRecord {
 		return super.getList(sql).stream().map(e->(RecBoardScrap)e).collect(Collectors.toList());
 	}
 
+	public boolean delete(String boardid) {
+		String sql = String.format("DELETE FROM %s WHERE boardid='%s'", RecBoardScrap.TBL_NAME, boardid);
+		return super.delete(sql);
+	}
+
 }

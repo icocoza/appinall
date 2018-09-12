@@ -32,9 +32,11 @@ import org.elasticsearch.index.query.MultiMatchQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.search.MatchQuery;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
+import org.springframework.stereotype.Component;
 
 import com.ccz.appinall.services.model.elasticsearch.ElasticSourcePair;
 
+@Component
 public class ElasticTransportMgr {
 	
 	//static ElasticTransportMgr s_pThis;
@@ -102,7 +104,7 @@ public class ElasticTransportMgr {
 	
 	public boolean hasMappings(String index, String type) {
 		GetMappingsResponse gmr = transportClient.admin().indices().prepareGetMappings(index).get();
-		return gmr.getMappings().containsKey("southkorea");
+		return gmr.getMappings().containsKey(type);
 	}
 	
 	public boolean putMappings(String index, String type, String mappings) {

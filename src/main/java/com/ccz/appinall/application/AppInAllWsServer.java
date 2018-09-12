@@ -14,8 +14,10 @@ import com.ccz.appinall.application.ws.AppInAllServiceHandler;
 import com.ccz.appinall.application.ws.AppInAllWebsocketInitializer;
 import com.ccz.appinall.common.config.ServicesConfig;
 import com.ccz.appinall.common.rdb.DbAppManager;
+import com.ccz.appinall.library.module.elasticsearch.ElasticSearchManager;
 import com.ccz.appinall.services.controller.address.AddressCommandAction;
-import com.ccz.appinall.services.controller.address.AddressElasticSearch;
+import com.ccz.appinall.services.repository.elasticsearch.AddressElasticSearch;
+import com.ccz.appinall.services.repository.elasticsearch.BoardElasticSearch;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
@@ -29,13 +31,14 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class AppInAllWsServer {
 
-	@Autowired
-	ServicesConfig servicesConfig;
-	@Autowired
-	AppInAllWebsocketInitializer appInAllWebsocketInitializer;
+	@Autowired ServicesConfig servicesConfig;
+	@Autowired AppInAllWebsocketInitializer appInAllWebsocketInitializer;
 	
 	@Autowired AppInAllServiceHandler appInAllServiceAction;
 	@Autowired AppInAllFileHandler appInAllFileAction;
+	@Autowired ElasticSearchManager elasticSearchManager;
+	@Autowired AddressElasticSearch addressElasticSearch;
+	@Autowired BoardElasticSearch boardElasticSearch;
 	
 	private ServerBootstrap bootstrap;
 	private EventLoopGroup bossGroup;
@@ -62,11 +65,6 @@ public class AppInAllWsServer {
 		bootstrap.localAddress(new InetSocketAddress(servicesConfig.getWebsocketPort()));
 		bootstrap.childHandler(appInAllWebsocketInitializer);
 		
-//		Map<ChannelOption<?>, Object> tcpChannelOptions = channelOptions();
-//        Set<ChannelOption<?>> keySet = tcpChannelOptions.keySet();
-//        for (@SuppressWarnings("rawtypes") ChannelOption option : keySet) {
-//           bootstrap.option(option, tcpChannelOptions.get(option));
-//        }
 		channelFuture = bootstrap.bind().sync();
 		return true;
 	}
@@ -109,9 +107,12 @@ public class AppInAllWsServer {
 	}
 	
 	public boolean initElasticSearch() throws UnknownHostException {
-		return AddressElasticSearch.getInst().init(servicesConfig.getElasticCluster(), servicesConfig.getElasticNode(), 
-				servicesConfig.getElasticUrl(), servicesConfig.getElasticPort(), 
-				servicesConfig.getElasticIndex(), servicesConfig.getElasticType(), null);
+		if( elasticSearchManager.init(servicesConfig.getElasticCluster(), servicesConfig.getElasticNode(), 
+				servicesConfig.getElasticUrl(), servicesConfig.getElasticPort()) == false)
+			return false;
+		if(addressElasticSearch.init() == false)
+			return false;
+		return boardElasticSearch.init();
 	}
 	
 	//public void initMongoDb() {

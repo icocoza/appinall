@@ -59,6 +59,20 @@
           <label for="fcmkey">FCM Key:</label>
           <input type="text" id="fcmkey" name="fcmkey" size=64 maxlength=256 th:value="${app} ? ${app.fcmkey}:''"></input>
         </fieldset>
+
+        <fieldset>
+          <legend><span class="number">4</span>Secondary Server Info.</legend>
+          <label for="fcmid">Secondary Server Url:</label>
+          <input type="text" id="secondurl" name="secondurl" size=32 maxlength=32 th:value="${app} ? ${app.secondurl}:''"></input>
+          <label for="fcmkey">Start Date of 2nd url</label>
+          <input type="text" id="secondarydate" name="secondarydate" size=64 maxlength=256 th:value="${app} ? ${app.secondarydate}:''"></input>
+        </fieldset>
+
+        <fieldset>
+          <legend><span class="number">5</span>Etc.</legend>
+          <label for="fcmid">Upload File Limite(MB)</label>
+          <input type="text" id="filelimit" name="filelimit" size=32 maxlength=32 th:value="${app} ? ${app.filelimit}:''"></input>
+        </fieldset>
         
         <label for="status">App Status:</label>
         <select id="status" name="status" th:value="${app} ? ${app.status}:'ready'">

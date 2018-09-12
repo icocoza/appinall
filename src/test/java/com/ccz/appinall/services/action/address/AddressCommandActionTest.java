@@ -11,13 +11,14 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import com.ccz.appinall.common.config.ServicesConfig;
 import com.ccz.appinall.common.rdb.DbAppManager;
+import com.ccz.appinall.library.module.elasticsearch.ElasticSearchManager;
 import com.ccz.appinall.services.controller.address.AddressCommandAction;
-import com.ccz.appinall.services.controller.address.AddressElasticSearch;
 import com.ccz.appinall.services.enums.EDeliverType;
 import com.ccz.appinall.services.enums.EDeliverMethod;
 import com.ccz.appinall.services.enums.EGoodsSize;
 import com.ccz.appinall.services.enums.EGoodsType;
 import com.ccz.appinall.services.enums.EGoodsWeight;
+import com.ccz.appinall.services.repository.elasticsearch.AddressElasticSearch;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -27,18 +28,19 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 //@SpringBootTest
 public class AddressCommandActionTest {
 
-	@Autowired
-	AddressCommandAction addressCommandAction;
-	@Autowired
-	ServicesConfig servicesConfig;
+	@Autowired AddressCommandAction addressCommandAction;
+	@Autowired ServicesConfig servicesConfig;
+	@Autowired ElasticSearchManager elasticSearchManager;
+	@Autowired AddressElasticSearch addressElasticSearch;
+	
 	private void init()  throws UnknownHostException{
 		if(DbAppManager.getInst().createAdminDatabase(servicesConfig.getAdminMysqlUrl(), "owy", servicesConfig.getAdminMysqlOption(), servicesConfig.getAdminMysqlUser(), servicesConfig.getAdminMysqlPw())==false)
 			return;
 		if(DbAppManager.getInst().initApp("owy", 2, 3)==false)
 			return;
-		AddressElasticSearch.getInst().init(servicesConfig.getElasticClusterName(), servicesConfig.getElasticClusterNode(), 
-				servicesConfig.getElasticUrl(), servicesConfig.getElasticPort(), 
-				servicesConfig.getElasticIndex(), servicesConfig.getElasticType(), null);
+		elasticSearchManager.init(servicesConfig.getElasticClusterName(), servicesConfig.getElasticClusterNode(), 
+				servicesConfig.getElasticUrl(), servicesConfig.getElasticPort());
+		addressElasticSearch.init();
 		//AddressMongoDb.getInst().init(servicesConfig.getMongoDbUrl(), servicesConfig.getMongoDbPort(), 
 		//		servicesConfig.getAddressMongoDatabase(), servicesConfig.getAddressMongocollection());
 	}

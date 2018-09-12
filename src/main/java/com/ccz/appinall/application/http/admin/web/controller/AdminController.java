@@ -18,10 +18,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import com.ccz.appinall.application.http.admin.business.service.ResourceLoaderService;
 import com.ccz.appinall.common.rdb.DbAppManager;
 import com.ccz.appinall.library.type.ResponseData;
 import com.ccz.appinall.library.util.KeyGen;
+import com.ccz.appinall.library.util.ResourceLoaderService;
 import com.ccz.appinall.services.controller.admin.AdminCommandAction;
 import com.ccz.appinall.services.controller.admin.entity.AddApp;
 import com.ccz.appinall.services.controller.admin.entity.AdminCommon;
@@ -30,7 +30,6 @@ import com.ccz.appinall.services.controller.admin.entity.ModifyApp;
 import com.ccz.appinall.services.enums.EAdminAppStatus;
 import com.ccz.appinall.services.enums.EAllError;
 import com.ccz.appinall.services.enums.EAdminStatus;
-import com.ccz.appinall.services.enums.EAllError;
 import com.ccz.appinall.services.enums.EUserRole;
 import com.ccz.appinall.services.model.db.RecAdminApp;
 
@@ -40,8 +39,7 @@ public class AdminController {
 	//@Autowired
 	BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 	
-	@Autowired
-	ResourceLoaderService resourceLoaderService;
+	@Autowired ResourceLoaderService resourceLoaderService;
 	
 	AdminCommandAction adminCommandAction = new AdminCommandAction();
 	

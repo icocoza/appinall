@@ -15,7 +15,6 @@ public class RecScrap  extends DbRecord {
 	@Getter private String scrapid;
 	@JsonIgnore @Getter private String url;
 	@Getter private String scraptitle, subtitle;
-	@Getter private String body;
 	@JsonIgnore @Getter private String scrapip;
 	@JsonIgnore @Getter private String scrappath;
 	@Getter private String scrapimg;
@@ -34,7 +33,7 @@ public class RecScrap  extends DbRecord {
 	public boolean createTable() {
 		String sql = String.format("CREATE TABLE IF NOT EXISTS %s ("
 				+ "scrapid VARCHAR(64) NOT NULL PRIMARY KEY, url VARCHAR(256) NOT NULL, "
-				+ "scraptitle VARCHAR(64) NOT NULL, subtitle VARCHAR(64) NOT NULL, body VARCHAR(256), "
+				+ "scraptitle VARCHAR(64) NOT NULL, subtitle VARCHAR(64) NOT NULL, "
 				+ "scrapip VARCHAR(16), scrappath VARCHAR(32), createdAt DATETIME DEFAULT NOW(), "
 				+ "INDEX idx_url(url) )", RecScrap.TBL_NAME);
 		return super.createTable(sql);
@@ -47,7 +46,6 @@ public class RecScrap  extends DbRecord {
 		rec.url = rd.getString("url");
 		rec.scraptitle = rd.getString("scraptitle");
 		rec.subtitle = rd.getString("subtitle");
-		rec.body = rd.getString("body");
 		rec.scrapip = rd.getString("scrapip");
 		rec.scrappath = rd.getString("scrappath");
 		rec.scrapimg = String.format("http://%s:8080/scrap?scrapid=%s", rec.scrapip, rec.scrapid);
@@ -64,15 +62,15 @@ public class RecScrap  extends DbRecord {
 		return doLoad(rd, new RecScrap(poolName));
 	}
 	
-	public boolean insertScrap(String scrapid, String url, String scraptitle, String subtitle, String body) {
-		String sql = qInsertScrap(scrapid, url, scraptitle, subtitle, body);
+	public boolean insertScrap(String scrapid, String url, String scraptitle, String subtitle) {
+		String sql = qInsertScrap(scrapid, url, scraptitle, subtitle);
 		return super.insert(sql);
 	}
 
-	public static String qInsertScrap(String scrapid, String url, String scraptitle, String subtitle, String body) {
-		return String.format("INSERT INTO %s (scrapid, url, scraptitle, subtitle, body) "
-				+ "VALUES('%s', '%s', '%s', '%s', '%s')", RecScrap.TBL_NAME, 
-				scrapid, url, scraptitle, subtitle, body);
+	public static String qInsertScrap(String scrapid, String url, String scraptitle, String subtitle) {
+		return String.format("INSERT INTO %s (scrapid, url, scraptitle, subtitle) "
+				+ "VALUES('%s', '%s', '%s', '%s')", RecScrap.TBL_NAME, 
+				scrapid, url, scraptitle, subtitle);
 	}
 	
 	public RecScrap getScrap(String scrapid) {

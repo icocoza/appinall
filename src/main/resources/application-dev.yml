@@ -33,11 +33,15 @@ elastic:
   cluster-node: oyw-node-1
   url: localhost
   port: 9300
-  index_db: address
-  type_table: southkorea
   client: 
     transport:
       sniff: false
+  address:
+    index: address
+    type: southkorea
+  board:
+    index: board
+    type: apartment
   
 #AppInAll Websocket Server
 websocket:

@@ -1,5 +1,8 @@
 package com.ccz.appinall.services.model.db;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import com.ccz.appinall.library.dbhelper.DbReader;
 import com.ccz.appinall.library.dbhelper.DbRecord;
 
@@ -60,22 +63,3 @@ public class RecBoardContent extends DbRecord {
 	}
 
 }
-/*{
-	@Id
-	@Column(length = 64, nullable = false)
-	private String boardid;
-	@Column(length = 1024, nullable = false)
-	private String content;
-	
-	public RecBoardContent() {	}
-	
-	public RecBoardContent(String boardid, String content) {
-		this.boardid = boardid;
-		this.content = content;
-	}
-	
-	public void updateContent(String content) {
-		this.content = content;
-	}
-}
-*/

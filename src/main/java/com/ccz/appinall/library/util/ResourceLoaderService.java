@@ -1,17 +1,18 @@
-package com.ccz.appinall.application.http.admin.business.service;
+package com.ccz.appinall.library.util;
 
 import java.io.IOException;
 
-import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
-import com.ccz.appinall.library.util.ResourceLoader;
-
-@Service
+@Component
 public class ResourceLoaderService {
-
+	
+	@Autowired ResourceLoader resourceLoader;
+	
 	public String loadText(String filepath) {
 		try {
-			return ResourceLoader.getInst().getAllText(filepath);
+			return resourceLoader.getAllText(filepath);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -20,11 +21,10 @@ public class ResourceLoaderService {
 	
 	public String loadText(String filepath, String encoding) {
 		try {
-			return ResourceLoader.getInst().getAllText(filepath, encoding);
+			return resourceLoader.getAllText(filepath, encoding);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		return "";
 	}
-
 }
