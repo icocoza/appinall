@@ -65,7 +65,10 @@ public class StrUtil {
 	static public boolean isNumericDash(String str) {
 		return str.matches(NUMERIC_DASH_PATTERN);
 	}
-	
+	static String NUMERIC_PATTERN = "[0-9]";
+	static public boolean isNumeric(String str) {
+		return str.matches(NUMERIC_DASH_PATTERN);
+	}
 	private static final String IMAGE_PATTERN = "([^\\s]+(\\.(?i)(jpg|png|gif|bmp))$)";
 	static public boolean isImageFile(String s) {
 		return s.matches(IMAGE_PATTERN);
@@ -156,7 +159,7 @@ public class StrUtil {
 		    extension = filename.substring(i+1);
 		return extension;
 	}
-	
+
 	public String getFileExt(File file) {
 	    String name = file.getName();
 	    try {
@@ -165,4 +168,16 @@ public class StrUtil {
 	        return "";
 	    }
 	}
+	
+	public static String getUrlExt(String url) {
+		int i = url.lastIndexOf('/');
+		if(i<0)
+			return "";
+		String ext = getFileExt(url.substring(i+1));
+		if(ext.contains("?")) {
+			return ext.substring(0, ext.indexOf("?"));
+		}
+		return ext;
+	}
+
 }

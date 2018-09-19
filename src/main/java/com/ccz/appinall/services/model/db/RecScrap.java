@@ -17,6 +17,7 @@ public class RecScrap  extends DbRecord {
 	@Getter private String scraptitle, subtitle;
 	@JsonIgnore @Getter private String scrapip;
 	@JsonIgnore @Getter private String scrappath;
+	@Getter private String scrapext;
 	@Getter private String scrapimg;
 	
 	public RecScrap(String poolName) {
@@ -34,7 +35,7 @@ public class RecScrap  extends DbRecord {
 		String sql = String.format("CREATE TABLE IF NOT EXISTS %s ("
 				+ "scrapid VARCHAR(64) NOT NULL PRIMARY KEY, url VARCHAR(256) NOT NULL, "
 				+ "scraptitle VARCHAR(64) NOT NULL, subtitle VARCHAR(64) NOT NULL, "
-				+ "scrapip VARCHAR(16), scrappath VARCHAR(32), createdAt DATETIME DEFAULT NOW(), "
+				+ "scrapip VARCHAR(16), scrappath VARCHAR(32), scrapext VARCHAR(8), createdAt DATETIME DEFAULT NOW(), "
 				+ "INDEX idx_url(url) )", RecScrap.TBL_NAME);
 		return super.createTable(sql);
 	}
@@ -48,6 +49,7 @@ public class RecScrap  extends DbRecord {
 		rec.subtitle = rd.getString("subtitle");
 		rec.scrapip = rd.getString("scrapip");
 		rec.scrappath = rd.getString("scrappath");
+		rec.scrapext = rd.getString("scrapext");
 		rec.scrapimg = String.format("http://%s:8080/scrap?scrapid=%s", rec.scrapip, rec.scrapid);
 		return rec;
 	}
@@ -90,8 +92,8 @@ public class RecScrap  extends DbRecord {
 		return super.getList(sql).stream().map(e->(RecScrap)e).collect(Collectors.toList());
 	}
 	
-	public boolean updateScrap(String scrapid, String scrapip, String scrappath) {
-		String sql = String.format("UPDATE %s SET scrapip='%s', scrappath='%s' WHERE scrapid='%s'", RecScrap.TBL_NAME, scrapip, scrappath, scrapid);
+	public boolean updateScrap(String scrapid, String scrapip, String scrappath, String scrapext) {
+		String sql = String.format("UPDATE %s SET scrapip='%s', scrappath='%s', scrapext='%s' WHERE scrapid='%s'", RecScrap.TBL_NAME, scrapip, scrappath, scrapext, scrapid);
 		return super.update(sql);
 	}
 

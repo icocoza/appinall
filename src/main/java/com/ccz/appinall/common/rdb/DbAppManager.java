@@ -869,8 +869,8 @@ public class DbAppManager {
 		return new RecScrap(scode).getScrapListByUrl(urls);
 	}
 	
-	public boolean updateScrap(String scode, String scrapid, String serverip, String subpath) {
-		return new RecScrap(scode).updateScrap(scrapid, serverip, subpath);
+	public boolean updateScrap(String scode, String scrapid, String serverip, String subpath, String scrapext) {
+		return new RecScrap(scode).updateScrap(scrapid, serverip, subpath, scrapext);
 	}
 	
 	public boolean insertScrapId(String scode, String boardid, String scrapid) {

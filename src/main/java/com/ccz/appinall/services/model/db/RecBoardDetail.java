@@ -55,12 +55,13 @@ public class RecBoardDetail extends RecBoard {
 	}
 	
 	public List<RecBoardDetail> getBoardList(List<String> boardids) {
+		String ids = boardids.stream().map(x -> '\''+x+'\'').collect(Collectors.joining(","));
 		String sql = String.format("SELECT * FROM board " + 
 				"LEFT JOIN boardcount ON board.boardid=boardcount.boardid " + 
 				"LEFT JOIN filecrop ON board.boardid=filecrop.boardid "+
 				"LEFT JOIN boardscrap ON board.boardid=boardscrap.boardid "+
 				"LEFT JOIN scrap ON scrap.scrapid=boardscrap.scrapid " + 
-				"WHERE board.boardid IN (%s)", boardids.stream().collect(Collectors.joining(",")));
+				"WHERE board.boardid IN (%s) ORDER BY FIELD(board.boardid, %s)", ids, ids);
 		return super.getList(sql).stream().map(e->(RecBoardDetail)e).collect(Collectors.toList());
 	}
 	

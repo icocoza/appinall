@@ -42,13 +42,15 @@ public class ImageUtil {
     
     public static boolean crop(File src, File dest, int width, int height) throws IOException {
     	BufferedImage resizeImg = resize(src, width, height);
-    	int cropSize = width > height ? height : width;
-    	cropSize = (int)((float)cropSize * 0.85f);
+    	//int cropSize = width > height ? height : width;
+    	//cropSize = (int)((float)cropSize * 0.85f);
+    	int cropWidth = (int) (width * 0.85f);
+    	int cropHeight = (int) (height * 0.85f);
     	
-    	int x = (width - cropSize) / 2;
-    	int y = (height - cropSize) / 2;
+    	int x = (width - cropWidth) / 2;
+    	int y = (height - cropHeight) / 2;
     	
-    	BufferedImage cropImg = resizeImg.getSubimage(x, y, cropSize, cropSize);
+    	BufferedImage cropImg = resizeImg.getSubimage(x, y, cropWidth, cropHeight);
         return ImageIO.write(cropImg, "jpg", dest);
     }
 

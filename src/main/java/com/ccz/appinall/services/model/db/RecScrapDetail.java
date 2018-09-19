@@ -16,6 +16,7 @@ public class RecScrapDetail  extends DbRecord {
 	@Getter private String scraptitle, subtitle;
 	@JsonIgnore @Getter private String scrapip;
 	@JsonIgnore @Getter private String scrappath;
+	@Getter private String scrapext;
 	@Getter private String scrapimg;
 	@Getter private String body;
 	
@@ -43,7 +44,8 @@ public class RecScrapDetail  extends DbRecord {
 		rec.subtitle = rd.getString("subtitle");
 		rec.scrapip = rd.getString("scrapip");
 		rec.scrappath = rd.getString("scrappath");
-		rec.scrapimg = String.format("http://%s:8080/scrap?scrapid=%s", rec.scrapip, rec.scrapid);
+		rec.scrapext = rd.getString("scrapext");
+		rec.scrapimg = String.format("http://%s:8080/scrap?scrapid=%s.%s", rec.scrapip, rec.scrapid, rec.scrapext);
 		rec.body = rd.getString("body");
 		return rec;
 	}

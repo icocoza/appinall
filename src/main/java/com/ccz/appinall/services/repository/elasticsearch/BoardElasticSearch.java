@@ -67,7 +67,7 @@ public class BoardElasticSearch extends CommonElasticSearch {
 			JsonNode srcNode = arrNode.get(i).get("_source");
 			if(srcNode == NullNode.instance)
 				continue;
-			list.add(srcNode.asText());
+			list.add(srcNode.get("boardid").asText());
 		}
 		return list;
 	}

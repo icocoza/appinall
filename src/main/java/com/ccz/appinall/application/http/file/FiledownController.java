@@ -18,9 +18,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import com.ccz.appinall.common.config.ServicesConfig;
 import com.ccz.appinall.common.rdb.DbAppManager;
 import com.ccz.appinall.services.model.db.RecFile;
+import com.ccz.appinall.services.model.db.RecScrap;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Controller
-
 public class FiledownController {
 	@Autowired
     private ServletContext servletContext;
@@ -97,12 +100,14 @@ public class FiledownController {
         //String filename = String.format("%d%03d.jpg", System.currentTimeMillis(), ++seq);
         MediaTypeUtils mediaTypeUtils = new MediaTypeUtils();
         MediaType mediaType = mediaTypeUtils.getMediaTypeForFileName(this.servletContext, scrapid);
-        File file = new File(servicesConfig.getFileUploadDir() + "/scrapcrop/" + scrapid);
+        String filePath = String.format("%s/scrapcrop/%s", servicesConfig.getFileUploadDir(), scrapid);
+        log.info(filePath);
+        File file = new File(filePath);
         InputStreamResource resource = new InputStreamResource(new FileInputStream(file));
  
         return ResponseEntity.ok()
                 // Content-Disposition
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + scrapid)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + scrapid +".jpg")
                 // Content-Type
                 .contentType(mediaType)
                 // Contet-Length

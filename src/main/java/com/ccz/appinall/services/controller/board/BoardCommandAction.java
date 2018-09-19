@@ -1,5 +1,6 @@
 package com.ccz.appinall.services.controller.board;
 
+import java.awt.image.BufferedImage;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -8,10 +9,15 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
+
+import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
+import javax.imageio.stream.ImageInputStream;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -563,20 +569,25 @@ public class BoardCommandAction extends CommonAction {
 	}
 
 	private List<String> findAndAddScrap(AuthSession ss, AddBoard data) {
-		List<String> list = StrUtil.extractUrls(data.content);
+		return findAndAddScrap(ss.scode, data.content);
+	}
+	
+	public List<String> findAndAddScrap(String scode, String content) {
+		List<String> list = StrUtil.extractUrls(content);
 		if(list.size()<1)
 			return null;
 		List<HtmlNode> htmls = list.stream().map(x -> HtmlScrapper.doScrap(x)).filter(x -> x.isEmpty()==false).collect(Collectors.toList());
 		List<String> urls = htmls.stream().map(x -> x.getUrl()).collect(Collectors.toList());
 		
-		List<String> dbUrls = DbAppManager.getInst().getScrapListByUrl(ss.scode, urls).stream().map(x->x.getUrl()).collect(Collectors.toList());
+		List<String> dbUrls = DbAppManager.getInst().getScrapListByUrl(scode, urls).stream().map(x->x.getUrl()).collect(Collectors.toList());
 		htmls.removeIf(x -> dbUrls.contains(x.getUrl()));
 		
 		for(HtmlNode node : htmls) {
-			DbTransaction.getInst().insertTransactionalScrap(ss.scode, node.getScrapid(), node.getUrl(), node.getMainTitle(), node.getSubTitle(), node.getShortBody());
-			makeScrapImage(ss.scode, node);
+			
+			DbTransaction.getInst().insertTransactionalScrap(scode, node.getScrapid(), node.getUrl(), node.getMainTitle(), node.getSubTitle(), node.getShortBody());
+			makeScrapImage(scode, node);
 		}
-		return DbAppManager.getInst().getScrapListByUrl(ss.scode, urls).stream().map(x->x.getScrapid()).collect(Collectors.toList());
+		return DbAppManager.getInst().getScrapListByUrl(scode, urls).stream().map(x->x.getScrapid()).collect(Collectors.toList());
 	}
 	
 	private ResponseData<EAllError> updateBoard(AuthSession ss, ResponseData<EAllError> res, UpdateBoard data, List<String> scrapIds) {
@@ -624,31 +635,26 @@ public class BoardCommandAction extends CommonAction {
 	}
 
 	Executor executor = Executors.newFixedThreadPool(20);
-	private final float MAX_SCRAP_SIZE = 256f;
+	private final float MAX_SCRAP_SIZE = 356f;
 	private void makeScrapImage(final String scode, final HtmlNode htmlNode) {
-		Runnable runnable = () -> {
+		//Runnable runnable = () -> {
 			try {
 				URL url = new URL(htmlNode.getImageUrl());
-				String localSrc = servicesConfig.getFileUploadDir() + "/scrap/" + htmlNode.getScrapid();
-				String localDest = servicesConfig.getFileUploadDir() + "/scrapcrop/" + htmlNode.getScrapid();
+				String ext = StrUtil.getUrlExt(url.toString());
+				String localSrc = servicesConfig.getFileUploadDir() + "/scrap/" + htmlNode.getScrapid() + (ext.length()>0 ? "." + ext : "");
 				
-		        InputStream in = url.openStream();
-		        OutputStream out = new BufferedOutputStream(new FileOutputStream(localSrc));
-
-		        int n = 0;
-				byte[] buf = new byte[4096];
-		        while( -1 != (n=in.read(buf))) {
-		        	out.write(buf);
-		        }
-		        out.close();
-		        in.close();
+				BufferedImage bufImg = ImageIO.read(url);
+				ImageIO.write(bufImg, ext.length()>0?ext:"jpeg", new File(localSrc));	//ext가 blank일 경우, 일단 jpeg로 저장하고 다시 확장자 획득시도 
 		        
+				String resExt = (ext.length()<1) ? getFileExtFromSource(localSrc) : ext;
+				String localDest = servicesConfig.getFileUploadDir() + "/scrapcrop/" + htmlNode.getScrapid() + (resExt.length()>0 ? "." + resExt : "");
+				
 		        ImageSize imgSize = ImageUtil.getImageSize(localSrc);
 		        float rate = MAX_SCRAP_SIZE / (imgSize.width > imgSize.height ? (float)imgSize.width : (float)imgSize.height);
 		        imageResizeWorker.doCrop(localSrc, localDest, (int)(imgSize.width * rate), (int)(imgSize.height * rate), new ImageResizerCallback() {
 					@Override
 					public void onCompleted(Object dest) {
-						DbAppManager.getInst().updateScrap(scode, htmlNode.getScrapid(), StrUtil.getHostIp(), "scrapcrop");
+						DbAppManager.getInst().updateScrap(scode, htmlNode.getScrapid(), StrUtil.getHostIp(), "scrapcrop", resExt);
 						new File(localSrc).delete();
 					}
 					@Override
@@ -659,10 +665,25 @@ public class BoardCommandAction extends CommonAction {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-		};
-		executor.execute(runnable);
+		//};
+		//executor.execute(runnable);
 	}
 	
+	private String getFileExtFromSource(String src) {
+		File file = new File(src);
+		try{
+	        ImageInputStream iis = ImageIO.createImageInputStream(file);
+	        Iterator<ImageReader> iter = ImageIO.getImageReaders(iis);
+	        ImageReader reader = iter.next();
+	        String formatName = reader.getFormatName();
+	        System.out.println("FOUND IMAGE FORMAT :" + formatName);
+	        iis.close();
+	        return formatName.toLowerCase();
+	    }catch(Exception e){
+	        e.printStackTrace();
+	    }
+		return "";
+	}
 /*	public String getBoardSearchQuery(ElkBoard elkBoard, int offset, int count) throws JsonProcessingException {
 		ObjectMapper mapper = new ObjectMapper();
 		ArrayNode arrNode = mapper.createArrayNode();
@@ -696,6 +717,7 @@ public class BoardCommandAction extends CommonAction {
 		rootNode.put("from", search.getOffset());
 		rootNode.put("size", search.getCount());
 		rootNode.set("_source", getSources(mapper));
+		rootNode.set("sort", getSortBySource(mapper));
 		rootNode.set("query", mapper.createObjectNode().set("bool", getQuery(mapper, categoryId, search, false)));
 		return mapper.writeValueAsString(rootNode);
 	}
@@ -723,6 +745,12 @@ public class BoardCommandAction extends CommonAction {
 		arrNode.add(mapper.createObjectNode().set("match", mapper.createObjectNode().put("title", search.getSearch())));
 		if(compareBody == true)
 			arrNode.add(mapper.createObjectNode().set("match", mapper.createObjectNode().put("content", search.getSearch())));
+		return arrNode;
+	}
+	
+	public ArrayNode getSortBySource(ObjectMapper mapper) {
+		ArrayNode arrNode = mapper.createArrayNode();
+		arrNode.add("_score");
 		return arrNode;
 	}
 	

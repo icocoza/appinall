@@ -47,6 +47,7 @@ public class UtilTest {
 	}
 	
 	@Test
+	@Ignore
 	public void testWebProtocolParser() {
 		String linkContent = "테스트 URL 테스트 입니다. https://news.v.daum.net/v/20180903150103126?rcmd=rn 두번째 링크는 https://news.naver.com/main/read.nhn?mode=LSD&mid=shm&sid1=101&oid=018&aid=0004189465 공갈 링크는 http://www.aaa3423.634 입니다. 어떻게 될까요?";
 		List<String> list = StrUtil.extractUrls(linkContent);
