@@ -11,8 +11,9 @@ public class RecBoardDetail extends RecBoard {
 	
 	@JsonIgnore private String serverip, subpath, filename;
 	public String cropurl;
-	public int likes = 0, dislikes=0, visit=0, reply=0;
+	public int likes = 0, dislikes=0, visit=0, reply=0, votes=0;
 	public RecScrap scrap;
+	public boolean voted = false;
 	
 	public RecBoardDetail(String poolName) {
 		super(poolName);

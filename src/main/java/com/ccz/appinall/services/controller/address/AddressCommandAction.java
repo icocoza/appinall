@@ -40,6 +40,7 @@ public class AddressCommandAction extends CommonAction {
 	public AddressCommandAction() {
 		super.setCommandFunction(EAllCmd.addr_search, doSearch);
 		super.setCommandFunction(EAllCmd.gps_search, doGpsSearch);
+		super.setCommandFunction(EAllCmd.gps_intown, doInMyTown);
 	}
 
 	/*
@@ -85,7 +86,13 @@ public class AddressCommandAction extends CommonAction {
 		res.setParam("buildings", buildList);
 		return buildList.size() > 0 ? res.setError(EAllError.ok) : res.setError(EAllError.empty_search);
 	};
-	
+
+	ICommandFunction<AuthSession, ResponseData<EAllError>, JsonNode> doInMyTown = (AuthSession session, ResponseData<EAllError> res, JsonNode jnode) -> {
+		DataGpsSearchAddr data = new RecDataAddr().new DataGpsSearchAddr(jnode);
+		res.setParam("intown", session.isIn500m(data.getLon(), data.getLat()));
+		return res.setError(EAllError.ok);
+	};
+
 	private ArrayNode copySearshResultToResponse(ArrayNode arrNode) {
 		ObjectMapper mapper = new ObjectMapper();
 		ArrayNode copyArrNode = mapper.createArrayNode();

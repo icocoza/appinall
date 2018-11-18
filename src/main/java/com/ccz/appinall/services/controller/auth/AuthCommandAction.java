@@ -171,9 +171,9 @@ public class AuthCommandAction extends CommonAction {
 		RecUser user = DbAppManager.getInst().getUser(data.getScode(), token.userid);
 		if(DbRecord.Empty == user)
 			return res.setError(EAllError.not_exist_userinfo);
-		//if(user.isSameAppCode(data.getScode()) == false)
-		//	DbAppManager.getInst().updateAppCode(data.getScode(), token.userid, data.getScode());	//update apt code
-		//user.inappcode = data.getTokenAppId();
+		RecUserBuild userBuilding = DbAppManager.getInst().getUserBuilding(data.getScode(), auth.getUserid());
+		if(userBuilding != null)
+			authSession.setBuildingInfo(userBuilding.buildid, userBuilding.lon, userBuilding.lat); 
 		authSession.putSession(user, data.getScode());	//consider the sessionid to find instance when close
 		authSession.setUserTableInfo(DbAppManager.getInst().getUserCategoryList(data.getScode(), auth.getUserid()));
 		authSession.setSessionData(sessionService.addUserSession(token.userid, StrUtil.getHostIp()));	//save to redis
@@ -182,6 +182,7 @@ public class AuthCommandAction extends CommonAction {
 		
 		res.setParam("username", user.username);
 		res.setParam("userid", auth.getUserid());
+		res.setParam("intown", authSession.isIn500m(data.getLon(), data.getLat()));
 		return res.setError(EAllError.ok).setParam(""+user.lasttime);
 	};
 
@@ -377,7 +378,7 @@ public class AuthCommandAction extends CommonAction {
 		queries.add(DbTransaction.getInst().queryAddUserTable(res.getUserid(), sigu.tableid, sigu.title, 2));
 		queries.add(DbTransaction.getInst().queryAddUserTable(res.getUserid(), dong.tableid, dong.title, 1));
 		queries.add(DbTransaction.getInst().queryAddUserTable(res.getUserid(), buildname.tableid, buildname.title, 0));
-		
+		queries.add(DbTransaction.getInst().queryInsertUserBuilding(res.getUserid(), addr.buildid, addr.lon, addr.lat));
 		if(DbTransaction.getInst().transactionQuery(data.getScode(), queries) == true) {
 			List<CategoryTable> tableList = new ArrayList<>();
 			//tableList.add(makeUserTableInfo(sido, 3));

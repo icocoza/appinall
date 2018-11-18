@@ -17,6 +17,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.GenericToStringSerializer;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 import com.ccz.appinall.library.module.redisqueue.RedisQueueManager;
 import com.ccz.appinall.services.enums.ERedisQueueCmd;
@@ -26,6 +27,7 @@ import lombok.Getter;
 
 @Getter
 @Configuration
+@EnableScheduling
 public class ServicesConfig {
 	@Autowired
 	private Environment env;

@@ -4,7 +4,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public enum EBoardItemType {
-	none("none"), text("text"), image("image"), audio("audio"), video("video"), 
+	none("none"), text("text"), image("image"), audio("audio"), video("video"), vote("vote"), 
 	link("link"), textimage("textimage"), textaudio("textaudio"), textvideo("textvideo"), 
 	imageaudio("imageaudio"), imagevideo("imagevideo"), multimedia("multimedia"), richtext("richtext");
 	

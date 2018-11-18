@@ -15,6 +15,7 @@ import com.ccz.appinall.services.model.db.RecScrapBody;
 import com.ccz.appinall.services.model.db.RecUser;
 import com.ccz.appinall.services.model.db.RecUserAuth;
 import com.ccz.appinall.services.model.db.RecUserBoardTableList;
+import com.ccz.appinall.services.model.db.RecUserBuild;
 import com.ccz.appinall.services.model.db.RecUserToken;
 import com.ccz.appinall.services.model.db.RecUserVoter;
 
@@ -79,6 +80,10 @@ public class DbTransaction {
 	
 	public String queryUpdateUserLike(String userid, boolean like, boolean cancel) {
 		return RecUser.qUpdateUserLike(userid, like, cancel);
+	}
+	
+	public String queryInsertUserBuilding(String userid, String buildid, double lon, double lat) {
+		return RecUserBuild.qInsertUserBuilding(userid, buildid, lon, lat);
 	}
 	
 	public String queryInsertVoterUser(String deliverid, String orderid, String senderid, int point, boolean like, String comments) {

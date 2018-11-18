@@ -130,6 +130,7 @@ public class RecDataAuth {
 		
 		@Getter private String tokenUserid, tokenUuid;//by regToken
 		@Getter private  EUserAuthType tokenAuthType = EUserAuthType.none;//by regToken
+		@Getter private double lon, lat;
 		
 		public DataSignIn(JsonNode jnode) {
 			super(jnode);
@@ -143,7 +144,10 @@ public class RecDataAuth {
 				this.tokenid = jnode.get("tid").asText();
 			if(jnode.has("uuid"))
 				this.uuid = jnode.get("uuid").asText();
-			
+			if(jnode.has("lon"))
+				this.lon = jnode.get("lon").asDouble();
+			if(jnode.has("lat"))
+				this.lon = jnode.get("lat").asDouble();
 			decodeRegToken();
 		}
 		

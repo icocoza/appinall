@@ -14,6 +14,7 @@ import com.ccz.appinall.application.ws.AppInAllServiceHandler;
 import com.ccz.appinall.application.ws.AppInAllWebsocketInitializer;
 import com.ccz.appinall.common.config.ServicesConfig;
 import com.ccz.appinall.common.rdb.DbAppManager;
+import com.ccz.appinall.common.rdb.DbCommonManager;
 import com.ccz.appinall.library.module.elasticsearch.ElasticSearchManager;
 import com.ccz.appinall.services.controller.address.AddressCommandAction;
 import com.ccz.appinall.services.repository.elasticsearch.AddressElasticSearch;
@@ -102,6 +103,15 @@ public class AppInAllWsServer {
         if(DbAppManager.getInst().initAdminApp() == false) {
         		log.error("Fail to Init App DB Table");
         		return false;
+        }
+        if(DbCommonManager.getInst().createCommonDatabase(servicesConfig.getAdminMysqlUrl(), 
+        		servicesConfig.getAdminMysqlOption(), servicesConfig.getAdminMysqlUser(), servicesConfig.getAdminMysqlPw()) == false) {
+        	log.error("Fail to Create the Database for Common");
+        	return false;
+        }
+        if(DbCommonManager.getInst().initApp(4,  4) == false) {
+    		log.error("Fail to Init Common DB Table");
+    		return false;
         }
         return true;
 	}

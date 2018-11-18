@@ -36,13 +36,13 @@ public class StrUtil {
 	private static final String EMAIL_PATTERN =
 			"^[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*@"
 			+ "[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$";
-	private static final String PHONE_PATTERN = "^\\(?(\\d{3})\\)?[- ]?(\\d{3})[- ]?(\\d{4})$";
 	static public boolean isEmail(String email) {
 	    return email.matches(EMAIL_PATTERN);
 	}
-
+	
+	private static final String PHONE_PATTERN = "^\\(?(\\d{3})\\)?[- ]?(\\d{3,4})[- ]?(\\d{4})$";
 	static public boolean isPhone(String phone) {
-	    return phone.matches(EMAIL_PATTERN);
+	    return phone.matches(PHONE_PATTERN);
 	}
 
 	static public boolean isAlphaNumeric(String name) {
@@ -179,5 +179,28 @@ public class StrUtil {
 		}
 		return ext;
 	}
+	
+	public static boolean isMobile(String mdn) {
+		if (mdn == null) return false;
+		Pattern pattern = Pattern.compile("\\d{3}-\\d{3,4}-\\d{4}");	//11 digit with dash
+		Matcher  matcher = pattern.matcher(mdn);
+		if(matcher.matches())
+			return true;
 
+		pattern = Pattern.compile("^01\\d{1}\\d{3,4}\\d{4}$");//"^01(?:0|1|6-9|)");
+		matcher = pattern.matcher(mdn);
+		if(matcher.matches() ==true && (mdn.length()==10 || mdn.length()==11))
+			return true;
+		return false;
+	}
+	
+	public static boolean isHangul(String keyword)
+	{
+		if (keyword == null) return false;
+		Pattern pattern = Pattern.compile("^[ㄱ-ㅎ가-힣]*$");
+		Matcher  matcher = pattern.matcher(keyword);
+		if(matcher.matches())
+			return true;
+		return false;
+	}
 }

@@ -11,6 +11,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
@@ -44,6 +45,7 @@ import com.ccz.appinall.services.controller.board.RecDataBoard.*;
 import com.ccz.appinall.services.controller.file.UploadFile;
 import com.ccz.appinall.services.enums.EAllCmd;
 import com.ccz.appinall.services.enums.EAllError;
+import com.ccz.appinall.services.enums.EBoardItemType;
 import com.ccz.appinall.services.model.db.RecBoard;
 import com.ccz.appinall.services.model.db.RecBoardCount;
 import com.ccz.appinall.services.model.db.RecBoardDetail;
@@ -225,7 +227,17 @@ public class BoardCommandAction extends CommonAction {
 		//boardList = DbAppManager.getInst().getBoardList(ss.scode, data.getUserid(), categoryId, data.getOffset(), data.getCount()); //load a specific user's list
 		if(boardList.size()<1)
 			return res.setError(EAllError.NoListData);
-		
+		List<String> voteBoardids = boardList.stream().filter(x-> (x.itemtype == EBoardItemType.vote)).map(x->x.boardid).collect(Collectors.toList());
+		Map<String, Integer> voteCount = DbAppManager.getInst().getVoteCount(ss.scode, voteBoardids);
+		if(voteCount.size()>0) {
+			Map<String, Integer> votedIt = DbAppManager.getInst().getVotedBoardId(ss.scode, ss.getUserId(), voteBoardids);
+			for(RecBoardDetail item : boardList) {
+				if(item.itemtype == EBoardItemType.vote && voteCount.containsKey(item.boardid))
+					item.votes = voteCount.get(item.boardid);
+				if(votedIt.containsKey(item.boardid))
+					item.voted = true;
+			}
+		}
 		res.setParam("category", data.getCategoryInex());
 		res.setParam("data", boardList);
 		return res.setError(EAllError.ok);
@@ -439,6 +451,7 @@ public class BoardCommandAction extends CommonAction {
 			return res.setError(EAllError.FailDelVoteUser);
 		
 		DbAppManager.getInst().updateVoteSelection(ss.scode, data.boardid, data.vitemid, data.isselect);
+		res.setParam("vote", DbAppManager.getInst().getVoteItemList(ss.scode, data.boardid));
 		return res.setError(EAllError.ok);
 	};
 	

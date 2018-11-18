@@ -243,6 +243,7 @@ public class RecDataBoard {
 		
 		public AddVote(JsonNode jObj) {
 			board = new AddBoard(jObj);
+			board.itemtype = EBoardItemType.vote;
 			expiretime = jObj.get("expiretime").asLong();
 			ArrayNode jArr = (ArrayNode) jObj.get("voteitems");
 			for(JsonNode jItem : jArr)

@@ -60,6 +60,11 @@ public class RecUserBoardTableList extends DbRecord {
 		return String.format("INSERT INTO %s (userid, tableid, title, category) VALUES('%s', '%s', '%s', %d)", TBL_NAME, userid, tableid, title, category);
 	}
 
+	public RecUserBoardTableList getUserTable(String userid, int category) {
+		String sql = String.format("SELECT userid, tableid, title, category FROM %s WHERE userid='%s' AND category=%d" , TBL_NAME, userid, category);
+		return (RecUserBoardTableList) super.getOne(sql);
+	}
+
 	public List<RecUserBoardTableList> getUserTableList(String userid) {
 		String sql = String.format("SELECT userid, tableid, title, category FROM %s WHERE userid='%s' ORDER BY category ASC" , TBL_NAME, userid);
 		return super.getList(sql).stream().map(e->(RecUserBoardTableList)e).collect(Collectors.toList());
@@ -69,5 +74,5 @@ public class RecUserBoardTableList extends DbRecord {
 		String sql = String.format("SELECT userid, tableid, title, category FROM %s WHERE userid='%s' AND category < %d ORDER BY category ASC" , TBL_NAME, userid, categoryMax);
 		return super.getList(sql).stream().map(e->(RecUserBoardTableList)e).collect(Collectors.toList());
 	}
-
+	
 }

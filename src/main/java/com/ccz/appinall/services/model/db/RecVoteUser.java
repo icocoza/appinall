@@ -1,7 +1,11 @@
 package com.ccz.appinall.services.model.db;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.ccz.appinall.library.dbhelper.DbReader;
 import com.ccz.appinall.library.dbhelper.DbRecord;

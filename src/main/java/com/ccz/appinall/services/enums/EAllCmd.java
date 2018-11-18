@@ -6,7 +6,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import lombok.Getter;
 
 public enum EAllCmd {
-	none("none"), addr_search("addr_search"), gps_search("gps_search"),
+	none("none"), addr_search("addr_search"), gps_search("gps_search"), gps_intown("gps_intown"),
 	
 	adminregister("adminregister"), adminlogin("adminlogin"), adminlogout("adminlogout"),
 	addapp("addapp"), delapp("delapp"), applist("applist"), modifyapp("modifyapp"), appcount("appcount"), stopapp("stopapp"), runapp("runapp"), readyapp("readyapp"),

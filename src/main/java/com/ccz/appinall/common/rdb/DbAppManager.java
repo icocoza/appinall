@@ -348,6 +348,14 @@ public class DbAppManager {
 		return new RecUserAuth(scode).deleteUserId(userid);
 	}
 	
+	public boolean addUserBuilding(String scode, String userid, String buildid, double lon, double lat) {
+		return new RecUserBuild(scode).insertUserBuilding(userid, buildid, lon, lat) != null;
+	}
+	
+	public RecUserBuild getUserBuilding(String scode, String userid) {
+		return new RecUserBuild(scode).getUserBuilding(userid);
+	}
+	
 	//for user epid for fcm push
 	public DbRecord addEpid(String scode, String userid, String devuuid, String epid) {
 		return new RecPushToken(scode).insert(devuuid, userid, scode, epid);
@@ -534,7 +542,12 @@ public class DbAppManager {
 	public boolean delVoteUser(String scode, String userid, String boardid) {
 		return new RecVoteUser(scode).delete(userid, boardid);
 	}
-	
+	public Map<String, Integer> getVoteCount(String scode, List<String> boardids) {
+		return new RecVoteCount(scode).getVoteCount(boardids);
+	}
+	public Map<String, Integer>  getVotedBoardId(String scode, String userid, List<String> boardids) {
+		return new RecVoteCount(scode).getVotedBoardId(userid, boardids);
+	}
 	//for friend
 	public boolean addFriend(String scode, String userid, String friendid, String friendname, String friendtype) {	//default normal = 0
 		return new RecFriend(scode).insert(userid, friendid, friendname, friendtype);

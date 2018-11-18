@@ -122,6 +122,17 @@ public class DbReader {
 			return 0; 
 		}
     }
+    
+    public float getFloat(String field)
+    {
+        try
+        {
+            return rs.getFloat(field);
+        }
+        catch (SQLException e) { 
+			return 0f; 
+		}
+    }
 
     public double getDouble(String field)
     {

@@ -5,6 +5,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 import com.ccz.appinall.application.AppInAllWsServer;
 import com.ccz.appinall.library.util.HashUtil;
@@ -15,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 @SpringBootApplication
 @EnableAutoConfiguration
 @ComponentScan
+@EnableScheduling
 @Slf4j
 public class AppinallApplication {
 
